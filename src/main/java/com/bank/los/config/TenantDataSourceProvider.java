@@ -66,9 +66,10 @@ public class TenantDataSourceProvider {
             jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, dbName);
         }
 
-        ds.setJdbcUrl(jdbcUrl);
-        ds.setUsername(defaultUsername);
-        ds.setPassword(defaultPassword);
+        PersistenceConfig.ConnectionDetails details = PersistenceConfig.parseConnectionDetails(jdbcUrl, defaultUsername, defaultPassword);
+        ds.setJdbcUrl(details.jdbcUrl());
+        ds.setUsername(details.username());
+        ds.setPassword(details.password());
         ds.setPoolName("HikariPool-" + dbName);
         ds.setMaximumPoolSize(10);
         ds.setMinimumIdle(2);

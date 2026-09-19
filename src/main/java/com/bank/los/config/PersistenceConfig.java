@@ -45,9 +45,11 @@ public class PersistenceConfig {
     public DataSource masterDataSource() {
         HikariDataSource ds = new HikariDataSource();
         ds.setDriverClassName(masterDriverClassName);
-        ds.setJdbcUrl(masterUrl);
-        ds.setUsername(masterUsername);
-        ds.setPassword(masterPassword);
+
+        ConnectionDetails details = parseConnectionDetails(masterUrl, masterUsername, masterPassword);
+        ds.setJdbcUrl(details.jdbcUrl());
+        ds.setUsername(details.username());
+        ds.setPassword(details.password());
         ds.setPoolName("MasterHikariPool");
         ds.setMaximumPoolSize(10);
         ds.setMinimumIdle(2);
@@ -106,4 +108,40 @@ public class PersistenceConfig {
             @Qualifier("entityManagerFactory") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
+
+    public static ConnectionDetails parseConnectionDetails(String rawUrl, String defaultUser, String defaultPass) {
+        if (rawUrl == null || rawUrl.isEmpty()) {
+            return new ConnectionDetails(rawUrl, defaultUser, defaultPass);
+        }
+        String url = rawUrl.trim();
+        if (url.startsWith("postgresql://") || url.startsWith("postgres://")) {
+            try {
+                String uriString = url.replaceFirst("^(postgresql|postgres)://", "http://");
+                java.net.URI uri = new java.net.URI(uriString);
+                String userInfo = uri.getUserInfo();
+                String username = (defaultUser != null && !defaultUser.equals("postgres")) ? defaultUser : "postgres";
+                String password = defaultPass;
+                if (userInfo != null && userInfo.contains(":")) {
+                    String[] parts = userInfo.split(":", 2);
+                    username = parts[0];
+                    password = parts[1];
+                } else if (userInfo != null) {
+                    username = userInfo;
+                }
+                int port = uri.getPort() > 0 ? uri.getPort() : 5432;
+                String path = uri.getPath();
+                String dbName = (path != null && path.length() > 1) ? path.substring(1) : "los_master_db";
+                String query = uri.getQuery();
+                String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + ":" + port + "/" + dbName + (query != null ? "?" + query : "");
+                return new ConnectionDetails(jdbcUrl, username, password);
+            } catch (Exception e) {
+                if (!url.startsWith("jdbc:")) {
+                    return new ConnectionDetails("jdbc:" + url, defaultUser, defaultPass);
+                }
+            }
+        }
+        return new ConnectionDetails(url, defaultUser, defaultPass);
+    }
+
+    public record ConnectionDetails(String jdbcUrl, String username, String password) {}
 }
