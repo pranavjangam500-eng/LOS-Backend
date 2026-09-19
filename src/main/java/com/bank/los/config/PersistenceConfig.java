@@ -137,7 +137,7 @@ public class PersistenceConfig {
                 String dbName = (path != null && path.length() > 1) ? path.substring(1) : "los_master_db";
                 String host = uri.getHost();
                 String query = uri.getQuery();
-                if (host != null && host.contains("render.com") && (query == null || !query.contains("sslmode"))) {
+                if (host != null && (host.contains("render.com") || host.startsWith("dpg-")) && (query == null || !query.contains("sslmode"))) {
                     query = (query == null || query.isEmpty()) ? "sslmode=require" : query + "&sslmode=require";
                 }
                 String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + "/" + dbName + (query != null && !query.isEmpty() ? "?" + query : "");
@@ -148,7 +148,7 @@ public class PersistenceConfig {
                 }
             }
         }
-        if (url.startsWith("jdbc:postgresql://") && url.contains("render.com") && !url.contains("sslmode")) {
+        if (url.startsWith("jdbc:postgresql://") && (url.contains("render.com") || url.contains("dpg-")) && !url.contains("sslmode")) {
             url = url.contains("?") ? url + "&sslmode=require" : url + "?sslmode=require";
         }
         return new ConnectionDetails(url, defaultUser, defaultPass);
