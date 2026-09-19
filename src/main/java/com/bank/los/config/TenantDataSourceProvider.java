@@ -34,6 +34,9 @@ public class TenantDataSourceProvider {
     @Value("${tenant.datasource.default-url-suffix:}")
     private String urlSuffix;
 
+    @Value("${master.datasource.url:jdbc:postgresql://localhost:5432/los_master_db}")
+    private String masterUrl;
+
     private final Map<String, DataSource> tenantDataSources = new ConcurrentHashMap<>();
 
     public DataSource getOrCreateTenantDataSource(String dbName, String dbHost, Integer dbPort) {
@@ -54,17 +57,19 @@ public class TenantDataSourceProvider {
 
     private DataSource createDataSource(String dbName, String dbHost, Integer dbPort) {
         log.info("Creating dynamic HikariDataSource for tenant DB: {}", dbName);
-        HikariDataSource ds = new HikariDataSource();
-        ds.setDriverClassName(driverClassName);
 
         String jdbcUrl;
         if (urlPrefix != null && !urlPrefix.isEmpty()) {
             jdbcUrl = urlPrefix + dbName + (urlSuffix != null ? urlSuffix : "");
         } else {
+            ensurePostgreSqlDatabaseExists(masterUrl, dbName, defaultUsername, defaultPassword);
             String host = (dbHost != null && !dbHost.isEmpty()) ? dbHost : defaultHost;
             int port = (dbPort != null && dbPort > 0) ? dbPort : defaultPort;
             jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, dbName);
         }
+
+        HikariDataSource ds = new HikariDataSource();
+        ds.setDriverClassName(driverClassName);
 
         PersistenceConfig.ConnectionDetails details = PersistenceConfig.parseConnectionDetails(jdbcUrl, defaultUsername, defaultPassword);
         ds.setJdbcUrl(details.jdbcUrl());
@@ -88,5 +93,30 @@ public class TenantDataSourceProvider {
         }
 
         return ds;
+    }
+
+    private void ensurePostgreSqlDatabaseExists(String masterDbUrl, String targetDbName, String username, String password) {
+        if (targetDbName == null || targetDbName.isEmpty() || (urlPrefix != null && !urlPrefix.isEmpty())) {
+            return;
+        }
+        try {
+            PersistenceConfig.ConnectionDetails masterDetails = PersistenceConfig.parseConnectionDetails(masterDbUrl, username, password);
+            try (java.sql.Connection conn = java.sql.DriverManager.getConnection(
+                    masterDetails.jdbcUrl(), masterDetails.username(), masterDetails.password())) {
+                conn.setAutoCommit(true);
+                try (java.sql.Statement checkStmt = conn.createStatement();
+                     java.sql.ResultSet rs = checkStmt.executeQuery("SELECT 1 FROM pg_database WHERE datname = '" + targetDbName + "'")) {
+                    if (!rs.next()) {
+                        log.info("Auto-provisioning tenant database in PostgreSQL: {}", targetDbName);
+                        try (java.sql.Statement createStmt = conn.createStatement()) {
+                            createStmt.executeUpdate("CREATE DATABASE \"" + targetDbName + "\"");
+                            log.info("Successfully provisioned database: {}", targetDbName);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Auto database creation note for {}: {}", targetDbName, e.getMessage());
+        }
     }
 }
