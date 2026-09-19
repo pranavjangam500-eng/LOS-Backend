@@ -54,6 +54,7 @@ public class PersistenceConfig {
         ds.setMaximumPoolSize(10);
         ds.setMinimumIdle(2);
         ds.setIdleTimeout(30000);
+        ds.setConnectionTimeout(30000);
 
         // Ensure master schema exists
         try (java.sql.Connection conn = ds.getConnection()) {
@@ -64,7 +65,7 @@ public class PersistenceConfig {
             populator.setIgnoreFailedDrops(true);
             populator.populate(conn);
         } catch (Exception e) {
-            // Ignore if already created or permission-constrained
+            // Ignore if already created or offline during build
         }
 
         return ds;
@@ -73,7 +74,7 @@ public class PersistenceConfig {
     @Bean(name = "routingDataSource")
     @Primary
     public DataSource routingDataSource(TenantDataSourceProvider tenantDataSourceProvider,
-                                       @Qualifier("masterDataSource") DataSource masterDataSource) {
+                                        @Qualifier("masterDataSource") DataSource masterDataSource) {
         MultiTenantRoutingDataSource routingDataSource = new MultiTenantRoutingDataSource(tenantDataSourceProvider, masterDataSource);
         Map<Object, Object> targetDataSources = new HashMap<>();
         targetDataSources.put(TenantContext.MASTER_TENANT_ID, masterDataSource);
@@ -93,6 +94,9 @@ public class PersistenceConfig {
             org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties hibernateProperties) {
         Map<String, Object> properties = hibernateProperties.determineHibernateProperties(
                 jpaProperties.getProperties(), new org.springframework.boot.autoconfigure.orm.jpa.HibernateSettings());
+
+        // Explicitly disable eager JDBC metadata access during startup
+        properties.put("hibernate.temp.use_jdbc_metadata_defaults", "false");
 
         return builder
                 .dataSource(routingDataSource)
@@ -119,26 +123,33 @@ public class PersistenceConfig {
                 String uriString = url.replaceFirst("^(postgresql|postgres)://", "http://");
                 java.net.URI uri = new java.net.URI(uriString);
                 String userInfo = uri.getUserInfo();
-                String username = (defaultUser != null && !defaultUser.equals("postgres")) ? defaultUser : "postgres";
+                String username = defaultUser;
                 String password = defaultPass;
                 if (userInfo != null && userInfo.contains(":")) {
                     String[] parts = userInfo.split(":", 2);
                     username = parts[0];
                     password = parts[1];
-                } else if (userInfo != null) {
+                } else if (userInfo != null && !userInfo.isEmpty()) {
                     username = userInfo;
                 }
                 int port = uri.getPort() > 0 ? uri.getPort() : 5432;
                 String path = uri.getPath();
                 String dbName = (path != null && path.length() > 1) ? path.substring(1) : "los_master_db";
+                String host = uri.getHost();
                 String query = uri.getQuery();
-                String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + ":" + port + "/" + dbName + (query != null ? "?" + query : "");
+                if (host != null && host.contains("render.com") && (query == null || !query.contains("sslmode"))) {
+                    query = (query == null || query.isEmpty()) ? "sslmode=require" : query + "&sslmode=require";
+                }
+                String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + "/" + dbName + (query != null && !query.isEmpty() ? "?" + query : "");
                 return new ConnectionDetails(jdbcUrl, username, password);
             } catch (Exception e) {
                 if (!url.startsWith("jdbc:")) {
                     return new ConnectionDetails("jdbc:" + url, defaultUser, defaultPass);
                 }
             }
+        }
+        if (url.startsWith("jdbc:postgresql://") && url.contains("render.com") && !url.contains("sslmode")) {
+            url = url.contains("?") ? url + "&sslmode=require" : url + "?sslmode=require";
         }
         return new ConnectionDetails(url, defaultUser, defaultPass);
     }
