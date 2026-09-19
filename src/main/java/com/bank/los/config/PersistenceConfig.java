@@ -136,6 +136,9 @@ public class PersistenceConfig {
                 String path = uri.getPath();
                 String dbName = (path != null && path.length() > 1) ? path.substring(1) : "los_master_db";
                 String host = uri.getHost();
+                if (host != null && host.startsWith("dpg-") && !host.contains(".")) {
+                    host = host + ".singapore-postgres.render.com";
+                }
                 String query = uri.getQuery();
                 if (host != null && (host.contains("render.com") || host.startsWith("dpg-")) && (query == null || !query.contains("sslmode"))) {
                     query = (query == null || query.isEmpty()) ? "sslmode=require" : query + "&sslmode=require";
@@ -147,6 +150,9 @@ public class PersistenceConfig {
                     return new ConnectionDetails("jdbc:" + url, defaultUser, defaultPass);
                 }
             }
+        }
+        if (url.startsWith("jdbc:postgresql://dpg-") && !url.contains(".render.com")) {
+            url = url.replaceFirst("(jdbc:postgresql://dpg-[a-z0-9]+-a)(:[0-9]+|/)", "$1.singapore-postgres.render.com$2");
         }
         if (url.startsWith("jdbc:postgresql://") && (url.contains("render.com") || url.contains("dpg-")) && !url.contains("sslmode")) {
             url = url.contains("?") ? url + "&sslmode=require" : url + "?sslmode=require";
