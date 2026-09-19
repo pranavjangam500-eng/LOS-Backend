@@ -1,0 +1,62 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: los-backend
+  profiles:
+    active: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  jackson:
+    serialization:
+      indent_output: true
+      write_dates_as_timestamps: false
+    default-property-inclusion: non_null
+
+app:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    access-token-expiration-ms: 86400000 # 24 hours
+    refresh-token-expiration-ms: 604800000 # 7 days
+    issuer: LOS-Platform
+
+# Master Database (Registry & Global Routing)
+master:
+  datasource:
+    url: ${MASTER_DB_URL:jdbc:postgresql://localhost:5432/los_master_db}
+    username: ${MASTER_DB_USERNAME:postgres}
+    password: ${MASTER_DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      pool-name: MasterHikariPool
+
+# Default / Fallback Tenant Datasource template (used for dynamic tenant pools)
+tenant:
+  datasource:
+    default-host: ${TENANT_DB_HOST:localhost}
+    default-port: ${TENANT_DB_PORT:5432}
+    username: ${TENANT_DB_USERNAME:postgres}
+    password: ${TENANT_DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
