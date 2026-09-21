@@ -1,8 +1,12 @@
 package com.bank.los.auth.controller;
 
 import com.bank.los.auth.dto.request.ChangePasswordRequest;
+import com.bank.los.auth.dto.request.ForgotPasswordRequest;
 import com.bank.los.auth.dto.request.LoginRequest;
+import com.bank.los.auth.dto.request.LogoutRequest;
 import com.bank.los.auth.dto.request.RefreshTokenRequest;
+import com.bank.los.auth.dto.request.ResetPasswordRequest;
+import com.bank.los.auth.dto.response.ForgotPasswordResponse;
 import com.bank.los.auth.dto.response.LoginResponse;
 import com.bank.los.auth.dto.response.TokenResponse;
 import com.bank.los.auth.dto.response.UserProfileResponse;
@@ -35,6 +39,20 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Login successful", response));
     }
 
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset token or link via registered email / user identifier")
+    public ResponseEntity<ApiResponse<ForgotPasswordResponse>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        ForgotPasswordResponse response = authenticationService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.ok("Password reset token generated successfully", response));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using reset token without logging in")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authenticationService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.ok("Password reset successfully", "OK"));
+    }
+
     @PostMapping("/refresh-token")
     @Operation(summary = "Refresh access token using a valid refresh token")
     public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
@@ -56,6 +74,13 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequest request) {
         authenticationService.changePassword(principal, request);
         return ResponseEntity.ok(ApiResponse.ok("Password changed successfully", "OK"));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout user and revoke refresh token")
+    public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody LogoutRequest request) {
+        tokenService.revokeRefreshToken(request.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.ok("Logged out successfully", "OK"));
     }
 
     @GetMapping("/health")

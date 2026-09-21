@@ -89,4 +89,20 @@ public class TokenService {
                 .expiresIn(jwtTokenProvider.getAccessTokenExpirationMs())
                 .build();
     }
+
+    @Transactional
+    public void revokeRefreshToken(String requestRefreshToken) {
+        if (jwtTokenProvider.validateToken(requestRefreshToken)) {
+            Claims claims = jwtTokenProvider.getClaimsFromToken(requestRefreshToken);
+            String tenantDb = claims.get("tenantDb", String.class);
+            if (tenantDb != null) {
+                TenantContext.setCurrentTenant(tenantDb);
+            }
+        }
+        refreshTokenRepository.findByToken(requestRefreshToken).ifPresent(token -> {
+            token.setRevoked(true);
+            refreshTokenRepository.save(token);
+            log.info("Refresh token successfully revoked");
+        });
+    }
 }

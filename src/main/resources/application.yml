@@ -28,10 +28,16 @@ spring:
 
 app:
   jwt:
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
     access-token-expiration-ms: 86400000 # 24 hours
     refresh-token-expiration-ms: 604800000 # 7 days
     issuer: LOS-Platform
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8080}
+  security:
+    rate-limit:
+      auth-per-minute: ${RATE_LIMIT_AUTH_PER_MIN:10}
+      api-per-minute: ${RATE_LIMIT_API_PER_MIN:120}
 
 # Master Database (Registry & Global Routing)
 master:

@@ -3,6 +3,7 @@ package com.bank.los.user.service;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.common.util.StringUtil;
+import com.bank.los.common.validation.PasswordPolicy;
 import com.bank.los.config.TenantContext;
 import com.bank.los.master.entity.LoginDirectory;
 import com.bank.los.master.entity.Organization;
@@ -54,6 +55,7 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(UserPrincipal principal, CreateUserRequest request) {
+        PasswordPolicy.validate(request.getPassword());
         String tenantDb = principal.getTenantDbName();
         String orgCode = principal.getOrganizationCode();
 

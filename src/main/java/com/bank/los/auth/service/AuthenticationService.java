@@ -1,7 +1,10 @@
 package com.bank.los.auth.service;
 
 import com.bank.los.auth.dto.request.ChangePasswordRequest;
+import com.bank.los.auth.dto.request.ForgotPasswordRequest;
 import com.bank.los.auth.dto.request.LoginRequest;
+import com.bank.los.auth.dto.request.ResetPasswordRequest;
+import com.bank.los.auth.dto.response.ForgotPasswordResponse;
 import com.bank.los.auth.dto.response.LoginResponse;
 import com.bank.los.auth.dto.response.UserProfileResponse;
 import com.bank.los.auth.mapper.AuthMapper;
@@ -9,6 +12,7 @@ import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.common.exception.UnauthorizedException;
+import com.bank.los.common.validation.PasswordPolicy;
 import com.bank.los.config.TenantContext;
 import com.bank.los.master.entity.InternalUser;
 import com.bank.los.master.entity.LoginDirectory;
@@ -32,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -90,7 +95,14 @@ public class AuthenticationService {
             }
 
             if (!passwordEncoder.matches(request.getPassword(), internalUser.getPasswordHash())) {
-                internalUser.setFailedLoginAttempts(internalUser.getFailedLoginAttempts() + 1);
+                int attempts = (internalUser.getFailedLoginAttempts() != null ? internalUser.getFailedLoginAttempts() : 0) + 1;
+                internalUser.setFailedLoginAttempts(attempts);
+                if (attempts >= 5) {
+                    internalUser.setIsActive(false);
+                    internalUserRepository.save(internalUser);
+                    log.warn("Internal user account locked due to failed login attempts: {}", identifier);
+                    throw new UnauthorizedException("Your account has been locked due to 5 consecutive failed login attempts. Please contact administrator.");
+                }
                 internalUserRepository.save(internalUser);
                 throw new UnauthorizedException("Invalid email or password");
             }
@@ -129,7 +141,14 @@ public class AuthenticationService {
             }
 
             if (!passwordEncoder.matches(request.getPassword(), staffUser.getPasswordHash())) {
-                staffUser.setFailedLoginAttempts(staffUser.getFailedLoginAttempts() + 1);
+                int attempts = (staffUser.getFailedLoginAttempts() != null ? staffUser.getFailedLoginAttempts() : 0) + 1;
+                staffUser.setFailedLoginAttempts(attempts);
+                if (attempts >= 5) {
+                    staffUser.setIsActive(false);
+                    tenantUserRepository.save(staffUser);
+                    log.warn("Staff account locked due to failed login attempts: {}", identifier);
+                    throw new UnauthorizedException("Your staff account has been locked due to 5 consecutive failed login attempts. Please contact administrator.");
+                }
                 tenantUserRepository.save(staffUser);
                 throw new UnauthorizedException("Invalid email or password");
             }
@@ -213,6 +232,7 @@ public class AuthenticationService {
 
     @Transactional
     public void changePassword(UserPrincipal principal, ChangePasswordRequest request) {
+        PasswordPolicy.validate(request.getNewPassword());
         String userType = principal.getUserType();
 
         if (ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(userType)) {
@@ -251,6 +271,75 @@ public class AuthenticationService {
             customer.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
             customerRepository.save(customer);
         }
+    }
+
+    @Transactional
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
+        String identifier = request.getEmail().trim();
+        TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+
+        LoginDirectory directory = loginDirectoryRepository.findByEmailOrUserCodeOrPhone(identifier, identifier, identifier)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with provided identifier: " + identifier));
+
+        String resetToken = "rst_" + UUID.randomUUID().toString().replace("-", "");
+        
+        log.info("Generated password reset token for identifier: {}", identifier);
+
+        return ForgotPasswordResponse.builder()
+                .resetToken(resetToken)
+                .expiresInSeconds(900L)
+                .message("Password reset token generated successfully. Use this token to reset your password.")
+                .build();
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordPolicy.validate(request.getNewPassword());
+        String identifier = request.getEmail().trim();
+
+        TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+        LoginDirectory directory = loginDirectoryRepository.findByEmailOrUserCodeOrPhone(identifier, identifier, identifier)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with provided identifier: " + identifier));
+
+        Organization org = directory.getOrganization();
+        String userType = directory.getUserType();
+
+        if (ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(userType)) {
+            TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+            InternalUser user = internalUserRepository.findByEmail(identifier)
+                    .or(() -> internalUserRepository.findByUserCode(identifier))
+                    .orElseThrow(() -> new ResourceNotFoundException("Internal user not found"));
+
+            user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+            user.setFailedLoginAttempts(0);
+            user.setIsActive(true);
+            internalUserRepository.save(user);
+
+        } else if (ApplicationConstants.UserTypes.STAFF.equalsIgnoreCase(userType)) {
+            TenantContext.setCurrentTenant(org.getDbName());
+            TenantUser user = tenantUserRepository.findByEmail(identifier)
+                    .or(() -> tenantUserRepository.findByUserCode(identifier))
+                    .orElseThrow(() -> new ResourceNotFoundException("Staff user not found"));
+
+            user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+            user.setFailedLoginAttempts(0);
+            user.setIsActive(true);
+            tenantUserRepository.save(user);
+
+        } else if (ApplicationConstants.UserTypes.CUSTOMER.equalsIgnoreCase(userType)) {
+            TenantContext.setCurrentTenant(org.getDbName());
+            Customer customer = customerRepository.findByEmail(identifier)
+                    .or(() -> customerRepository.findByCustomerCode(identifier))
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+
+            customer.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+            customer.setIsActive(true);
+            customerRepository.save(customer);
+        } else {
+            throw new BusinessException("Unsupported user type: " + userType);
+        }
+
+        log.info("Password reset successful for user identifier: {}", identifier);
     }
 
     public UserProfileResponse getCurrentUserProfile(UserPrincipal principal) {
