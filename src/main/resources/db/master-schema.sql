@@ -83,8 +83,8 @@ CREATE TABLE IF NOT EXISTS identity.internal_users (
     updated_at                TIMESTAMP    NOT NULL DEFAULT now()           -- ModifiedDate
 );
 
--- Migration safety: ensure newly added columns exist in older DB instances
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS emp_no VARCHAR(30);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS username VARCHAR(80);
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS status VARCHAR(30) NOT NULL DEFAULT 'OPERATIVE';
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS first_name VARCHAR(80);
@@ -107,6 +107,10 @@ ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS two_fa_otp_expiry T
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS verified_by BIGINT;
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS verified_date TIMESTAMP;
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS modified_by BIGINT;
+
+-- Backfill existing rows that were created before these columns were added
+UPDATE identity.internal_users SET username = COALESCE(email, 'admin') WHERE username IS NULL;
+UPDATE identity.internal_users SET emp_no = 'EMP001' WHERE emp_no IS NULL;
 
 -- -----------------------------------------------------------------------
 -- identity.login_directory
