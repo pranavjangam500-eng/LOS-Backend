@@ -40,14 +40,15 @@ public class CustomUserDetailsService implements UserDetailsService {
         if ("INTERNAL".equalsIgnoreCase(userType)) {
             TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
             InternalUser internalUser = internalUserRepository.findByEmail(identifier)
-                    .or(() -> internalUserRepository.findByUserCode(identifier))
+                    .or(() -> internalUserRepository.findByUsername(identifier))
+                    .or(() -> internalUserRepository.findByEmpNo(identifier))
                     .orElseThrow(() -> new UsernameNotFoundException("Internal user record not found"));
 
             return UserPrincipal.builder()
                     .id(internalUser.getId())
                     .email(internalUser.getEmail())
-                    .userCode(internalUser.getUserCode())
-                    .fullName(internalUser.getFirstName() + " " + internalUser.getLastName())
+                    .userCode(internalUser.getEmpNo() != null ? internalUser.getEmpNo() : internalUser.getUsername())
+                    .fullName(internalUser.getFullName())
                     .password(internalUser.getPasswordHash())
                     .role(internalUser.getRole().getName())
                     .userType("INTERNAL")
@@ -59,20 +60,21 @@ public class CustomUserDetailsService implements UserDetailsService {
         TenantContext.setCurrentTenant(tenantDb);
         if ("STAFF".equalsIgnoreCase(userType)) {
             TenantUser staffUser = tenantUserRepository.findByEmail(identifier)
-                    .or(() -> tenantUserRepository.findByUserCode(identifier))
+                    .or(() -> tenantUserRepository.findByUsername(identifier))
+                    .or(() -> tenantUserRepository.findByEmpNo(identifier))
                     .orElseThrow(() -> new UsernameNotFoundException("Staff user record not found in tenant database"));
 
             return UserPrincipal.builder()
                     .id(staffUser.getId())
                     .email(staffUser.getEmail())
-                    .userCode(staffUser.getUserCode())
-                    .fullName(staffUser.getFirstName() + " " + staffUser.getLastName())
+                    .userCode(staffUser.getEmpNo() != null ? staffUser.getEmpNo() : staffUser.getUsername())
+                    .fullName(staffUser.getFullName())
                     .password(staffUser.getPasswordHash())
                     .role(staffUser.getRole().getName())
                     .userType("STAFF")
                     .organizationCode(orgCode)
                     .tenantDbName(tenantDb)
-                    .branchId(staffUser.getBranch() != null ? staffUser.getBranch().getId() : null)
+                    .branchId(staffUser.getLoginBranch() != null ? staffUser.getLoginBranch().getId() : null)
                     .active(Boolean.TRUE.equals(staffUser.getIsActive()))
                     .build();
         } else if ("CUSTOMER".equalsIgnoreCase(userType)) {
@@ -84,7 +86,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .id(customer.getId())
                     .email(customer.getEmail())
                     .userCode(customer.getCustomerCode())
-                    .fullName(customer.getFirstName() + " " + customer.getLastName())
+                    .fullName(customer.getFirstName() + (customer.getMiddleName() != null ? " " + customer.getMiddleName() : "") + " " + customer.getLastName())
                     .password(customer.getPasswordHash())
                     .role("CUSTOMER")
                     .userType("CUSTOMER")

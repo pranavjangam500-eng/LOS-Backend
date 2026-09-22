@@ -1,7 +1,6 @@
 package com.bank.los.auth.mapper;
 
 import com.bank.los.auth.dto.response.UserProfileResponse;
-import com.bank.los.common.util.StringUtil;
 import com.bank.los.master.entity.InternalUser;
 import com.bank.los.master.entity.Organization;
 import com.bank.los.tenant.entity.Customer;
@@ -14,53 +13,64 @@ public class AuthMapper {
     public UserProfileResponse toProfileResponse(InternalUser user) {
         return UserProfileResponse.builder()
                 .id(user.getId())
-                .userCode(user.getUserCode())
+                .empNo(user.getEmpNo())
+                .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .middleName(user.getMiddleName())
                 .lastName(user.getLastName())
-                .fullName(StringUtil.getFullName(user.getFirstName(), user.getMiddleName(), user.getLastName()))
+                .fullName(user.getFullName())
                 .email(user.getEmail())
-                .phone(user.getPhone())
+                .mobile(user.getMobile())
                 .role(user.getRole() != null ? user.getRole().getName() : "INTERNAL_ADMIN")
                 .userType("INTERNAL")
+                .status(user.getStatus())
                 .organizationName("LOS Master Platform")
                 .organizationCode("MASTER")
-                .lastLoginAt(user.getLastLoginAt())
+                .designation(user.getDesignation())
+                .lastLoginDate(user.getLastLoginDate())
+                .lastLoginTime(user.getLastLoginTime())
                 .build();
     }
 
     public UserProfileResponse toProfileResponse(TenantUser user, Organization org) {
         return UserProfileResponse.builder()
                 .id(user.getId())
-                .userCode(user.getUserCode())
+                .empNo(user.getEmpNo())
+                .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .middleName(user.getMiddleName())
                 .lastName(user.getLastName())
-                .fullName(StringUtil.getFullName(user.getFirstName(), user.getMiddleName(), user.getLastName()))
+                .fullName(user.getFullName())
                 .email(user.getEmail())
-                .phone(user.getPhone())
+                .mobile(user.getMobile())
                 .role(user.getRole() != null ? user.getRole().getName() : null)
                 .userType("STAFF")
+                .status(user.getStatus())
                 .organizationName(org != null ? org.getName() : null)
                 .organizationCode(org != null ? org.getCode() : null)
                 .organizationType(org != null ? org.getType() : null)
-                .branchId(user.getBranch() != null ? user.getBranch().getId() : null)
-                .branchName(user.getBranch() != null ? user.getBranch().getName() : null)
-                .branchCode(user.getBranch() != null ? user.getBranch().getCode() : null)
-                .lastLoginAt(user.getLastLoginAt())
+                .branchId(user.getLoginBranch() != null ? user.getLoginBranch().getId() : null)
+                .branchName(user.getLoginBranch() != null ? user.getLoginBranch().getName() : null)
+                .branchCode(user.getLoginBranch() != null ? user.getLoginBranch().getCode() : null)
+                .designation(user.getDesignation())
+                .multiBranchAccess(user.getMultiBranchAccess())
+                .inactiveSessionTimeout(user.getInactiveSessionTimeout())
+                .lastLoginDate(user.getLastLoginDate())
+                .lastLoginTime(user.getLastLoginTime())
                 .build();
     }
 
     public UserProfileResponse toProfileResponse(Customer customer, Organization org) {
         return UserProfileResponse.builder()
                 .id(customer.getId())
-                .userCode(customer.getCustomerCode())
+                .empNo(customer.getCustomerCode())
+                .username(customer.getEmail())
                 .firstName(customer.getFirstName())
                 .middleName(customer.getMiddleName())
                 .lastName(customer.getLastName())
-                .fullName(StringUtil.getFullName(customer.getFirstName(), customer.getMiddleName(), customer.getLastName()))
+                .fullName(customer.getFirstName() + " " + customer.getLastName())
                 .email(customer.getEmail())
-                .phone(customer.getPhone())
+                .mobile(customer.getPhone())
                 .role("CUSTOMER")
                 .userType("CUSTOMER")
                 .organizationName(org != null ? org.getName() : null)
@@ -69,7 +79,6 @@ public class AuthMapper {
                 .branchId(customer.getBranch() != null ? customer.getBranch().getId() : null)
                 .branchName(customer.getBranch() != null ? customer.getBranch().getName() : null)
                 .branchCode(customer.getBranch() != null ? customer.getBranch().getCode() : null)
-                .lastLoginAt(customer.getLastLoginAt())
                 .build();
     }
 }

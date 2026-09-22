@@ -1,6 +1,7 @@
 package com.bank.los.dashboard;
 
 import com.bank.los.auth.dto.request.LoginRequest;
+import com.bank.los.auth.dto.request.VerifyOtpRequest;
 import com.bank.los.auth.dto.response.LoginResponse;
 import com.bank.los.auth.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,22 +36,36 @@ class DashboardSecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // 1. Internal Super Admin (single-step)
         LoginResponse adminRes = authenticationService.login(LoginRequest.builder()
                 .email("admin@losplatform.com").password("Admin@123").build());
         internalAdminToken = adminRes.getAccessToken();
 
-        LoginResponse superAdminRes = authenticationService.login(LoginRequest.builder()
-                .email("superadmin@hdfcbank.com").password("Admin@123").build());
-        tenantAdminToken = superAdminRes.getAccessToken();
+        // 2. Bank Admin (2FA)
+        LoginResponse superAdminStep1 = authenticationService.login(LoginRequest.builder()
+                .email("admin@hdfcbank.com").password("Admin@123").build());
+        LoginResponse superAdminStep2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
+                .tempSessionToken(superAdminStep1.getTempSessionToken())
+                .otp(superAdminStep1.getDevOtp()).build());
+        tenantAdminToken = superAdminStep2.getAccessToken();
 
-        LoginResponse makerRes = authenticationService.login(LoginRequest.builder()
+        // 3. Bank Maker (2FA)
+        LoginResponse makerStep1 = authenticationService.login(LoginRequest.builder()
                 .email("maker@hdfcbank.com").password("Maker@123").build());
-        makerToken = makerRes.getAccessToken();
+        LoginResponse makerStep2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
+                .tempSessionToken(makerStep1.getTempSessionToken())
+                .otp(makerStep1.getDevOtp()).build());
+        makerToken = makerStep2.getAccessToken();
 
-        LoginResponse checkerRes = authenticationService.login(LoginRequest.builder()
+        // 4. Bank Checker (2FA)
+        LoginResponse checkerStep1 = authenticationService.login(LoginRequest.builder()
                 .email("checker@hdfcbank.com").password("Checker@123").build());
-        checkerToken = checkerRes.getAccessToken();
+        LoginResponse checkerStep2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
+                .tempSessionToken(checkerStep1.getTempSessionToken())
+                .otp(checkerStep1.getDevOtp()).build());
+        checkerToken = checkerStep2.getAccessToken();
 
+        // 5. Customer (single-step)
         LoginResponse custRes = authenticationService.login(LoginRequest.builder()
                 .email("rajesh.kumar@gmail.com").password("Customer@123").build());
         customerToken = custRes.getAccessToken();
@@ -67,8 +82,8 @@ class DashboardSecurityIntegrationTest {
     }
 
     @Test
-    @DisplayName("SUPER_ADMIN can access Tenant Admin Dashboard")
-    void testSuperAdminAccess() throws Exception {
+    @DisplayName("Bank ADMIN can access Tenant Admin Dashboard")
+    void testTenantAdminAccess() throws Exception {
         mockMvc.perform(get("/api/v1/dashboard/tenant-admin")
                         .header("Authorization", "Bearer " + tenantAdminToken))
                 .andExpect(status().isOk())

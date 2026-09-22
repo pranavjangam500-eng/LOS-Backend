@@ -94,6 +94,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Mail (for OTP email delivery — stub wired, activate by adding SMTP env vars) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

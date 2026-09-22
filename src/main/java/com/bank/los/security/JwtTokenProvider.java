@@ -38,14 +38,45 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpirationMs);
 
+        String jti = userPrincipal.getJti() != null
+                ? userPrincipal.getJti()
+                : java.util.UUID.randomUUID().toString();
+
         Map<String, Object> claims = new HashMap<>();
-        claims.put(SecurityConstants.CLAIM_USER_ID, userPrincipal.getId());
+        claims.put(SecurityConstants.CLAIM_JTI,       jti);
+        claims.put(SecurityConstants.CLAIM_USER_ID,   userPrincipal.getId());
         claims.put(SecurityConstants.CLAIM_USER_TYPE, userPrincipal.getUserType());
-        claims.put(SecurityConstants.CLAIM_ROLE, userPrincipal.getRole());
-        claims.put(SecurityConstants.CLAIM_ORG_CODE, userPrincipal.getOrganizationCode());
+        claims.put(SecurityConstants.CLAIM_ROLE,      userPrincipal.getRole());
+        claims.put(SecurityConstants.CLAIM_ORG_CODE,  userPrincipal.getOrganizationCode());
         claims.put(SecurityConstants.CLAIM_TENANT_DB, userPrincipal.getTenantDbName());
         claims.put(SecurityConstants.CLAIM_BRANCH_ID, userPrincipal.getBranchId());
         claims.put(SecurityConstants.CLAIM_FULL_NAME, userPrincipal.getFullName());
+
+        return Jwts.builder()
+                .id(jti)
+                .subject(userPrincipal.getUsername())
+                .issuer(issuer)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .claims(claims)
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    /**
+     * Short-lived (5-minute) JWT used as a temporary session token during the 2FA OTP step.
+     * Carries enough claims for OTP verification to identify the user and their tenant.
+     */
+    public String generateTempSessionToken(UserPrincipal userPrincipal) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 5 * 60 * 1000L); // 5 minutes
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(SecurityConstants.CLAIM_USER_ID,   userPrincipal.getId());
+        claims.put(SecurityConstants.CLAIM_USER_TYPE, userPrincipal.getUserType());
+        claims.put(SecurityConstants.CLAIM_TENANT_DB, userPrincipal.getTenantDbName());
+        claims.put(SecurityConstants.CLAIM_ORG_CODE,  userPrincipal.getOrganizationCode());
+        claims.put("temp", true); // marks this as a temp/challenge token, not a full auth token
 
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())

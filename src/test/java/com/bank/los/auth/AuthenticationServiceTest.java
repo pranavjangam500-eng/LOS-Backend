@@ -1,6 +1,7 @@
 package com.bank.los.auth;
 
 import com.bank.los.auth.dto.request.LoginRequest;
+import com.bank.los.auth.dto.request.VerifyOtpRequest;
 import com.bank.los.auth.dto.response.LoginResponse;
 import com.bank.los.auth.service.AuthenticationService;
 import com.bank.los.common.exception.UnauthorizedException;
@@ -20,7 +21,7 @@ class AuthenticationServiceTest {
     private AuthenticationService authenticationService;
 
     @Test
-    @DisplayName("Should successfully authenticate Internal Admin on Master DB")
+    @DisplayName("Should successfully authenticate Internal Super Admin on Master DB (single step)")
     void testInternalAdminLogin() {
         LoginRequest request = LoginRequest.builder()
                 .email("admin@losplatform.com")
@@ -32,59 +33,84 @@ class AuthenticationServiceTest {
         assertNotNull(response);
         assertNotNull(response.getAccessToken());
         assertNotNull(response.getRefreshToken());
+        assertNotNull(response.getUser());
         assertEquals("INTERNAL_ADMIN", response.getUser().getRole());
         assertEquals("INTERNAL", response.getUser().getUserType());
         assertEquals("/dashboard/internal-admin", response.getDashboardUrl());
     }
 
     @Test
-    @DisplayName("Should successfully authenticate Bank Super Admin on Tenant DB")
-    void testTenantSuperAdminLogin() {
-        LoginRequest request = LoginRequest.builder()
-                .email("superadmin@hdfcbank.com")
+    @DisplayName("Should enforce mandatory 2FA OTP for Bank Admin on Tenant DB (2-step flow)")
+    void testBankAdminLoginWith2FA() {
+        LoginRequest step1Request = LoginRequest.builder()
+                .email("admin@hdfcbank.com")
                 .password("Admin@123")
                 .build();
 
-        LoginResponse response = authenticationService.login(request);
+        // Step 1: Login credentials verification -> returns 2FA challenge
+        LoginResponse step1 = authenticationService.login(step1Request);
+        assertNotNull(step1);
+        assertTrue(Boolean.TRUE.equals(step1.getOtpRequired()), "2FA OTP must be mandatory for tenant staff");
+        assertNotNull(step1.getTempSessionToken());
+        assertNotNull(step1.getDevOtp(), "Dev OTP should be available in dev/test mode");
 
-        assertNotNull(response);
-        assertNotNull(response.getAccessToken());
-        assertEquals("SUPER_ADMIN", response.getUser().getRole());
-        assertEquals("STAFF", response.getUser().getUserType());
-        assertEquals("HDFC01", response.getUser().getOrganizationCode());
-        assertEquals("/dashboard/tenant-admin", response.getDashboardUrl());
+        // Step 2: Verify OTP
+        VerifyOtpRequest step2Request = VerifyOtpRequest.builder()
+                .tempSessionToken(step1.getTempSessionToken())
+                .otp(step1.getDevOtp())
+                .build();
+
+        LoginResponse step2 = authenticationService.verifyOtp(step2Request);
+        assertNotNull(step2);
+        assertNotNull(step2.getAccessToken());
+        assertEquals("ADMIN", step2.getUser().getRole());
+        assertEquals("STAFF", step2.getUser().getUserType());
+        assertEquals("HDFC01", step2.getUser().getOrganizationCode());
+        assertEquals("/dashboard/admin", step2.getDashboardUrl());
     }
 
     @Test
-    @DisplayName("Should successfully authenticate Bank Maker on Tenant DB")
-    void testMakerLogin() {
-        LoginRequest request = LoginRequest.builder()
+    @DisplayName("Should successfully authenticate Bank Maker on Tenant DB via 2FA")
+    void testMakerLoginWith2FA() {
+        LoginRequest step1Request = LoginRequest.builder()
                 .email("maker@hdfcbank.com")
                 .password("Maker@123")
                 .build();
 
-        LoginResponse response = authenticationService.login(request);
+        LoginResponse step1 = authenticationService.login(step1Request);
+        assertTrue(Boolean.TRUE.equals(step1.getOtpRequired()));
 
-        assertNotNull(response);
-        assertEquals("MAKER", response.getUser().getRole());
-        assertEquals("/dashboard/maker", response.getDashboardUrl());
-        assertTrue(response.getPermissions().contains("LOAN_APPLICATION_CREATE"));
+        LoginResponse step2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
+                .tempSessionToken(step1.getTempSessionToken())
+                .otp(step1.getDevOtp())
+                .build());
+
+        assertNotNull(step2);
+        assertEquals("MAKER", step2.getUser().getRole());
+        assertEquals("/dashboard/maker", step2.getDashboardUrl());
+        assertTrue(step2.getPermissions().contains("LOAN_APPLICATION_CREATE"));
     }
 
     @Test
-    @DisplayName("Should successfully authenticate Bank Checker on Tenant DB")
-    void testCheckerLogin() {
-        LoginRequest request = LoginRequest.builder()
+    @DisplayName("Should successfully authenticate Bank Checker on Tenant DB via 2FA")
+    void testCheckerLoginWith2FA() {
+        LoginRequest step1Request = LoginRequest.builder()
                 .email("checker@hdfcbank.com")
                 .password("Checker@123")
                 .build();
 
-        LoginResponse response = authenticationService.login(request);
+        LoginResponse step1 = authenticationService.login(step1Request);
+        assertTrue(Boolean.TRUE.equals(step1.getOtpRequired()));
 
-        assertNotNull(response);
-        assertEquals("CHECKER", response.getUser().getRole());
-        assertEquals("/dashboard/checker", response.getDashboardUrl());
-        assertTrue(response.getPermissions().contains("LOAN_APPLICATION_APPROVE"));
+        LoginResponse step2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
+                .tempSessionToken(step1.getTempSessionToken())
+                .otp(step1.getDevOtp())
+                .build());
+
+        assertNotNull(step2);
+        assertEquals("CHECKER", step2.getUser().getRole());
+        assertEquals("/dashboard/checker", step2.getDashboardUrl());
+        assertTrue(step2.getPermissions().contains("LOAN_APPLICATION_APPROVE"));
     }
 
     @Test

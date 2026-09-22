@@ -87,7 +87,7 @@ public class DashboardService {
             bMap.put("branchCode", b.getCode());
             bMap.put("city", b.getCity());
             bMap.put("status", b.getStatus());
-            bMap.put("staffCount", tenantUserRepository.countByBranchId(b.getId()));
+            bMap.put("staffCount", tenantUserRepository.countByLoginBranchId(b.getId()));
             bMap.put("customerCount", customerRepository.countByBranchId(b.getId()));
             branchSummaries.add(bMap);
         }

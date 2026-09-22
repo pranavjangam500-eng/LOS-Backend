@@ -8,9 +8,20 @@ import java.util.Optional;
 
 @Repository
 public interface TenantUserRepository extends JpaRepository<TenantUser, Long> {
+
     Optional<TenantUser> findByEmail(String email);
-    Optional<TenantUser> findByUserCode(String userCode);
-    Optional<TenantUser> findByPhone(String phone);
+
+    /** Login via username (UserName field in senior's design) */
+    Optional<TenantUser> findByUsername(String username);
+
+    /** Legacy / alternate lookup by empNo */
+    Optional<TenantUser> findByEmpNo(String empNo);
+
+    Optional<TenantUser> findByMobile(String mobile);
+
     boolean existsByEmail(String email);
-    long countByBranchId(Long branchId);
+    boolean existsByUsername(String username);
+    boolean existsByEmpNo(String empNo);
+
+    long countByLoginBranchId(Long branchId);
 }

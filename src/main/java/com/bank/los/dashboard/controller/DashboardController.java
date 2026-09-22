@@ -34,8 +34,8 @@ public class DashboardController {
     }
 
     @GetMapping("/tenant-admin")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
-    @Operation(summary = "Bank/NBFC Tenant Admin Dashboard — SUPER_ADMIN only (Full control within this NBFC/Bank)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Operation(summary = "Bank/NBFC Tenant Admin Dashboard — ADMIN or SUPER_ADMIN (Full control within this NBFC/Bank)")
     public ResponseEntity<ApiResponse<TenantAdminDashboardDto>> getTenantAdminDashboard(
             @AuthenticationPrincipal UserPrincipal principal) {
         TenantAdminDashboardDto data = dashboardService.getTenantAdminDashboard(principal);

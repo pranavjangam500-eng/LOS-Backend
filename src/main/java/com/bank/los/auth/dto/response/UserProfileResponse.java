@@ -7,7 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @Builder
@@ -17,21 +18,27 @@ import java.time.LocalDateTime;
 @Schema(description = "Authenticated user profile details")
 public class UserProfileResponse {
 
-    private Long id;
-    private String userCode;
+    private Long   id;
+    private String empNo;               // EmpNo from senior's design
+    private String username;            // UserName (login credential)
     private String firstName;
     private String middleName;
     private String lastName;
     private String fullName;
     private String email;
-    private String phone;
+    private String mobile;
     private String role;
-    private String userType; // 'INTERNAL', 'STAFF', 'CUSTOMER'
+    private String userType;            // INTERNAL / STAFF / CUSTOMER
+    private String status;              // OPERATIVE / NON_OPERATIVE / PENDING_VERIFICATION
+    private String designation;
     private String organizationName;
     private String organizationCode;
-    private String organizationType; // 'BANK', 'NBFC'
-    private Long branchId;
+    private String organizationType;    // BANK / NBFC
+    private Long   branchId;
     private String branchName;
     private String branchCode;
-    private LocalDateTime lastLoginAt;
+    private Boolean multiBranchAccess;
+    private Integer inactiveSessionTimeout;
+    private LocalDate lastLoginDate;
+    private LocalTime lastLoginTime;
 }

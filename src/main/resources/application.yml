@@ -25,11 +25,24 @@ spring:
       indent_output: true
       write_dates_as_timestamps: false
     default-property-inclusion: non_null
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        debug: false
 
 app:
   jwt:
     secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-    access-token-expiration-ms: 86400000 # 24 hours
+    access-token-expiration-ms: 86400000  # 24 hours
     refresh-token-expiration-ms: 604800000 # 7 days
     issuer: LOS-Platform
   cors:
@@ -38,6 +51,11 @@ app:
     rate-limit:
       auth-per-minute: ${RATE_LIMIT_AUTH_PER_MIN:10}
       api-per-minute: ${RATE_LIMIT_API_PER_MIN:120}
+  # Mail — disabled until SMTP credentials are configured via env vars
+  # To activate: set MAIL_ENABLED=true and provide SMTP creds
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:noreply@losplatform.com}
 
 # Master Database (Registry & Global Routing)
 master:
