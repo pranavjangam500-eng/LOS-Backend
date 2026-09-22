@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
                 .success(false)
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("An internal server error occurred. Please contact system support if the issue persists.")
+                .message("ERROR DEBUG: " + ex.getMessage())
                 .path(request.getRequestURI())
                 .timestamp(LocalDateTime.now())
                 .build();
