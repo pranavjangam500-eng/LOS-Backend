@@ -85,6 +85,8 @@ CREATE TABLE IF NOT EXISTS identity.internal_users (
 
 -- Migration safety: ensure newly added columns exist in older DB instances
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS emp_no VARCHAR(30);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS status VARCHAR(30) NOT NULL DEFAULT 'OPERATIVE';
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS first_name VARCHAR(80);
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS middle_name VARCHAR(80);
 ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS last_name VARCHAR(80);
