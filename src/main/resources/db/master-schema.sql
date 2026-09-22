@@ -113,3 +113,18 @@ CREATE TABLE IF NOT EXISTS identity.master_password_reset_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_master_prt_emp_no ON identity.master_password_reset_tokens(emp_no);
+
+-- -----------------------------------------------------------------------
+-- identity.refresh_tokens (Master DB)
+-- Needed for Super Admin refresh tokens
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.refresh_tokens (
+    id                  BIGSERIAL    PRIMARY KEY,
+    user_id             BIGINT       NOT NULL,
+    token               VARCHAR(500) NOT NULL UNIQUE,
+    user_type           VARCHAR(20)  NOT NULL,
+    organization_code   VARCHAR(30),
+    expiry_date         TIMESTAMP    NOT NULL,
+    revoked             BOOLEAN      NOT NULL DEFAULT false,
+    created_at          TIMESTAMP    NOT NULL DEFAULT now()
+);
