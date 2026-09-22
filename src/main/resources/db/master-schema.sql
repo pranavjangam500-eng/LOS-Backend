@@ -75,7 +75,6 @@ CREATE TABLE IF NOT EXISTS identity.internal_users (
     last_login_time           TIME,
     is_active                 BOOLEAN      NOT NULL DEFAULT true,
 
-    -- Audit (senior's design)
     created_by                BIGINT,                                       -- CreatedBy
     created_at                TIMESTAMP    NOT NULL DEFAULT now(),          -- CreatedDate
     verified_by               BIGINT,                                       -- VerifiedBy
@@ -83,6 +82,29 @@ CREATE TABLE IF NOT EXISTS identity.internal_users (
     modified_by               BIGINT,                                       -- ModifiedBy
     updated_at                TIMESTAMP    NOT NULL DEFAULT now()           -- ModifiedDate
 );
+
+-- Migration safety: ensure newly added columns exist in older DB instances
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS emp_no VARCHAR(30);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS first_name VARCHAR(80);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS middle_name VARCHAR(80);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS last_name VARCHAR(80);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS dob DATE;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS mobile VARCHAR(20);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS designation VARCHAR(100);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS login_on_holidays BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS login_time TIME;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS logout_time TIME;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS inactive_session_timeout INT NOT NULL DEFAULT 1800;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS no_of_bad_logins INT NOT NULL DEFAULT 0;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS last_login_date DATE;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS last_login_time TIME;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS two_fa_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS two_fa_otp_hash VARCHAR(255);
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS two_fa_otp_expiry TIMESTAMP;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS verified_by BIGINT;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS verified_date TIMESTAMP;
+ALTER TABLE identity.internal_users ADD COLUMN IF NOT EXISTS modified_by BIGINT;
 
 -- -----------------------------------------------------------------------
 -- identity.login_directory
