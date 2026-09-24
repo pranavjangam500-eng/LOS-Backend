@@ -90,9 +90,8 @@ public class SecurityConfig {
             configuration.setAllowCredentials(true);
         }
 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Tenant-Code", "Accept", "X-Requested-With"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Tenant-Code"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Bank-Code", "X-Organization-Code", "X-Tenant-Code", "Accept", "X-Requested-With"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Bank-Code", "X-Organization-Code", "X-Tenant-Code"));
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

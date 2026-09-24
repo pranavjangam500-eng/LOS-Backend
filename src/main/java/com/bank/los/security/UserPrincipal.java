@@ -25,7 +25,7 @@ public class UserPrincipal implements UserDetails {
     private String userType;      // INTERNAL / STAFF / CUSTOMER
     private String role;          // INTERNAL_ADMIN / ADMIN / MAKER / CHECKER / VIEWER / CUSTOMER
     private String organizationCode;
-    private String tenantDbName;
+    private String organizationDbName;
     private Long   branchId;
 
     /** JWT ID — used for session activity tracking and auto-logout */
@@ -35,6 +35,29 @@ public class UserPrincipal implements UserDetails {
     private String password;
 
     private boolean active;
+
+    // Backward-compatible alias for tenantDbName
+    public String getTenantDbName() {
+        return organizationDbName;
+    }
+
+    public void setTenantDbName(String tenantDbName) {
+        this.organizationDbName = tenantDbName;
+    }
+
+    public static class UserPrincipalBuilder {
+        private String organizationDbName;
+
+        public UserPrincipalBuilder tenantDbName(String tenantDbName) {
+            this.organizationDbName = tenantDbName;
+            return this;
+        }
+
+        public UserPrincipalBuilder organizationDbName(String organizationDbName) {
+            this.organizationDbName = organizationDbName;
+            return this;
+        }
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

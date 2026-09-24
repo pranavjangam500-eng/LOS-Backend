@@ -77,13 +77,29 @@ master:
       idle-timeout: 30000
       pool-name: MasterHikariPool
 
-# Default / Fallback Tenant Datasource template (used for dynamic tenant pools)
+# Default / Fallback Bank Datasource template (used for dynamic bank pools)
+bank:
+  datasource:
+    default-host: ${BANK_DB_HOST:${TENANT_DB_HOST:localhost}}
+    default-port: ${BANK_DB_PORT:${TENANT_DB_PORT:5432}}
+    username: ${BANK_DB_USERNAME:${TENANT_DB_USERNAME:postgres}}
+    password: ${BANK_DB_PASSWORD:${TENANT_DB_PASSWORD:postgres}}
+    driver-class-name: org.postgresql.Driver
+
 tenant:
   datasource:
-    default-host: ${TENANT_DB_HOST:localhost}
-    default-port: ${TENANT_DB_PORT:5432}
-    username: ${TENANT_DB_USERNAME:postgres}
-    password: ${TENANT_DB_PASSWORD:postgres}
+    default-host: ${TENANT_DB_HOST:${BANK_DB_HOST:localhost}}
+    default-port: ${TENANT_DB_PORT:${BANK_DB_PORT:5432}}
+    username: ${TENANT_DB_USERNAME:${BANK_DB_USERNAME:postgres}}
+    password: ${TENANT_DB_PASSWORD:${BANK_DB_PASSWORD:postgres}}
+    driver-class-name: org.postgresql.Driver
+
+organization:
+  datasource:
+    default-host: ${ORGANIZATION_DB_HOST:${TENANT_DB_HOST:${BANK_DB_HOST:localhost}}}
+    default-port: ${ORGANIZATION_DB_PORT:${TENANT_DB_PORT:${BANK_DB_PORT:5432}}}
+    username: ${ORGANIZATION_DB_USERNAME:${TENANT_DB_USERNAME:${BANK_DB_USERNAME:postgres}}}
+    password: ${ORGANIZATION_DB_PASSWORD:${TENANT_DB_PASSWORD:${BANK_DB_PASSWORD:postgres}}}
     driver-class-name: org.postgresql.Driver
 
 springdoc:

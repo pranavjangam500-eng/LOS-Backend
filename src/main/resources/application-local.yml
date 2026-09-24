@@ -20,6 +20,14 @@ master:
     password: ""
     driver-class-name: org.h2.Driver
 
+bank:
+  datasource:
+    driver-class-name: org.h2.Driver
+    default-url-prefix: "jdbc:h2:mem:"
+    default-url-suffix: ";DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
+    username: sa
+    password: ""
+
 tenant:
   datasource:
     driver-class-name: org.h2.Driver
@@ -27,3 +35,12 @@ tenant:
     default-url-suffix: ";DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
     username: sa
     password: ""
+
+organization:
+  datasource:
+    driver-class-name: org.h2.Driver
+    default-url-prefix: "jdbc:h2:mem:"
+    default-url-suffix: ";DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"
+    username: sa
+    password: ""
+

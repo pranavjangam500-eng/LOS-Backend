@@ -1,37 +1,33 @@
 package com.bank.los.config;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
+/**
+ * @deprecated Use {@link BankContext} instead.
+ */
+@Deprecated
 public final class TenantContext {
 
-    private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
-    private static final ThreadLocal<String> CURRENT_ORG_CODE = new ThreadLocal<>();
-
-    public static final String MASTER_TENANT_ID = "master";
+    public static final String MASTER_TENANT_ID = BankContext.MASTER_BANK_ID;
 
     private TenantContext() {}
 
     public static void setCurrentTenant(String tenantDbName) {
-        log.debug("Setting current tenant DB to: {}", tenantDbName);
-        CURRENT_TENANT.set(tenantDbName);
+        BankContext.setCurrentBank(tenantDbName);
     }
 
     public static String getCurrentTenant() {
-        String tenant = CURRENT_TENANT.get();
-        return tenant != null ? tenant : MASTER_TENANT_ID;
+        return BankContext.getCurrentBank();
     }
 
     public static void setCurrentOrgCode(String orgCode) {
-        CURRENT_ORG_CODE.set(orgCode);
+        BankContext.setCurrentBankCode(orgCode);
     }
 
     public static String getCurrentOrgCode() {
-        return CURRENT_ORG_CODE.get();
+        return BankContext.getCurrentBankCode();
     }
 
     public static void clear() {
-        CURRENT_TENANT.remove();
-        CURRENT_ORG_CODE.remove();
+        BankContext.clear();
     }
 }
+

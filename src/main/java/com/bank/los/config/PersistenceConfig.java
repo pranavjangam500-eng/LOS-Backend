@@ -5,7 +5,6 @@ import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +22,15 @@ import java.util.Map;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = {"com.bank.los.master.repository", "com.bank.los.tenant.repository"},
+        basePackages = {
+                "com.bank.los.administration.master.repository",
+                "com.bank.los.administration.audit.repository",
+                "com.bank.los.bank.master.repository",
+                "com.bank.los.bank.lead.repository",
+                "com.bank.los.bank.product.repository",
+                "com.bank.los.bank.loan.repository",
+                "com.bank.los.bank.audit.repository"
+        },
         entityManagerFactoryRef = "entityManagerFactory",
         transactionManagerRef = "transactionManager"
 )
@@ -56,14 +63,18 @@ public class PersistenceConfig {
         ds.setIdleTimeout(30000);
         ds.setConnectionTimeout(30000);
 
-        // Ensure master schema exists
+        // Ensure master schema exists if script is present
         try (java.sql.Connection conn = ds.getConnection()) {
-            org.springframework.jdbc.datasource.init.ResourceDatabasePopulator populator =
-                    new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator();
-            populator.addScript(new org.springframework.core.io.ClassPathResource("db/master-schema.sql"));
-            populator.setContinueOnError(true);
-            populator.setIgnoreFailedDrops(true);
-            populator.populate(conn);
+            org.springframework.core.io.ClassPathResource masterSchema =
+                    new org.springframework.core.io.ClassPathResource("db/master-schema.sql");
+            if (masterSchema.exists()) {
+                org.springframework.jdbc.datasource.init.ResourceDatabasePopulator populator =
+                        new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator();
+                populator.addScript(masterSchema);
+                populator.setContinueOnError(true);
+                populator.setIgnoreFailedDrops(true);
+                populator.populate(conn);
+            }
         } catch (Exception e) {
             // Ignore if already created or offline during build
         }
@@ -73,11 +84,11 @@ public class PersistenceConfig {
 
     @Bean(name = "routingDataSource")
     @Primary
-    public DataSource routingDataSource(TenantDataSourceProvider tenantDataSourceProvider,
+    public DataSource routingDataSource(BankDataSourceProvider bankDataSourceProvider,
                                         @Qualifier("masterDataSource") DataSource masterDataSource) {
-        MultiTenantRoutingDataSource routingDataSource = new MultiTenantRoutingDataSource(tenantDataSourceProvider, masterDataSource);
+        MultiBankRoutingDataSource routingDataSource = new MultiBankRoutingDataSource(bankDataSourceProvider, masterDataSource);
         Map<Object, Object> targetDataSources = new HashMap<>();
-        targetDataSources.put(TenantContext.MASTER_TENANT_ID, masterDataSource);
+        targetDataSources.put(BankContext.MASTER_BANK_ID, masterDataSource);
 
         routingDataSource.setTargetDataSources(targetDataSources);
         routingDataSource.setDefaultTargetDataSource(masterDataSource);
@@ -100,7 +111,15 @@ public class PersistenceConfig {
 
         return builder
                 .dataSource(routingDataSource)
-                .packages("com.bank.los.master.entity", "com.bank.los.tenant.entity")
+                .packages(
+                        "com.bank.los.administration.master.entity",
+                        "com.bank.los.administration.audit.entity",
+                        "com.bank.los.bank.master.entity",
+                        "com.bank.los.bank.lead.entity",
+                        "com.bank.los.bank.product.entity",
+                        "com.bank.los.bank.loan.entity",
+                        "com.bank.los.bank.audit.entity"
+                )
                 .persistenceUnit("losPersistenceUnit")
                 .properties(properties)
                 .build();

@@ -17,6 +17,7 @@ target/
 *.iws
 *.iml
 *.ipr
+out/
 
 ### NetBeans ###
 /nbproject/private/
@@ -31,6 +32,73 @@ build/
 ### VS Code ###
 .vscode/
 
+### Operating System ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
 ### Log and temp files ###
 *.log
+*.tmp
+*.temp
 extracted_doc.txt
+
+### Environment & Secret Files (CRITICAL - DO NOT PUSH TO GIT) ###
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+!*.env.example
+
+### Spring Boot Secret Profiles & Credential Files ###
+*application-secret*.yml
+*application-secret*.yaml
+*application-secret*.properties
+*application-prod-secret*.yml
+*application-prod-secret*.yaml
+*application-prod-secret*.properties
+*application-local-override*.yml
+*application-local-override*.properties
+secrets.yml
+secrets.yaml
+secrets.properties
+
+### Certificates, Keys, and Keystores ###
+*.pem
+*.key
+*.pkcs12
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.cer
+*.crt
+*.der
+credentials.json
+client_secret*.json
+service-account*.json
+firebase-adminsdk*.json
+
+### Database Schema & SQL Scripts (CRITICAL - DO NOT PUSH TO GIT) ###
+*.sql
+*.sql.gz
+*.dump
+*.db
+*.sqlite
+*.sqlite3
+db/*.sql
+src/main/resources/db/*.sql
+LOS_Database_Schema.sql
+
+### Crashlytics / Diagnostics ###
+hs_err_pid*
+replay_pid*
+
+

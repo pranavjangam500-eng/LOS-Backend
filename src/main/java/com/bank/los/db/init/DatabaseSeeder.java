@@ -1,31 +1,35 @@
 package com.bank.los.db.init;
 
+import com.bank.los.administration.master.entity.InternalUser;
+import com.bank.los.administration.master.entity.LoginDirectory;
+import com.bank.los.administration.master.entity.MasterRole;
+import com.bank.los.administration.master.entity.Organization;
+import com.bank.los.administration.master.repository.InternalUserRepository;
+import com.bank.los.administration.master.repository.LoginDirectoryRepository;
+import com.bank.los.administration.master.repository.MasterRoleRepository;
+import com.bank.los.administration.master.repository.OrganizationRepository;
+import com.bank.los.bank.master.entity.Branch;
+import com.bank.los.bank.master.entity.Customer;
+import com.bank.los.bank.master.entity.OrganizationRole;
+import com.bank.los.bank.master.entity.OrganizationUser;
+import com.bank.los.bank.master.entity.Permission;
+import com.bank.los.bank.master.repository.BranchRepository;
+import com.bank.los.bank.master.repository.CustomerRepository;
+import com.bank.los.bank.master.repository.OrganizationRoleRepository;
+import com.bank.los.bank.master.repository.OrganizationUserRepository;
+import com.bank.los.bank.master.repository.PermissionRepository;
 import com.bank.los.common.constant.ApplicationConstants;
-import com.bank.los.config.TenantContext;
-import com.bank.los.master.entity.InternalUser;
-import com.bank.los.master.entity.LoginDirectory;
-import com.bank.los.master.entity.MasterRole;
-import com.bank.los.master.entity.Organization;
-import com.bank.los.master.repository.InternalUserRepository;
-import com.bank.los.master.repository.LoginDirectoryRepository;
-import com.bank.los.master.repository.MasterRoleRepository;
-import com.bank.los.master.repository.OrganizationRepository;
-import com.bank.los.tenant.entity.Branch;
-import com.bank.los.tenant.entity.Customer;
-import com.bank.los.tenant.entity.Permission;
-import com.bank.los.tenant.entity.TenantRole;
-import com.bank.los.tenant.entity.TenantUser;
-import com.bank.los.tenant.repository.BranchRepository;
-import com.bank.los.tenant.repository.CustomerRepository;
-import com.bank.los.tenant.repository.PermissionRepository;
-import com.bank.los.tenant.repository.TenantRoleRepository;
-import com.bank.los.tenant.repository.TenantUserRepository;
+import com.bank.los.config.BankContext;
+import com.bank.los.config.BankDataSourceProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.List;
 
 @Slf4j
@@ -33,47 +37,47 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DatabaseSeeder implements CommandLineRunner {
 
-    private final MasterRoleRepository       masterRoleRepository;
-    private final OrganizationRepository     organizationRepository;
-    private final InternalUserRepository     internalUserRepository;
-    private final LoginDirectoryRepository   loginDirectoryRepository;
+    private final MasterRoleRepository masterRoleRepository;
+    private final OrganizationRepository organizationRepository;
+    private final InternalUserRepository internalUserRepository;
+    private final LoginDirectoryRepository loginDirectoryRepository;
 
-    private final TenantRoleRepository       tenantRoleRepository;
-    private final BranchRepository           branchRepository;
-    private final TenantUserRepository       tenantUserRepository;
-    private final CustomerRepository         customerRepository;
-    private final PermissionRepository       permissionRepository;
-    private final PasswordEncoder            passwordEncoder;
-    private final com.bank.los.config.TenantDataSourceProvider tenantDataSourceProvider;
+    private final OrganizationRoleRepository organizationRoleRepository;
+    private final BranchRepository branchRepository;
+    private final OrganizationUserRepository organizationUserRepository;
+    private final CustomerRepository customerRepository;
+    private final PermissionRepository permissionRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final BankDataSourceProvider bankDataSourceProvider;
 
     @Override
     public void run(String... args) {
         log.info("Checking database initialization and seed data...");
         try {
             seedMasterDatabase();
-            seedTenantDatabase("los_hdfc01_db", "HDFC01");
-            seedTenantDatabase("los_bajaj02_db", "BAJAJ02");
+            seedOrganizationDatabase("los_hdfc01_db", "HDFC01");
+            seedOrganizationDatabase("los_bajaj02_db", "BAJAJ02");
             log.info("Database seeding completed successfully.");
         } catch (Exception e) {
             log.warn("Notice during seeding: {}", e.getMessage());
         } finally {
-            TenantContext.clear();
+            BankContext.clear();
         }
     }
 
     // =====================================================================
-    //  MASTER DATABASE
+    //  MASTER DATABASE (Administration Panel)
     // =====================================================================
 
     private void seedMasterDatabase() {
-        TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+        BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
 
         // Internal platform admin role
         MasterRole adminRole = masterRoleRepository.findByName(ApplicationConstants.Roles.INTERNAL_ADMIN)
                 .orElseGet(() -> masterRoleRepository.save(MasterRole.builder()
                         .name(ApplicationConstants.Roles.INTERNAL_ADMIN)
                         .panel(ApplicationConstants.Panels.INTERNAL)
-                        .description("Platform team; manages tenants and system features")
+                        .description("Platform team; manages organizations and system features")
                         .build()));
 
         // Sample organizations
@@ -131,14 +135,14 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         // Login directory entries for HDFC demo staff
-        registerLoginDirectoryEntry("admin@hdfcbank.com",    "EMP-HDFC-001", "+919876500001", hdfc, ApplicationConstants.UserTypes.STAFF);
-        registerLoginDirectoryEntry("maker@hdfcbank.com",    "EMP-HDFC-002", "+919876500002", hdfc, ApplicationConstants.UserTypes.STAFF);
-        registerLoginDirectoryEntry("checker@hdfcbank.com",  "EMP-HDFC-003", "+919876500003", hdfc, ApplicationConstants.UserTypes.STAFF);
-        registerLoginDirectoryEntry("viewer@hdfcbank.com",   "EMP-HDFC-004", "+919876500004", hdfc, ApplicationConstants.UserTypes.STAFF);
-        registerLoginDirectoryEntry("rajesh.kumar@gmail.com","CUST-HDFC-1001","+919876500005",hdfc, ApplicationConstants.UserTypes.CUSTOMER);
+        registerLoginDirectoryEntry("admin@hdfcbank.com", "EMP-HDFC-001", "+919876500001", hdfc, ApplicationConstants.UserTypes.STAFF);
+        registerLoginDirectoryEntry("maker@hdfcbank.com", "EMP-HDFC-002", "+919876500002", hdfc, ApplicationConstants.UserTypes.STAFF);
+        registerLoginDirectoryEntry("checker@hdfcbank.com", "EMP-HDFC-003", "+919876500003", hdfc, ApplicationConstants.UserTypes.STAFF);
+        registerLoginDirectoryEntry("viewer@hdfcbank.com", "EMP-HDFC-004", "+919876500004", hdfc, ApplicationConstants.UserTypes.STAFF);
+        registerLoginDirectoryEntry("rajesh.kumar@gmail.com", "CUST-HDFC-1001", "+919876500005", hdfc, ApplicationConstants.UserTypes.CUSTOMER);
 
         // Login directory entries for Bajaj demo staff
-        registerLoginDirectoryEntry("admin@bajajfinance.com","EMP-BJ-001",  "+919876500010", bajaj, ApplicationConstants.UserTypes.STAFF);
+        registerLoginDirectoryEntry("admin@bajajfinance.com", "EMP-BJ-001", "+919876500010", bajaj, ApplicationConstants.UserTypes.STAFF);
     }
 
     private void registerLoginDirectoryEntry(String email, String userCode, String phone, Organization org, String userType) {
@@ -154,18 +158,18 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     // =====================================================================
-    //  TENANT DATABASE
+    //  ORGANIZATION DATABASE (Bank / NBFC Panel)
     // =====================================================================
 
-    private void seedTenantDatabase(String tenantDbName, String orgCode) {
-        TenantContext.setCurrentTenant(tenantDbName);
-        TenantContext.setCurrentOrgCode(orgCode);
+    private void seedOrganizationDatabase(String orgDbName, String orgCode) {
+        BankContext.setCurrentBank(orgDbName);
+        BankContext.setCurrentBankCode(orgCode);
 
-        // ── 5 Tenant Roles ────────────────────────────────────────────────
-        TenantRole adminRole = seedRole("ADMIN",   "BANK_NBFC", "Bank/NBFC internal admin — configures org and assigns roles");
-        TenantRole makerRole = seedRole("MAKER",   "BANK_NBFC", "Creates and initiates loan records for Checker approval");
-        TenantRole checkerRole = seedRole("CHECKER","BANK_NBFC", "Reviews and approves Maker actions");
-        TenantRole viewerRole = seedRole("VIEWER", "BANK_NBFC", "Read-only access");
+        // ── 5 Organization Roles ──────────────────────────────────────────
+        OrganizationRole adminRole = seedRole("ADMIN", "BANK_NBFC", "Bank/NBFC internal admin — configures org and assigns roles");
+        OrganizationRole makerRole = seedRole("MAKER", "BANK_NBFC", "Creates and initiates loan records for Checker approval");
+        OrganizationRole checkerRole = seedRole("CHECKER", "BANK_NBFC", "Reviews and approves Maker actions");
+        OrganizationRole viewerRole = seedRole("VIEWER", "BANK_NBFC", "Read-only access");
         seedRole("CUSTOMER", "CUSTOMER", "Loan applicant");
 
         // ── Branches ──────────────────────────────────────────────────────
@@ -194,7 +198,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         // ── Seed Permissions & Role Mappings ─────────────────────────────
         seedPermissions();
 
-        seedRolePermissions(tenantDbName, adminRole, List.of(
+        seedRolePermissions(orgDbName, adminRole, List.of(
                 ApplicationConstants.Permissions.USER_CREATE,
                 ApplicationConstants.Permissions.USER_UPDATE,
                 ApplicationConstants.Permissions.USER_VIEW,
@@ -211,7 +215,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE
         ));
 
-        seedRolePermissions(tenantDbName, makerRole, List.of(
+        seedRolePermissions(orgDbName, makerRole, List.of(
                 ApplicationConstants.Permissions.LOAN_APPLICATION_CREATE,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_EDIT,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW,
@@ -224,7 +228,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.DASHBOARD_VIEW
         ));
 
-        seedRolePermissions(tenantDbName, checkerRole, List.of(
+        seedRolePermissions(orgDbName, checkerRole, List.of(
                 ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_VERIFY,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_APPROVE,
@@ -236,7 +240,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.DASHBOARD_VIEW
         ));
 
-        seedRolePermissions(tenantDbName, viewerRole, List.of(
+        seedRolePermissions(orgDbName, viewerRole, List.of(
                 ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW,
                 ApplicationConstants.Permissions.CUSTOMER_VIEW,
                 ApplicationConstants.Permissions.CUSTOMER_VIEW_ALL,
@@ -249,10 +253,10 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // ── Staff Users ───────────────────────────────────────────────────
         if ("HDFC01".equals(orgCode)) {
-            createStaffUser("admin@hdfcbank.com",   "EMP-HDFC-001", "admin",   "Vikram",   "Aditya",  "Mehta",    "+919876500001", "Admin@123",   adminRole,   mainBranch);
-            createStaffUser("maker@hdfcbank.com",   "EMP-HDFC-002", "maker01", "Rohan",    "Kumar",   "Verma",    "+919876500002", "Maker@123",   makerRole,   mainBranch);
-            createStaffUser("checker@hdfcbank.com", "EMP-HDFC-003", "chk01",   "Priyanka", "Devi",    "Nair",     "+919876500003", "Checker@123", checkerRole, mainBranch);
-            createStaffUser("viewer@hdfcbank.com",  "EMP-HDFC-004", "view01",  "Sanjay",   "Rao",     "Kulkarni", "+919876500004", "Viewer@123",  viewerRole,  mainBranch);
+            createStaffUser("admin@hdfcbank.com", "EMP-HDFC-001", "admin", "Vikram", "Aditya", "Mehta", "+919876500001", "Admin@123", adminRole, mainBranch);
+            createStaffUser("maker@hdfcbank.com", "EMP-HDFC-002", "maker01", "Rohan", "Kumar", "Verma", "+919876500002", "Maker@123", makerRole, mainBranch);
+            createStaffUser("checker@hdfcbank.com", "EMP-HDFC-003", "chk01", "Priyanka", "Devi", "Nair", "+919876500003", "Checker@123", checkerRole, mainBranch);
+            createStaffUser("viewer@hdfcbank.com", "EMP-HDFC-004", "view01", "Sanjay", "Rao", "Kulkarni", "+919876500004", "Viewer@123", viewerRole, mainBranch);
 
             // Demo customer
             if (customerRepository.findByEmail("rajesh.kumar@gmail.com").isEmpty()) {
@@ -269,13 +273,13 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .build());
             }
         } else if ("BAJAJ02".equals(orgCode)) {
-            createStaffUser("admin@bajajfinance.com","EMP-BJ-001","bj_admin","Ananya","R","Deshmukh","+919876500010","Admin@123",adminRole,mainBranch);
+            createStaffUser("admin@bajajfinance.com", "EMP-BJ-001", "bj_admin", "Ananya", "R", "Deshmukh", "+919876500010", "Admin@123", adminRole, mainBranch);
         }
     }
 
-    private TenantRole seedRole(String name, String panel, String description) {
-        return tenantRoleRepository.findByName(name)
-                .orElseGet(() -> tenantRoleRepository.save(TenantRole.builder()
+    private OrganizationRole seedRole(String name, String panel, String description) {
+        return organizationRoleRepository.findByName(name)
+                .orElseGet(() -> organizationRoleRepository.save(OrganizationRole.builder()
                         .name(name)
                         .panel(panel)
                         .description(description)
@@ -284,35 +288,35 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private void seedPermissions() {
         List<Object[]> perms = List.of(
-            // code,                                           description,                                module
-            new Object[]{ApplicationConstants.Permissions.USER_CREATE,          "Create new users",                  ApplicationConstants.PermissionModules.USER},
-            new Object[]{ApplicationConstants.Permissions.USER_UPDATE,          "Update user details",               ApplicationConstants.PermissionModules.USER},
-            new Object[]{ApplicationConstants.Permissions.USER_VIEW,            "View user details",                 ApplicationConstants.PermissionModules.USER},
-            new Object[]{ApplicationConstants.Permissions.USER_DEACTIVATE,      "Deactivate a user",                 ApplicationConstants.PermissionModules.USER},
-            new Object[]{ApplicationConstants.Permissions.USER_VERIFY,          "Verify pending user (2nd admin)",   ApplicationConstants.PermissionModules.USER},
-            new Object[]{ApplicationConstants.Permissions.USER_RESET_PASSWORD,  "Reset a user's password",           ApplicationConstants.PermissionModules.USER},
-            new Object[]{ApplicationConstants.Permissions.BRANCH_CREATE,        "Create branches",                   ApplicationConstants.PermissionModules.BRANCH},
-            new Object[]{ApplicationConstants.Permissions.BRANCH_UPDATE,        "Update branch details",             ApplicationConstants.PermissionModules.BRANCH},
-            new Object[]{ApplicationConstants.Permissions.BRANCH_VIEW,          "View branches",                     ApplicationConstants.PermissionModules.BRANCH},
-            new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_CREATE, "Create loan applications",       ApplicationConstants.PermissionModules.LOAN},
-            new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_EDIT,   "Edit loan applications",         ApplicationConstants.PermissionModules.LOAN},
-            new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW,   "View loan applications",         ApplicationConstants.PermissionModules.LOAN},
-            new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_SUBMIT, "Submit loan applications",       ApplicationConstants.PermissionModules.LOAN},
-            new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_VERIFY, "Verify loan applications",       ApplicationConstants.PermissionModules.LOAN},
-            new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_APPROVE,"Approve loan applications",      ApplicationConstants.PermissionModules.LOAN},
-            new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_REJECT, "Reject loan applications",       ApplicationConstants.PermissionModules.LOAN},
-            new Object[]{ApplicationConstants.Permissions.CUSTOMER_CREATE,      "Create customer records",           ApplicationConstants.PermissionModules.CUSTOMER},
-            new Object[]{ApplicationConstants.Permissions.CUSTOMER_EDIT,        "Edit customer details",             ApplicationConstants.PermissionModules.CUSTOMER},
-            new Object[]{ApplicationConstants.Permissions.CUSTOMER_VIEW,        "View own customers",                ApplicationConstants.PermissionModules.CUSTOMER},
-            new Object[]{ApplicationConstants.Permissions.CUSTOMER_VIEW_ALL,    "View all customers in org",         ApplicationConstants.PermissionModules.CUSTOMER},
-            new Object[]{ApplicationConstants.Permissions.DOCUMENT_UPLOAD,      "Upload documents",                  ApplicationConstants.PermissionModules.DOCUMENT},
-            new Object[]{ApplicationConstants.Permissions.DOCUMENT_VERIFY,      "Verify documents",                  ApplicationConstants.PermissionModules.DOCUMENT},
-            new Object[]{ApplicationConstants.Permissions.DOCUMENT_VIEW,        "View documents",                    ApplicationConstants.PermissionModules.DOCUMENT},
-            new Object[]{ApplicationConstants.Permissions.REPORT_VIEW,          "View reports",                      ApplicationConstants.PermissionModules.REPORT},
-            new Object[]{ApplicationConstants.Permissions.REPORT_EXPORT,        "Export reports",                    ApplicationConstants.PermissionModules.REPORT},
-            new Object[]{ApplicationConstants.Permissions.DASHBOARD_VIEW,       "View dashboard",                    ApplicationConstants.PermissionModules.DASHBOARD},
-            new Object[]{ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW,"View dashboard analytics",       ApplicationConstants.PermissionModules.DASHBOARD},
-            new Object[]{ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE,"Manage role permissions",          ApplicationConstants.PermissionModules.SYSTEM}
+                // code, description, module
+                new Object[]{ApplicationConstants.Permissions.USER_CREATE, "Create new users", ApplicationConstants.PermissionModules.USER},
+                new Object[]{ApplicationConstants.Permissions.USER_UPDATE, "Update user details", ApplicationConstants.PermissionModules.USER},
+                new Object[]{ApplicationConstants.Permissions.USER_VIEW, "View user details", ApplicationConstants.PermissionModules.USER},
+                new Object[]{ApplicationConstants.Permissions.USER_DEACTIVATE, "Deactivate a user", ApplicationConstants.PermissionModules.USER},
+                new Object[]{ApplicationConstants.Permissions.USER_VERIFY, "Verify pending user (2nd admin)", ApplicationConstants.PermissionModules.USER},
+                new Object[]{ApplicationConstants.Permissions.USER_RESET_PASSWORD, "Reset a user's password", ApplicationConstants.PermissionModules.USER},
+                new Object[]{ApplicationConstants.Permissions.BRANCH_CREATE, "Create branches", ApplicationConstants.PermissionModules.BRANCH},
+                new Object[]{ApplicationConstants.Permissions.BRANCH_UPDATE, "Update branch details", ApplicationConstants.PermissionModules.BRANCH},
+                new Object[]{ApplicationConstants.Permissions.BRANCH_VIEW, "View branches", ApplicationConstants.PermissionModules.BRANCH},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_CREATE, "Create loan applications", ApplicationConstants.PermissionModules.LOAN},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_EDIT, "Edit loan applications", ApplicationConstants.PermissionModules.LOAN},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW, "View loan applications", ApplicationConstants.PermissionModules.LOAN},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_SUBMIT, "Submit loan applications", ApplicationConstants.PermissionModules.LOAN},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_VERIFY, "Verify loan applications", ApplicationConstants.PermissionModules.LOAN},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_APPROVE, "Approve loan applications", ApplicationConstants.PermissionModules.LOAN},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_REJECT, "Reject loan applications", ApplicationConstants.PermissionModules.LOAN},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_CREATE, "Create customer records", ApplicationConstants.PermissionModules.CUSTOMER},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_EDIT, "Edit customer details", ApplicationConstants.PermissionModules.CUSTOMER},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_VIEW, "View own customers", ApplicationConstants.PermissionModules.CUSTOMER},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_VIEW_ALL, "View all customers in org", ApplicationConstants.PermissionModules.CUSTOMER},
+                new Object[]{ApplicationConstants.Permissions.DOCUMENT_UPLOAD, "Upload documents", ApplicationConstants.PermissionModules.DOCUMENT},
+                new Object[]{ApplicationConstants.Permissions.DOCUMENT_VERIFY, "Verify documents", ApplicationConstants.PermissionModules.DOCUMENT},
+                new Object[]{ApplicationConstants.Permissions.DOCUMENT_VIEW, "View documents", ApplicationConstants.PermissionModules.DOCUMENT},
+                new Object[]{ApplicationConstants.Permissions.REPORT_VIEW, "View reports", ApplicationConstants.PermissionModules.REPORT},
+                new Object[]{ApplicationConstants.Permissions.REPORT_EXPORT, "Export reports", ApplicationConstants.PermissionModules.REPORT},
+                new Object[]{ApplicationConstants.Permissions.DASHBOARD_VIEW, "View dashboard", ApplicationConstants.PermissionModules.DASHBOARD},
+                new Object[]{ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW, "View dashboard analytics", ApplicationConstants.PermissionModules.DASHBOARD},
+                new Object[]{ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE, "Manage role permissions", ApplicationConstants.PermissionModules.SYSTEM}
         );
 
         for (Object[] p : perms) {
@@ -334,9 +338,9 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void createStaffUser(String email, String empNo, String username,
                                  String firstName, String middleName, String lastName,
                                  String mobile, String rawPassword,
-                                 TenantRole role, Branch branch) {
-        if (tenantUserRepository.findByEmail(email).isEmpty()) {
-            tenantUserRepository.save(TenantUser.builder()
+                                 OrganizationRole role, Branch branch) {
+        if (organizationUserRepository.findByEmail(email).isEmpty()) {
+            organizationUserRepository.save(OrganizationUser.builder()
                     .empNo(empNo)
                     .username(username)
                     .loginBranch(branch)
@@ -348,7 +352,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .mobile(mobile)
                     .passwordHash(passwordEncoder.encode(rawPassword))
                     .isActive(true)
-                    .status(ApplicationConstants.UserStatus.OPERATIVE)  // demo seed
+                    .status(ApplicationConstants.UserStatus.OPERATIVE)
                     .twoFaEnabled(true)
                     .loginOnHolidays(false)
                     .multiBranchAccess(false)
@@ -358,16 +362,16 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
     }
 
-    private void seedRolePermissions(String tenantDb, TenantRole role, List<String> permCodes) {
+    private void seedRolePermissions(String orgDb, OrganizationRole role, List<String> permCodes) {
         if (role == null || permCodes == null) return;
-        javax.sql.DataSource ds = tenantDataSourceProvider.getTenantDataSource(tenantDb);
+        DataSource ds = bankDataSourceProvider.getBankDataSource(orgDb);
         if (ds == null) return;
 
-        try (java.sql.Connection conn = ds.getConnection()) {
+        try (Connection conn = ds.getConnection()) {
             conn.setAutoCommit(true);
             for (String code : permCodes) {
                 permissionRepository.findByCode(code).ifPresent(p -> {
-                    try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                    try (PreparedStatement ps = conn.prepareStatement(
                             "INSERT INTO identity.role_permissions (role_id, permission_id) " +
                             "SELECT " + role.getId() + ", " + p.getId() + " WHERE NOT EXISTS (" +
                             "SELECT 1 FROM identity.role_permissions WHERE role_id = " + role.getId() + " AND permission_id = " + p.getId() + ")")) {
