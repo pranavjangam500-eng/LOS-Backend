@@ -42,6 +42,13 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        
+        // Skip rate limiting for health check / actuator endpoints
+        if (path.equals("/health") || path.equals("/api/v1/health") || path.equals("/api/v1/auth/health") || path.startsWith("/actuator")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String clientIp = getClientIp(request);
 
         boolean isAuthEndpoint = path.startsWith("/api/v1/auth/login") ||

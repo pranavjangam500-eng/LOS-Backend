@@ -95,7 +95,11 @@ Scroll down to the **Environment Variables** section on Render and add the follo
 - **Swagger UI**:  
   `https://<YOUR-RENDER-URL>.onrender.com/swagger-ui.html`
 
-- **Health Check**:  
+- **Public Health & Keep-Alive Check**:  
+  `https://<YOUR-RENDER-URL>.onrender.com/api/v1/health`  
+  *(Also available at `/health` and `/actuator/health`)*
+
+- **Auth Health Check**:  
   `https://<YOUR-RENDER-URL>.onrender.com/api/v1/auth/health`
 
 - **Live Login Test (cURL)**:
@@ -107,3 +111,26 @@ Scroll down to the **Environment Variables** section on Render and add the follo
       "password": "Admin@123"
     }'
   ```
+
+---
+
+## 5. Preventing Render Free Tier 15-Minute Spin-Down (Keep Backend 24/7 Alive)
+
+Render free instances spin down after 15 minutes of inactivity. We provide two easy methods to keep it permanently awake:
+
+### Option A: Built-in Self-Ping Heartbeat (Automatic)
+Render automatically exposes the `RENDER_EXTERNAL_URL` environment variable to your web service (e.g., `https://los-backend.onrender.com`). 
+1. The backend has a built-in `RenderKeepAliveService` that pings `https://<YOUR-RENDER-URL>/api/v1/health` every **10 minutes** over the public internet.
+2. If Render doesn't set `RENDER_EXTERNAL_URL` automatically, simply add this Environment Variable in your Render Dashboard:
+   - **Key**: `APP_KEEP_ALIVE_URL`
+   - **Value**: `https://<your-service-name>.onrender.com`
+
+### Option B: Free External Uptime Monitor (Recommended for 100% Reliability)
+Set up a free monitor that pings your backend every 5 to 10 minutes from outside:
+1. **[UptimeRobot](https://uptimerobot.com)** (Free):
+   - Monitor Type: `HTTP(s)`
+   - URL: `https://<your-service-name>.onrender.com/api/v1/health`
+   - Monitoring Interval: `5 minutes` or `10 minutes`
+2. **[cron-job.org](https://cron-job.org)** (Free):
+   - Create a cron job with URL `https://<your-service-name>.onrender.com/api/v1/health` running every 10 minutes.
+

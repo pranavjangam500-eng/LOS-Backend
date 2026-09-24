@@ -51,6 +51,13 @@ app:
     rate-limit:
       auth-per-minute: ${RATE_LIMIT_AUTH_PER_MIN:10}
       api-per-minute: ${RATE_LIMIT_API_PER_MIN:120}
+  # Render / Cloud Free Tier Keep-Alive Heartbeat
+  render:
+    keep-alive:
+      enabled: ${RENDER_KEEP_ALIVE_ENABLED:true}
+      url: ${RENDER_EXTERNAL_URL:${APP_KEEP_ALIVE_URL:}}
+      interval-ms: ${RENDER_KEEP_ALIVE_INTERVAL_MS:600000} # 10 minutes (prevents 15m idle shutdown)
+
   # Mail — disabled until SMTP credentials are configured via env vars
   # To activate: set MAIL_ENABLED=true and provide SMTP creds
   mail:
