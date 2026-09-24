@@ -9,6 +9,7 @@ public final class ApplicationConstants {
     /** Role names — must match identity.roles.name */
     public static final class Roles {
         public static final String INTERNAL_ADMIN = "INTERNAL_ADMIN"; // our platform team (master DB)
+        public static final String SUPER_ADMIN    = "SUPER_ADMIN";    // platform super admin alias
         public static final String ADMIN          = "ADMIN";           // bank/NBFC internal admin (tenant DB)
         public static final String CHECKER        = "CHECKER";
         public static final String MAKER          = "MAKER";

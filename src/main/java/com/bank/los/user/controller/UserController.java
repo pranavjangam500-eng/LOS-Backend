@@ -7,6 +7,7 @@ import com.bank.los.user.dto.CreateUserRequest;
 import com.bank.los.user.dto.UserResponse;
 import com.bank.los.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-@Tag(name = "User Management", description = "Tenant staff user administration (Bank Admin / Super Admin)")
+@Tag(name = "User Management", description = "Tenant staff user administration (Super Admin & Bank Admin)")
 @SecurityRequirement(name = "BearerAuth")
 public class UserController {
 
@@ -30,9 +31,12 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'INTERNAL_ADMIN')")
-    @Operation(summary = "List all staff users in this bank/NBFC")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(@AuthenticationPrincipal UserPrincipal principal) {
-        List<UserResponse> users = userService.getAllUsers(principal);
+    @Operation(summary = "List staff users (Super Admin can filter by organizationId or list all across banks; Bank Admin lists within their own bank)")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Parameter(description = "Filter users by Bank/Organization ID (for Super Admin)")
+            @RequestParam(required = false) Long organizationId) {
+        List<UserResponse> users = userService.getAllUsers(principal, organizationId);
         return ResponseEntity.ok(ApiResponse.ok(users));
     }
 
@@ -41,19 +45,22 @@ public class UserController {
     @Operation(summary = "Get user details by ID")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(
             @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long id) {
-        UserResponse user = userService.getUserById(principal, id);
+            @PathVariable Long id,
+            @Parameter(description = "Bank/Organization ID (for Super Admin)")
+            @RequestParam(required = false) Long organizationId) {
+        UserResponse user = userService.getUserById(principal, id, organizationId);
         return ResponseEntity.ok(ApiResponse.ok(user));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'INTERNAL_ADMIN')")
-    @Operation(summary = "Create and onboard a new Bank/NBFC staff user (e.g. Maker, Checker, Viewer)")
+    @Operation(summary = "Create and assign a new user to a Bank/NBFC with a specific role (e.g. Bank Admin, Maker, Checker, Viewer)")
     public ResponseEntity<ApiResponse<UserResponse>> createUser(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreateUserRequest request) {
         UserResponse response = userService.createUser(principal, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("User created successfully (Status: PENDING_VERIFICATION)", response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(
+                "User created successfully (Status: " + response.getStatus() + ")", response));
     }
 
     @PostMapping("/{id}/verify")

@@ -17,6 +17,9 @@ import java.time.LocalTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
     private Long id;
+    private Long organizationId;
+    private String organizationCode;
+    private String organizationName;
     private String empNo;
     private String username;
     private String firstName;

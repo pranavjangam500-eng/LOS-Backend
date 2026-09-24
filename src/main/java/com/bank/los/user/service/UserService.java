@@ -1,5 +1,6 @@
 package com.bank.los.user.service;
 
+import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.common.validation.PasswordPolicy;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -41,55 +43,159 @@ public class UserService {
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<UserResponse> getAllUsers(UserPrincipal principal) {
-        TenantContext.setCurrentTenant(principal.getTenantDbName());
-        return tenantUserRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public List<UserResponse> getAllUsers(UserPrincipal principal, Long organizationId) {
+        boolean isInternalAdmin = isInternalAdmin(principal);
+
+        if (isInternalAdmin) {
+            if (organizationId != null) {
+                TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+                Organization org = organizationRepository.findById(organizationId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
+                TenantContext.setCurrentTenant(org.getDbName());
+                TenantContext.setCurrentOrgCode(org.getCode());
+                return tenantUserRepository.findAll().stream()
+                        .map(u -> mapToResponse(u, org))
+                        .collect(Collectors.toList());
+            } else {
+                // Return all users across all active organizations
+                TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+                List<Organization> orgs = organizationRepository.findAll();
+                List<UserResponse> allUsers = new ArrayList<>();
+                for (Organization org : orgs) {
+                    try {
+                        TenantContext.setCurrentTenant(org.getDbName());
+                        TenantContext.setCurrentOrgCode(org.getCode());
+                        List<UserResponse> orgUsers = tenantUserRepository.findAll().stream()
+                                .map(u -> mapToResponse(u, org))
+                                .collect(Collectors.toList());
+                        allUsers.addAll(orgUsers);
+                    } catch (Exception ex) {
+                        log.debug("Notice listing users for org {}: {}", org.getCode(), ex.getMessage());
+                    }
+                }
+                return allUsers;
+            }
+        } else {
+            // Tenant admin / staff querying their own organization
+            TenantContext.setCurrentTenant(principal.getTenantDbName());
+            TenantContext.setCurrentOrgCode(principal.getOrganizationCode());
+            return tenantUserRepository.findAll().stream()
+                    .map(u -> mapToResponse(u, null))
+                    .collect(Collectors.toList());
+        }
     }
 
-    public UserResponse getUserById(UserPrincipal principal, Long id) {
-        TenantContext.setCurrentTenant(principal.getTenantDbName());
+    public UserResponse getUserById(UserPrincipal principal, Long id, Long organizationId) {
+        boolean isInternalAdmin = isInternalAdmin(principal);
+        Organization targetOrg = null;
+
+        if (isInternalAdmin) {
+            if (organizationId != null) {
+                TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+                targetOrg = organizationRepository.findById(organizationId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
+                TenantContext.setCurrentTenant(targetOrg.getDbName());
+                TenantContext.setCurrentOrgCode(targetOrg.getCode());
+            } else {
+                // Look up in login directory
+                TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+                // Search in current context or master
+            }
+        } else {
+            TenantContext.setCurrentTenant(principal.getTenantDbName());
+            TenantContext.setCurrentOrgCode(principal.getOrganizationCode());
+        }
+
+        final Organization finalOrg = targetOrg;
         TenantUser user = tenantUserRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        return mapToResponse(user);
+        return mapToResponse(user, finalOrg);
     }
 
     @Transactional
     public UserResponse createUser(UserPrincipal principal, CreateUserRequest request) {
         PasswordPolicy.validate(request.getPassword());
-        String tenantDb = principal.getTenantDbName();
-        String orgCode = principal.getOrganizationCode();
+        boolean isInternalAdmin = isInternalAdmin(principal);
 
+        Organization org;
+        if (isInternalAdmin) {
+            TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+            if (request.getOrganizationId() != null) {
+                org = organizationRepository.findById(request.getOrganizationId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", request.getOrganizationId()));
+            } else if (request.getOrganizationCode() != null && !request.getOrganizationCode().isBlank()) {
+                org = organizationRepository.findByCode(request.getOrganizationCode().trim().toUpperCase())
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "code", request.getOrganizationCode()));
+            } else {
+                throw new BusinessException("ORGANIZATION_REQUIRED", "Please specify organizationId or organizationCode when creating a bank user as Super Admin");
+            }
+        } else {
+            TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+            org = organizationRepository.findByCode(principal.getOrganizationCode())
+                    .orElseThrow(() -> new ResourceNotFoundException("Organization", "code", principal.getOrganizationCode()));
+        }
+
+        String tenantDb = org.getDbName();
+        String orgCode = org.getCode();
+
+        // 1. Check globally in Master Login Directory for unique email
+        TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
+        if (loginDirectoryRepository.findByEmail(request.getEmail().trim().toLowerCase()).isPresent()) {
+            throw new BusinessException("EMAIL_EXISTS", "User with email '" + request.getEmail() + "' is already registered in the platform");
+        }
+
+        // 2. Switch to target Tenant DB
         TenantContext.setCurrentTenant(tenantDb);
+        TenantContext.setCurrentOrgCode(orgCode);
 
-        if (tenantUserRepository.existsByUsername(request.getUsername())) {
-            throw new BusinessException("USERNAME_EXISTS", "User with username '" + request.getUsername() + "' already exists");
+        if (tenantUserRepository.existsByUsername(request.getUsername().trim().toLowerCase())) {
+            throw new BusinessException("USERNAME_EXISTS", "User with username '" + request.getUsername() + "' already exists in " + org.getName());
         }
 
-        if (tenantUserRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException("EMAIL_EXISTS", "User with email '" + request.getEmail() + "' already exists");
+        if (tenantUserRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
+            throw new BusinessException("EMAIL_EXISTS", "User with email '" + request.getEmail() + "' already exists in " + org.getName());
         }
 
+        // 3. Resolve Role in tenant DB
+        TenantRole role = null;
+        if (request.getRoleId() != null) {
+            role = tenantRoleRepository.findById(request.getRoleId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
+        } else if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
+            String roleName = request.getRoleName().trim().toUpperCase();
+            role = tenantRoleRepository.findByName(roleName)
+                    .orElseThrow(() -> new ResourceNotFoundException("Role", "name", roleName));
+        } else {
+            // Default to ADMIN if created by Super Admin, or VIEWER
+            role = tenantRoleRepository.findByName(isInternalAdmin ? "ADMIN" : "VIEWER")
+                    .orElseThrow(() -> new BusinessException("ROLE_REQUIRED", "Could not resolve default role in tenant database"));
+        }
+
+        // 4. Resolve Branch in tenant DB
         Branch loginBranch = null;
         if (Boolean.TRUE.equals(request.getMultiBranchAccess())) {
             if (request.getLoginBranchId() != null) {
                 loginBranch = branchRepository.findById(request.getLoginBranchId()).orElse(null);
             }
         } else {
-            if (request.getLoginBranchId() == null) {
-                throw new BusinessException("BRANCH_REQUIRED", "Login Branch is mandatory when Multi-Branch Access is not enabled");
+            if (request.getLoginBranchId() != null) {
+                loginBranch = branchRepository.findById(request.getLoginBranchId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Branch", "id", request.getLoginBranchId()));
+            } else {
+                // Pick primary/first active branch in this tenant if exists
+                loginBranch = branchRepository.findAll().stream().findFirst().orElse(null);
             }
-            loginBranch = branchRepository.findById(request.getLoginBranchId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Branch", "id", request.getLoginBranchId()));
         }
-
-        TenantRole role = tenantRoleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
 
         String empNo = request.getEmpNo();
         if (empNo == null || empNo.isBlank()) {
-            empNo = "EMP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            empNo = "EMP-" + orgCode + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        }
+
+        // Initial status: OPERATIVE when created by Super Admin (so bank admin can login immediately)
+        String initialStatus = request.getStatus();
+        if (initialStatus == null || initialStatus.isBlank()) {
+            initialStatus = isInternalAdmin ? ApplicationConstants.UserStatus.OPERATIVE : ApplicationConstants.UserStatus.PENDING_VERIFICATION;
         }
 
         TenantUser user = TenantUser.builder()
@@ -97,7 +203,7 @@ public class UserService {
                 .username(request.getUsername().trim().toLowerCase())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .twoFaEnabled(request.getTwoFaEnabled() != null ? request.getTwoFaEnabled() : true)
-                .status("PENDING_VERIFICATION")
+                .status(initialStatus)
                 .isActive(true)
                 .role(role)
                 .loginBranch(loginBranch)
@@ -109,7 +215,7 @@ public class UserService {
                 .email(request.getEmail().trim().toLowerCase())
                 .mobile(request.getMobile())
                 .gender(request.getGender())
-                .designation(request.getDesignation())
+                .designation(request.getDesignation() != null ? request.getDesignation() : (role.getName() + " - " + org.getName()))
                 .loginOnHolidays(Boolean.TRUE.equals(request.getLoginOnHolidays()))
                 .loginTime(request.getLoginTime())
                 .logoutTime(request.getLogoutTime())
@@ -122,27 +228,26 @@ public class UserService {
 
         TenantUser savedUser = tenantUserRepository.save(user);
 
-        // Register in Master Login Directory for routing
+        // 5. Register in Master Login Directory for dynamic routing
         try {
             TenantContext.setCurrentTenant(TenantContext.MASTER_TENANT_ID);
-            Organization org = organizationRepository.findByCode(orgCode)
-                    .orElseThrow(() -> new ResourceNotFoundException("Organization", "code", orgCode));
-
             LoginDirectory loginDirectory = LoginDirectory.builder()
                     .userCode(savedUser.getEmpNo())
                     .email(savedUser.getEmail())
                     .phone(savedUser.getMobile())
                     .organization(org)
-                    .userType("STAFF")
+                    .userType(ApplicationConstants.UserTypes.STAFF)
                     .build();
 
             loginDirectoryRepository.save(loginDirectory);
         } finally {
             TenantContext.setCurrentTenant(tenantDb);
+            TenantContext.setCurrentOrgCode(orgCode);
         }
 
-        log.info("Created staff user empNo={} username={} for tenant={}", savedUser.getEmpNo(), savedUser.getUsername(), tenantDb);
-        return mapToResponse(savedUser);
+        log.info("Successfully created staff user empNo={} username={} role={} for organization={}",
+                savedUser.getEmpNo(), savedUser.getUsername(), role.getName(), orgCode);
+        return mapToResponse(savedUser, org);
     }
 
     @Transactional
@@ -153,11 +258,11 @@ public class UserService {
         TenantUser user = tenantUserRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        if (user.getCreatedBy() != null && user.getCreatedBy().equals(principal.getId())) {
+        if (!isInternalAdmin(principal) && user.getCreatedBy() != null && user.getCreatedBy().equals(principal.getId())) {
             throw new BusinessException("MAKER_CHECKER_VIOLATION", "The creator of the user cannot verify/approve the same user record (Maker-Checker policy).");
         }
 
-        user.setStatus("OPERATIVE");
+        user.setStatus(ApplicationConstants.UserStatus.OPERATIVE);
         user.setVerifiedBy(principal.getId());
         user.setVerifiedDate(LocalDateTime.now());
         user.setModifiedBy(principal.getId());
@@ -165,7 +270,7 @@ public class UserService {
 
         TenantUser updated = tenantUserRepository.save(user);
         log.info("User id={} verified and marked OPERATIVE by verifier={}", userId, principal.getId());
-        return mapToResponse(updated);
+        return mapToResponse(updated, null);
     }
 
     @Transactional
@@ -186,9 +291,12 @@ public class UserService {
         log.info("Password reset by admin id={} for user id={}", principal.getId(), userId);
     }
 
-    public UserResponse mapToResponse(TenantUser user) {
+    public UserResponse mapToResponse(TenantUser user, Organization org) {
         return UserResponse.builder()
                 .id(user.getId())
+                .organizationId(org != null ? org.getId() : null)
+                .organizationCode(org != null ? org.getCode() : null)
+                .organizationName(org != null ? org.getName() : null)
                 .empNo(user.getEmpNo())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
@@ -222,5 +330,13 @@ public class UserService {
                 .modifiedBy(user.getModifiedBy())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    private boolean isInternalAdmin(UserPrincipal principal) {
+        return principal != null && (
+                ApplicationConstants.Roles.INTERNAL_ADMIN.equalsIgnoreCase(principal.getRole()) ||
+                ApplicationConstants.Roles.SUPER_ADMIN.equalsIgnoreCase(principal.getRole()) ||
+                ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(principal.getUserType())
+        );
     }
 }

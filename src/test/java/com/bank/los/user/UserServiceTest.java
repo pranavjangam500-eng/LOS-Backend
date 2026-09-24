@@ -1,0 +1,119 @@
+package com.bank.los.user;
+
+import com.bank.los.auth.dto.request.LoginRequest;
+import com.bank.los.auth.dto.request.VerifyOtpRequest;
+import com.bank.los.auth.dto.response.LoginResponse;
+import com.bank.los.auth.service.AuthenticationService;
+import com.bank.los.config.TenantContext;
+import com.bank.los.organization.dto.CreateOrganizationRequest;
+import com.bank.los.organization.dto.OrganizationResponse;
+import com.bank.los.organization.service.OrganizationService;
+import com.bank.los.security.UserPrincipal;
+import com.bank.los.user.dto.CreateUserRequest;
+import com.bank.los.user.dto.UserResponse;
+import com.bank.los.user.service.UserService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@ActiveProfiles("local")
+class UserServiceTest {
+
+    @Autowired
+    private OrganizationService organizationService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private AuthenticationService authenticationService;
+
+    @Test
+    @DisplayName("Should register bank with organizational info and allow Super Admin to create Bank Admin who logs in")
+    void testBankOnboardingAndAdminAssignmentFlow() {
+        // 1. Super Admin registers a new Bank (only organization info)
+        String orgCode = "ICICI99";
+        String dbName = "los_icici99_db";
+
+        CreateOrganizationRequest orgRequest = CreateOrganizationRequest.builder()
+                .name("ICICI Bank Ltd")
+                .code(orgCode)
+                .type("BANK")
+                .contactEmail("contact@icicibank.com")
+                .contactPhone("+912240001000")
+                .dbName(dbName)
+                .dbHost("localhost")
+                .dbPort(5432)
+                .build();
+
+        OrganizationResponse orgResponse = organizationService.createOrganization(orgRequest);
+        assertNotNull(orgResponse);
+        assertEquals(orgCode, orgResponse.getCode());
+        assertEquals("contact@icicibank.com", orgResponse.getContactEmail());
+
+        // 2. Super Admin creates a Bank Admin user for this new Bank
+        UserPrincipal superAdminPrincipal = UserPrincipal.builder()
+                .id(1L)
+                .email("admin@losplatform.com")
+                .userCode("EMP-MST-001")
+                .role("INTERNAL_ADMIN")
+                .userType("INTERNAL")
+                .tenantDbName(TenantContext.MASTER_TENANT_ID)
+                .organizationCode("MASTER")
+                .active(true)
+                .build();
+
+        CreateUserRequest adminUserRequest = CreateUserRequest.builder()
+                .organizationId(orgResponse.getId())
+                .username("icici_admin")
+                .email("admin@icicibank.com")
+                .password("Admin@123")
+                .roleName("ADMIN")
+                .firstName("Aditya")
+                .lastName("Kapoor")
+                .mobile("+919811122233")
+                .status("OPERATIVE")
+                .build();
+
+        UserResponse userResponse = userService.createUser(superAdminPrincipal, adminUserRequest);
+        assertNotNull(userResponse);
+        assertEquals("icici_admin", userResponse.getUsername());
+        assertEquals("admin@icicibank.com", userResponse.getEmail());
+        assertEquals("ADMIN", userResponse.getRoleName());
+        assertEquals("OPERATIVE", userResponse.getStatus());
+        assertEquals(orgCode, userResponse.getOrganizationCode());
+
+        // 3. Newly created Bank Admin logs in and gets routed to ICICI tenant dashboard
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("admin@icicibank.com")
+                .password("Admin@123")
+                .build();
+
+        LoginResponse loginResp1 = authenticationService.login(loginRequest);
+        assertNotNull(loginResp1);
+        assertTrue(Boolean.TRUE.equals(loginResp1.getOtpRequired()));
+
+        // Complete 2FA
+        LoginResponse loginResp2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
+                .tempSessionToken(loginResp1.getTempSessionToken())
+                .otp(loginResp1.getDevOtp())
+                .build());
+
+        assertNotNull(loginResp2);
+        assertEquals("ADMIN", loginResp2.getUser().getRole());
+        assertEquals(orgCode, loginResp2.getUser().getOrganizationCode());
+        assertEquals("/dashboard/admin", loginResp2.getDashboardUrl());
+
+        // 4. Super Admin lists users of this bank
+        List<UserResponse> iciciUsers = userService.getAllUsers(superAdminPrincipal, orgResponse.getId());
+        assertFalse(iciciUsers.isEmpty());
+        assertTrue(iciciUsers.stream().anyMatch(u -> "admin@icicibank.com".equals(u.getEmail())));
+    }
+}
