@@ -9,20 +9,47 @@ CREATE SCHEMA IF NOT EXISTS customer;
 -- organization.organizations
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS organization.organizations (
-    id              BIGSERIAL PRIMARY KEY,
-    name            VARCHAR(150) NOT NULL,
-    code            VARCHAR(20)  NOT NULL UNIQUE,
-    type            VARCHAR(20)  NOT NULL,
-    status          VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
-    contact_email   VARCHAR(150),
-    contact_phone   VARCHAR(20),
-    db_name         VARCHAR(100) NOT NULL UNIQUE,
-    db_host         VARCHAR(150) NOT NULL DEFAULT 'localhost',
-    db_port         INT          NOT NULL DEFAULT 5432,
-    created_by      BIGINT,
-    created_at      TIMESTAMP    NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMP    NOT NULL DEFAULT now()
+    id                      BIGSERIAL PRIMARY KEY,
+    uuid                    UUID UNIQUE DEFAULT gen_random_uuid(),
+    institution_code        VARCHAR(50)  NOT NULL UNIQUE,
+    institution_name        VARCHAR(150) NOT NULL,
+    legal_name              VARCHAR(200),
+    short_name              VARCHAR(50),
+    institution_type        VARCHAR(50)  NOT NULL,
+    registration_number     VARCHAR(100),
+    pan                     VARCHAR(20),
+    cin                     VARCHAR(50),
+    website                 VARCHAR(255),
+    logo                    TEXT,
+    regulatory_authority_id UUID,
+    regulatory_status       VARCHAR(50)  NOT NULL DEFAULT 'ACTIVE',
+    country                 VARCHAR(100) NOT NULL DEFAULT 'India',
+    status                  VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    contact_email           VARCHAR(150),
+    contact_phone           VARCHAR(20),
+    db_name                 VARCHAR(100) NOT NULL UNIQUE,
+    db_host                 VARCHAR(150) NOT NULL DEFAULT 'localhost',
+    db_port                 INT          NOT NULL DEFAULT 5432,
+    created_by              BIGINT,
+    created_at              TIMESTAMP    NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMP    NOT NULL DEFAULT now()
 );
+
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS uuid UUID DEFAULT gen_random_uuid();
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS institution_code VARCHAR(50);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS institution_name VARCHAR(150);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS short_name VARCHAR(50);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS institution_type VARCHAR(50);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS registration_number VARCHAR(100);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS pan VARCHAR(20);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS cin VARCHAR(50);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS website VARCHAR(255);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS logo TEXT;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS regulatory_authority_id UUID;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS regulatory_status VARCHAR(50) DEFAULT 'ACTIVE';
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'India';
+
 
 -- -----------------------------------------------------------------------
 -- identity.roles  (master — INTERNAL_ADMIN / SUPER_ADMIN)

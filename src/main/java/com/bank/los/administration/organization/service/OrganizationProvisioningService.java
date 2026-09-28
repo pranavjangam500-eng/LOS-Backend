@@ -46,6 +46,7 @@ public class OrganizationProvisioningService {
             BankContext.setCurrentBankCode(orgCode);
 
             // 3. Seed default roles
+            OrganizationRole superAdminRole = seedRole("SUPER_ADMIN", "BANK_NBFC", "Bank/NBFC Super Admin — full control within this Bank/NBFC");
             OrganizationRole adminRole = seedRole("ADMIN", "BANK_NBFC", "Bank/NBFC internal admin — configures org and manages users");
             OrganizationRole makerRole = seedRole("MAKER", "BANK_NBFC", "Creates and initiates loan records for Checker approval");
             OrganizationRole checkerRole = seedRole("CHECKER", "BANK_NBFC", "Reviews and approves Maker actions");
@@ -68,7 +69,7 @@ public class OrganizationProvisioningService {
 
             // 5. Seed permissions & role mappings
             seedPermissions();
-            seedRolePermissions(orgDb, adminRole, List.of(
+            List<String> adminPerms = List.of(
                     ApplicationConstants.Permissions.USER_CREATE,
                     ApplicationConstants.Permissions.USER_UPDATE,
                     ApplicationConstants.Permissions.USER_VIEW,
@@ -83,7 +84,10 @@ public class OrganizationProvisioningService {
                     ApplicationConstants.Permissions.DASHBOARD_VIEW,
                     ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW,
                     ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE
-            ));
+            );
+            seedRolePermissions(orgDb, superAdminRole, adminPerms);
+            seedRolePermissions(orgDb, adminRole, adminPerms);
+
 
             seedRolePermissions(orgDb, makerRole, List.of(
                     ApplicationConstants.Permissions.LOAN_APPLICATION_CREATE,

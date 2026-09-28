@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,26 +45,67 @@ public class OrganizationService {
         return mapToResponse(org);
     }
 
+    public OrganizationResponse getOrganizationByUuid(UUID uuid) {
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        Organization org = organizationRepository.findByUuid(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException("Organization", "uuid", uuid));
+        return mapToResponse(org);
+    }
+
     public OrganizationResponse createOrganization(CreateOrganizationRequest request) {
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
-        if (organizationRepository.existsByCode(request.getCode())) {
-            throw new BusinessException("ORGANIZATION_EXISTS", "Organization with code " + request.getCode() + " already exists");
+        String baseName = request.getInstitutionName() != null ? request.getInstitutionName() : 
+                (request.getLegalName() != null ? request.getLegalName() : "BANK");
+        String clean = baseName.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+        if (clean.length() > 6) {
+            clean = clean.substring(0, 6);
         }
-        if (organizationRepository.existsByDbName(request.getDbName())) {
-            throw new BusinessException("DATABASE_NAME_IN_USE", "Database name " + request.getDbName() + " is already assigned");
+        if (clean.isBlank()) {
+            clean = "BANK";
+        }
+        int seq = 1;
+        String code = clean + String.format("%02d", seq);
+        while (organizationRepository.existsByCode(code) || organizationRepository.existsByInstitutionCode(code)) {
+            seq++;
+            code = clean + String.format("%02d", seq);
         }
 
+        String name = request.getInstitutionName() != null ? request.getInstitutionName() : request.getLegalName();
+        String shortName = name != null ? name.split("\\s+")[0] : code;
+
+        String dbName = request.getDbName();
+        if (dbName == null || dbName.isBlank()) {
+            dbName = "los_" + code.toLowerCase().replaceAll("[^a-z0-9]", "") + "_db";
+        }
+
+        if (organizationRepository.existsByDbName(dbName)) {
+            throw new BusinessException("DATABASE_NAME_IN_USE", "Database name " + dbName + " is already assigned");
+        }
+
+        UUID orgUuid = request.getId() != null ? request.getId() : UUID.randomUUID();
+
         Organization org = Organization.builder()
-                .name(request.getName())
-                .code(request.getCode().toUpperCase())
-                .type(request.getType().toUpperCase())
+                .uuid(orgUuid)
+                .institutionCode(code)
+                .institutionName(request.getInstitutionName())
+                .legalName(request.getLegalName())
+                .shortName(shortName)
+                .institutionType(request.getInstitutionType() != null ? request.getInstitutionType().toUpperCase() : "BANK")
+                .registrationNumber(request.getRegistrationNumber())
+                .pan(request.getPan() != null ? request.getPan().toUpperCase() : null)
+                .cin(request.getCin() != null ? request.getCin().toUpperCase() : null)
+                .website(request.getWebsite())
+                .logo(request.getLogo())
+                .regulatoryAuthorityId(request.getRegulatoryAuthorityId())
+                .regulatoryStatus(request.getRegulatoryStatus() != null ? request.getRegulatoryStatus().toUpperCase() : "ACTIVE")
+                .country(request.getCountry() != null ? request.getCountry() : "India")
                 .status("ACTIVE")
                 .contactEmail(request.getContactEmail())
                 .contactPhone(request.getContactPhone())
-                .dbName(request.getDbName())
-                .dbHost(request.getDbHost())
-                .dbPort(request.getDbPort())
+                .dbName(dbName)
+                .dbHost(request.getDbHost() != null ? request.getDbHost() : "localhost")
+                .dbPort(request.getDbPort() != null ? request.getDbPort() : 5432)
                 .build();
 
         Organization saved = organizationRepository.save(org);
@@ -112,12 +154,21 @@ public class OrganizationService {
         }
     }
 
-    private OrganizationResponse mapToResponse(Organization org) {
+    public OrganizationResponse mapToResponse(Organization org) {
         return OrganizationResponse.builder()
-                .id(org.getId())
-                .name(org.getName())
-                .code(org.getCode())
-                .type(org.getType())
+                .id(org.getUuid() != null ? org.getUuid() : UUID.nameUUIDFromBytes(String.valueOf(org.getId()).getBytes()))
+                .pkid(org.getId())
+                .institutionName(org.getInstitutionName() != null ? org.getInstitutionName() : org.getName())
+                .legalName(org.getLegalName())
+                .institutionType(org.getInstitutionType() != null ? org.getInstitutionType() : org.getType())
+                .registrationNumber(org.getRegistrationNumber())
+                .pan(org.getPan())
+                .cin(org.getCin())
+                .website(org.getWebsite())
+                .logo(org.getLogo())
+                .regulatoryAuthorityId(org.getRegulatoryAuthorityId())
+                .regulatoryStatus(org.getRegulatoryStatus())
+                .country(org.getCountry())
                 .status(org.getStatus())
                 .contactEmail(org.getContactEmail())
                 .contactPhone(org.getContactPhone())
@@ -125,6 +176,7 @@ public class OrganizationService {
                 .dbHost(org.getDbHost())
                 .dbPort(org.getDbPort())
                 .createdAt(org.getCreatedAt())
+                .updatedAt(org.getUpdatedAt())
                 .build();
     }
 
@@ -150,3 +202,4 @@ public class OrganizationService {
                 .build();
     }
 }
+

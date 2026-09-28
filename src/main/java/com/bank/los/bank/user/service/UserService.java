@@ -144,8 +144,47 @@ public class UserService {
         OrganizationContext.setCurrentOrganization(orgDb);
         OrganizationContext.setCurrentOrgCode(orgCode);
 
-        if (organizationUserRepository.existsByUsername(request.getUsername().trim().toLowerCase())) {
-            throw new BusinessException("USERNAME_EXISTS", "User with username '" + request.getUsername() + "' already exists in " + org.getName());
+        // Parse Name if full name passed
+        String firstName = request.getFirstName();
+        String middleName = request.getMiddleName();
+        String lastName = request.getLastName();
+
+        if ((firstName == null || firstName.isBlank()) && request.getName() != null && !request.getName().isBlank()) {
+            String[] parts = request.getName().trim().split("\\s+");
+            if (parts.length == 1) {
+                firstName = parts[0];
+                lastName = parts[0];
+            } else if (parts.length == 2) {
+                firstName = parts[0];
+                lastName = parts[1];
+            } else {
+                firstName = parts[0];
+                middleName = parts[1];
+                StringBuilder sb = new StringBuilder();
+                for (int i = 2; i < parts.length; i++) {
+                    if (i > 2) sb.append(" ");
+                    sb.append(parts[i]);
+                }
+                lastName = sb.toString();
+            }
+        }
+
+        if (firstName == null || firstName.isBlank()) {
+            firstName = request.getEmail().split("@")[0];
+        }
+        if (lastName == null || lastName.isBlank()) {
+            lastName = "Staff";
+        }
+
+        String username = request.getUsername();
+        if (username == null || username.isBlank()) {
+            username = request.getEmail().split("@")[0].toLowerCase();
+        } else {
+            username = username.trim().toLowerCase();
+        }
+
+        if (organizationUserRepository.existsByUsername(username)) {
+            throw new BusinessException("USERNAME_EXISTS", "User with username '" + username + "' already exists in " + org.getName());
         }
 
         if (organizationUserRepository.existsByEmail(request.getEmail().trim().toLowerCase())) {
@@ -191,19 +230,26 @@ public class UserService {
             initialStatus = isInternalAdmin ? ApplicationConstants.UserStatus.OPERATIVE : ApplicationConstants.UserStatus.PENDING_VERIFICATION;
         }
 
+        Boolean twoFa = request.getTwoFaEnabled();
+        if (twoFa == null) {
+            twoFa = true;
+        }
+
+        Long creatorId = principal != null ? principal.getId() : (request.getCreatedBy() != null ? request.getCreatedBy() : 1L);
+
         OrganizationUser user = OrganizationUser.builder()
                 .empNo(empNo)
-                .username(request.getUsername().trim().toLowerCase())
+                .username(username)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .twoFaEnabled(request.getTwoFaEnabled() != null ? request.getTwoFaEnabled() : true)
+                .twoFaEnabled(twoFa)
                 .status(initialStatus)
                 .isActive(true)
                 .role(role)
                 .loginBranch(loginBranch)
                 .multiBranchAccess(Boolean.TRUE.equals(request.getMultiBranchAccess()))
-                .firstName(request.getFirstName())
-                .middleName(request.getMiddleName())
-                .lastName(request.getLastName())
+                .firstName(firstName)
+                .middleName(middleName)
+                .lastName(lastName)
                 .dob(request.getDob())
                 .email(request.getEmail().trim().toLowerCase())
                 .mobile(request.getMobile())
@@ -213,9 +259,13 @@ public class UserService {
                 .loginTime(request.getLoginTime())
                 .logoutTime(request.getLogoutTime())
                 .inactiveSessionTimeout(request.getInactiveSessionTimeout() != null ? request.getInactiveSessionTimeout() : 1800)
+                .lastLoginDate(request.getLastLoginDate())
                 .noOfBadLogins(0)
+                .verifiedBy(request.getVerifiedBy())
+                .verifiedDate(request.getVerifiedDate())
+                .modifiedBy(request.getModifiedBy())
                 .build();
-        user.setCreatedBy(principal.getId());
+        user.setCreatedBy(creatorId);
 
         OrganizationUser savedUser = organizationUserRepository.save(user);
 
@@ -283,17 +333,24 @@ public class UserService {
     }
 
     public UserResponse mapToResponse(OrganizationUser user, Organization org) {
+        String fullName = user.getFullName();
+        String roleName = user.getRole() != null ? user.getRole().getName() : null;
+        Integer roleId = user.getRole() != null ? user.getRole().getId() : null;
+        String branchName = user.getLoginBranch() != null ? user.getLoginBranch().getName() : null;
+        Long branchId = user.getLoginBranch() != null ? user.getLoginBranch().getId() : null;
+
         return UserResponse.builder()
+                .pkid(user.getId())
                 .id(user.getId())
                 .organizationId(org != null ? org.getId() : null)
                 .organizationCode(org != null ? org.getCode() : null)
                 .organizationName(org != null ? org.getName() : null)
                 .empNo(user.getEmpNo())
                 .username(user.getUsername())
+                .name(fullName)
                 .firstName(user.getFirstName())
                 .middleName(user.getMiddleName())
                 .lastName(user.getLastName())
-                .fullName(user.getFullName())
                 .email(user.getEmail())
                 .mobile(user.getMobile())
                 .gender(user.getGender())
@@ -301,27 +358,36 @@ public class UserService {
                 .designation(user.getDesignation())
                 .status(user.getStatus())
                 .isActive(user.getIsActive())
+                .twoFa(user.getTwoFaEnabled())
                 .twoFaEnabled(user.getTwoFaEnabled())
-                .roleId(user.getRole() != null ? user.getRole().getId() : null)
-                .roleName(user.getRole() != null ? user.getRole().getName() : null)
+                .role(roleName)
+                .roleId(roleId)
+                .roleName(roleName)
+                .mBrAccess(user.getMultiBranchAccess())
                 .multiBranchAccess(user.getMultiBranchAccess())
-                .loginBranchId(user.getLoginBranch() != null ? user.getLoginBranch().getId() : null)
-                .loginBranchName(user.getLoginBranch() != null ? user.getLoginBranch().getName() : null)
+                .loginBranch(branchName)
+                .loginBranchId(branchId)
+                .loginBranchName(branchName)
+                .holidayLogin(user.getLoginOnHolidays())
                 .loginOnHolidays(user.getLoginOnHolidays())
                 .loginTime(user.getLoginTime())
                 .logoutTime(user.getLogoutTime())
                 .inactiveSessionTimeout(user.getInactiveSessionTimeout())
                 .noOfBadLogins(user.getNoOfBadLogins())
+                .lastlogindate(user.getLastLoginDate())
                 .lastLoginDate(user.getLastLoginDate())
                 .lastLoginTime(user.getLastLoginTime())
                 .createdBy(user.getCreatedBy())
+                .createdDate(user.getCreatedAt())
                 .createdAt(user.getCreatedAt())
                 .verifiedBy(user.getVerifiedBy())
                 .verifiedDate(user.getVerifiedDate())
                 .modifiedBy(user.getModifiedBy())
+                .modifiedDate(user.getUpdatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
+
 
     private boolean isInternalAdmin(UserPrincipal principal) {
         return principal != null && (

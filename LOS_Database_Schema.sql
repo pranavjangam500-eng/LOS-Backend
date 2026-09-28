@@ -28,21 +28,33 @@ CREATE SCHEMA IF NOT EXISTS identity;
 -- Registry of every NBFC/Bank + which physical database holds its data
 -- ---------------------------------------------------------------------
 CREATE TABLE organization.organizations (
-    id              BIGSERIAL PRIMARY KEY,
-    name            VARCHAR(150) NOT NULL,
-    code            VARCHAR(20) NOT NULL UNIQUE,
-    type            VARCHAR(20) NOT NULL CHECK (type IN ('BANK','NBFC')),
-    status          VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
-                        CHECK (status IN ('ACTIVE','INACTIVE','SUSPENDED')),
-    contact_email   VARCHAR(150),
-    contact_phone   VARCHAR(20),
-    db_name         VARCHAR(100) NOT NULL UNIQUE,
-    db_host         VARCHAR(150) NOT NULL DEFAULT 'localhost',
-    db_port         INT NOT NULL DEFAULT 5432,
-    created_by      BIGINT,
-    created_at      TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMP NOT NULL DEFAULT now()
+    id                      BIGSERIAL PRIMARY KEY,
+    uuid                    UUID UNIQUE DEFAULT gen_random_uuid(),
+    institution_code        VARCHAR(50) NOT NULL UNIQUE,
+    institution_name        VARCHAR(150) NOT NULL,
+    legal_name              VARCHAR(200),
+    short_name              VARCHAR(50),
+    institution_type        VARCHAR(50) NOT NULL,
+    registration_number     VARCHAR(100),
+    pan                     VARCHAR(20),
+    cin                     VARCHAR(50),
+    website                 VARCHAR(255),
+    logo                    TEXT,
+    regulatory_authority_id UUID,
+    regulatory_status       VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    country                 VARCHAR(100) NOT NULL DEFAULT 'India',
+    status                  VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+                                CHECK (status IN ('ACTIVE','INACTIVE','SUSPENDED')),
+    contact_email           VARCHAR(150),
+    contact_phone           VARCHAR(20),
+    db_name                 VARCHAR(100) NOT NULL UNIQUE,
+    db_host                 VARCHAR(150) NOT NULL DEFAULT 'localhost',
+    db_port                 INT NOT NULL DEFAULT 5432,
+    created_by              BIGINT,
+    created_at              TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMP NOT NULL DEFAULT now()
 );
+
 
 -- ---------------------------------------------------------------------
 -- identity.roles  (Internal panel only)

@@ -43,9 +43,15 @@ class UserServiceTest {
         String dbName = "los_icici99_db";
 
         CreateOrganizationRequest orgRequest = CreateOrganizationRequest.builder()
-                .name("ICICI Bank Ltd")
-                .code(orgCode)
-                .type("BANK")
+                .institutionName("ICICI Bank Ltd")
+                .legalName("ICICI Bank Limited")
+                .institutionType("BANK")
+                .registrationNumber("REG-MH-2024-9900")
+                .pan("AAACI1234F")
+                .cin("L65191PN1994PLC076333")
+                .regulatoryAuthorityId(java.util.UUID.randomUUID())
+                .regulatoryStatus("ACTIVE")
+                .country("India")
                 .contactEmail("contact@icicibank.com")
                 .contactPhone("+912240001000")
                 .dbName(dbName)
@@ -55,7 +61,7 @@ class UserServiceTest {
 
         OrganizationResponse orgResponse = organizationService.createOrganization(orgRequest);
         assertNotNull(orgResponse);
-        assertEquals(orgCode, orgResponse.getCode());
+        assertNotNull(orgResponse.getId());
         assertEquals("contact@icicibank.com", orgResponse.getContactEmail());
 
         // 2. Super Admin creates a Bank Admin user for this new Bank
@@ -72,7 +78,7 @@ class UserServiceTest {
                 .build();
 
         CreateUserRequest adminUserRequest = CreateUserRequest.builder()
-                .organizationId(orgResponse.getId())
+                .organizationId(orgResponse.getPkid())
                 .username("icici_admin")
                 .email("admin@icicibank.com")
                 .password("Admin@123")
@@ -85,11 +91,11 @@ class UserServiceTest {
 
         UserResponse userResponse = userService.createUser(superAdminPrincipal, adminUserRequest);
         assertNotNull(userResponse);
+        assertNotNull(userResponse.getOrganizationCode());
         assertEquals("icici_admin", userResponse.getUsername());
         assertEquals("admin@icicibank.com", userResponse.getEmail());
         assertEquals("ADMIN", userResponse.getRoleName());
         assertEquals("OPERATIVE", userResponse.getStatus());
-        assertEquals(orgCode, userResponse.getOrganizationCode());
 
         // 3. Newly created Bank Admin logs in and gets routed to ICICI bank dashboard
         LoginRequest loginRequest = LoginRequest.builder()
@@ -109,11 +115,11 @@ class UserServiceTest {
 
         assertNotNull(loginResp2);
         assertEquals("ADMIN", loginResp2.getUser().getRole());
-        assertEquals(orgCode, loginResp2.getUser().getOrganizationCode());
+        assertEquals(userResponse.getOrganizationCode(), loginResp2.getUser().getOrganizationCode());
         assertEquals("/dashboard/admin", loginResp2.getDashboardUrl());
 
         // 4. Super Admin lists users of this bank
-        List<UserResponse> iciciUsers = userService.getAllUsers(superAdminPrincipal, orgResponse.getId());
+        List<UserResponse> iciciUsers = userService.getAllUsers(superAdminPrincipal, orgResponse.getPkid());
         assertFalse(iciciUsers.isEmpty());
         assertTrue(iciciUsers.stream().anyMatch(u -> "admin@icicibank.com".equals(u.getEmail())));
     }

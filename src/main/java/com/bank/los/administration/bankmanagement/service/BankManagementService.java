@@ -4,6 +4,7 @@ import com.bank.los.administration.bankmanagement.dto.BankStatusUpdateRequest;
 import com.bank.los.administration.master.entity.Organization;
 import com.bank.los.administration.master.repository.OrganizationRepository;
 import com.bank.los.administration.organization.dto.OrganizationResponse;
+import com.bank.los.administration.organization.service.OrganizationService;
 import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.config.OrganizationContext;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BankManagementService {
 
     private final OrganizationRepository organizationRepository;
+    private final OrganizationService organizationService;
 
     @Transactional
     public OrganizationResponse updateBankStatus(Long organizationId, BankStatusUpdateRequest request) {
@@ -30,18 +32,7 @@ public class BankManagementService {
         log.info("Organization id={} code={} status changed to {} by administrator",
                 org.getId(), org.getCode(), org.getStatus());
 
-        return OrganizationResponse.builder()
-                .id(updated.getId())
-                .name(updated.getName())
-                .code(updated.getCode())
-                .type(updated.getType())
-                .status(updated.getStatus())
-                .contactEmail(updated.getContactEmail())
-                .contactPhone(updated.getContactPhone())
-                .dbName(updated.getDbName())
-                .dbHost(updated.getDbHost())
-                .dbPort(updated.getDbPort())
-                .createdAt(updated.getCreatedAt())
-                .build();
+        return organizationService.mapToResponse(updated);
     }
 }
+

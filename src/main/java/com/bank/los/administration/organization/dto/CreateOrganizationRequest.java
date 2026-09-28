@@ -1,13 +1,18 @@
 package com.bank.los.administration.organization.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Data
 @Builder
@@ -16,38 +21,108 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Request body for onboarding a new Bank or NBFC Organization")
 public class CreateOrganizationRequest {
 
-    @NotBlank(message = "Organization name is required")
-    @Size(max = 150, message = "Name must not exceed 150 characters")
-    @Schema(description = "Legal business name of the financial institution", example = "HDFC Bank")
-    private String name;
+    @Schema(description = "Optional custom UUID (auto-generated if omitted)", example = "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d")
+    private UUID id;
 
-    @NotBlank(message = "Organization code is required")
-    @Size(min = 3, max = 20, message = "Code must be between 3 and 20 characters")
-    @Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "Code must be alphanumeric and may contain hyphens/underscores")
-    @Schema(description = "Unique short code for the bank/NBFC (used in user codes and routing)", example = "HDFC01")
-    private String code;
+    @NotBlank(message = "institution_name is required")
+    @Size(max = 150, message = "institution_name must not exceed 150 characters")
+    @JsonProperty("institution_name")
+    @JsonAlias({"institutionName", "name"})
+    @Schema(description = "Display name of the institution", example = "HDFC Bank")
+    private String institutionName;
 
-    @NotBlank(message = "Type is required")
-    @Pattern(regexp = "^(BANK|NBFC)$", message = "Type must be 'BANK' or 'NBFC'")
-    @Schema(description = "Type of financial entity", example = "BANK", allowableValues = {"BANK", "NBFC"})
-    private String type;
+    @NotBlank(message = "legal_name is required")
+    @Size(max = 200, message = "legal_name must not exceed 200 characters")
+    @JsonProperty("legal_name")
+    @JsonAlias({"legalName"})
+    @Schema(description = "Registered legal entity name", example = "HDFC Bank Limited")
+    private String legalName;
 
-    @Schema(description = "Primary contact email address", example = "contact@hdfcbank.com")
+    @NotBlank(message = "institution_type is required")
+    @JsonProperty("institution_type")
+    @JsonAlias({"institutionType", "type"})
+    @Schema(description = "Type of financial institution", example = "COMMERCIAL_BANK", allowableValues = {"BANK", "NBFC", "COMMERCIAL_BANK", "SMALL_FINANCE_BANK", "PAYMENT_BANK", "COOPERATIVE_BANK", "HOUSING_FINANCE"})
+    private String institutionType;
+
+    @NotBlank(message = "registration_number is required")
+    @JsonProperty("registration_number")
+    @JsonAlias({"registrationNumber"})
+    @Schema(description = "Company registration / incorporation certificate number", example = "REG-MH-2024-8899")
+    private String registrationNumber;
+
+    @NotBlank(message = "PAN is required")
+    @Pattern(regexp = "^[A-Z]{5}[0-9]{4}[A-Z]{1}$", message = "PAN must be a valid 10-character Indian PAN format (e.g. ABCDE1234F)")
+    @JsonProperty("PAN")
+    @JsonAlias({"pan", "Pan"})
+    @Schema(description = "10-digit Permanent Account Number", example = "AAACH1234F")
+    private String pan;
+
+    @NotBlank(message = "CIN is required")
+    @JsonProperty("CIN")
+    @JsonAlias({"cin", "Cin"})
+    @Schema(description = "Corporate Identification Number (CIN)", example = "L65920MH1994PLC080618")
+    private String cin;
+
+    @JsonProperty("website")
+    @Schema(description = "Official website URL", example = "https://www.hdfcbank.com")
+    private String website;
+
+    @JsonProperty("logo")
+    @Schema(description = "Logo image URL or base64 asset identifier", example = "https://assets.bank.com/logos/hdfc.png")
+    private String logo;
+
+    @NotNull(message = "regulatory_authority_id is required")
+    @JsonProperty("regulatory_authority_id")
+    @JsonAlias({"regulatoryAuthorityId"})
+    @Schema(description = "UUID of the governing regulatory authority (e.g., RBI UUID)", example = "b5a76e2d-3c9f-4321-9e87-654321fedcba")
+    private UUID regulatoryAuthorityId;
+
+    @NotBlank(message = "regulatory_status is required")
+    @JsonProperty("regulatory_status")
+    @JsonAlias({"regulatoryStatus"})
+    @Schema(description = "Regulatory compliance status", example = "ACTIVE", allowableValues = {"ACTIVE", "LICENSED", "REGULATED", "PENDING_APPROVAL", "SUSPENDED"})
+    private String regulatoryStatus;
+
+    @NotBlank(message = "country is required")
+    @JsonProperty("country")
+    @Schema(description = "Country of jurisdiction / operation", example = "India")
+    private String country;
+
+    @JsonProperty("contact_email")
+    @JsonAlias({"contactEmail", "email"})
+    @Schema(description = "Primary contact email address", example = "compliance@hdfcbank.com")
     private String contactEmail;
 
+    @JsonProperty("contact_phone")
+    @JsonAlias({"contactPhone", "phone"})
     @Schema(description = "Primary contact telephone number", example = "+912261606161")
     private String contactPhone;
 
-    @NotBlank(message = "Database name is required")
+    @JsonProperty("db_name")
+    @JsonAlias({"dbName"})
     @Size(max = 100, message = "Database name must not exceed 100 characters")
-    @Schema(description = "Dedicated PostgreSQL database name allocated for this organization", example = "los_hdfc01_db")
+    @Schema(description = "Dedicated PostgreSQL database name allocated for this organization (optional, auto-generated if omitted)", example = "los_hdfc01_db")
     private String dbName;
 
+    @JsonProperty("db_host")
+    @JsonAlias({"dbHost"})
     @Schema(description = "Database host", example = "localhost", defaultValue = "localhost")
     @Builder.Default
     private String dbHost = "localhost";
 
+    @JsonProperty("db_port")
+    @JsonAlias({"dbPort"})
     @Schema(description = "Database port", example = "5432", defaultValue = "5432")
     @Builder.Default
     private Integer dbPort = 5432;
+
+    // Helper getters
+    public String getName() {
+        return institutionName != null ? institutionName : legalName;
+    }
+
+    public String getType() {
+        return institutionType;
+    }
 }
+

@@ -83,9 +83,9 @@ public class DatabaseSeeder implements CommandLineRunner {
         // Sample organizations
         Organization hdfc = organizationRepository.findByCode("HDFC01")
                 .orElseGet(() -> organizationRepository.save(Organization.builder()
-                        .name("HDFC Bank")
-                        .code("HDFC01")
-                        .type("BANK")
+                        .institutionName("HDFC Bank")
+                        .institutionCode("HDFC01")
+                        .institutionType("BANK")
                         .status("ACTIVE")
                         .contactEmail("contact@hdfcbank.com")
                         .contactPhone("+912261606161")
@@ -96,9 +96,9 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         Organization bajaj = organizationRepository.findByCode("BAJAJ02")
                 .orElseGet(() -> organizationRepository.save(Organization.builder()
-                        .name("Bajaj Finance Limited")
-                        .code("BAJAJ02")
-                        .type("NBFC")
+                        .institutionName("Bajaj Finance Limited")
+                        .institutionCode("BAJAJ02")
+                        .institutionType("NBFC")
                         .status("ACTIVE")
                         .contactEmail("customercare@bajajfinserv.in")
                         .contactPhone("+912071576403")
@@ -106,6 +106,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .dbHost("localhost")
                         .dbPort(5432)
                         .build()));
+
 
         // Super Admin user (platform team)
         if (internalUserRepository.findByEmail("admin@losplatform.com").isEmpty()) {
@@ -165,7 +166,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         BankContext.setCurrentBank(orgDbName);
         BankContext.setCurrentBankCode(orgCode);
 
-        // ── 5 Organization Roles ──────────────────────────────────────────
+        // ── Organization Roles ──────────────────────────────────────────
+        OrganizationRole superAdminRole = seedRole("SUPER_ADMIN", "BANK_NBFC", "Bank/NBFC Super Admin — full control within this Bank/NBFC");
         OrganizationRole adminRole = seedRole("ADMIN", "BANK_NBFC", "Bank/NBFC internal admin — configures org and assigns roles");
         OrganizationRole makerRole = seedRole("MAKER", "BANK_NBFC", "Creates and initiates loan records for Checker approval");
         OrganizationRole checkerRole = seedRole("CHECKER", "BANK_NBFC", "Reviews and approves Maker actions");
@@ -198,7 +200,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         // ── Seed Permissions & Role Mappings ─────────────────────────────
         seedPermissions();
 
-        seedRolePermissions(orgDbName, adminRole, List.of(
+        List<String> adminPerms = List.of(
                 ApplicationConstants.Permissions.USER_CREATE,
                 ApplicationConstants.Permissions.USER_UPDATE,
                 ApplicationConstants.Permissions.USER_VIEW,
@@ -213,10 +215,13 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.DASHBOARD_VIEW,
                 ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW,
                 ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE
-        ));
+        );
+        seedRolePermissions(orgDbName, superAdminRole, adminPerms);
+        seedRolePermissions(orgDbName, adminRole, adminPerms);
 
         seedRolePermissions(orgDbName, makerRole, List.of(
                 ApplicationConstants.Permissions.LOAN_APPLICATION_CREATE,
+
                 ApplicationConstants.Permissions.LOAN_APPLICATION_EDIT,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_SUBMIT,
