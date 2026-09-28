@@ -33,6 +33,15 @@ CREATE TABLE IF NOT EXISTS identity.roles (
     created_at    TIMESTAMP    NOT NULL DEFAULT now()
 );
 
+INSERT INTO identity.roles (name, panel, description) VALUES
+    ('SUPER_ADMIN', 'BANK_NBFC', 'Bank/NBFC Super Admin — full control within this Bank/NBFC'),
+    ('ADMIN', 'BANK_NBFC', 'Bank/NBFC internal admin — configures org and manages users'),
+    ('MAKER', 'BANK_NBFC', 'Creates and initiates loan records for Checker approval'),
+    ('CHECKER', 'BANK_NBFC', 'Reviews and approves Maker actions'),
+    ('VIEWER', 'BANK_NBFC', 'Read-only access'),
+    ('CUSTOMER', 'CUSTOMER', 'Loan applicant')
+ON CONFLICT (name) DO NOTHING;
+
 -- -----------------------------------------------------------------------
 -- identity.permissions  (lookup codes — DB-backed, configurable by ADMIN)
 -- -----------------------------------------------------------------------

@@ -202,10 +202,11 @@ public class UserService {
         } else if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
             String roleName = request.getRoleName().trim().toUpperCase();
             role = organizationRoleRepository.findByName(roleName)
-                    .orElseThrow(() -> new ResourceNotFoundException("Role", "name", roleName));
+                    .orElseGet(() -> autoSeedRole(roleName));
         } else {
-            role = organizationRoleRepository.findByName(isInternalAdmin ? "ADMIN" : "VIEWER")
-                    .orElseThrow(() -> new BusinessException("ROLE_REQUIRED", "Could not resolve default role in organization database"));
+            String defaultRole = isInternalAdmin ? "ADMIN" : "VIEWER";
+            role = organizationRoleRepository.findByName(defaultRole)
+                    .orElseGet(() -> autoSeedRole(defaultRole));
         }
 
         // 4. Resolve Branch in organization DB
@@ -219,7 +220,16 @@ public class UserService {
                 loginBranch = branchRepository.findById(request.getLoginBranchId())
                         .orElseThrow(() -> new ResourceNotFoundException("Branch", "id", request.getLoginBranchId()));
             } else {
-                loginBranch = branchRepository.findAll().stream().findFirst().orElse(null);
+                loginBranch = branchRepository.findAll().stream().findFirst()
+                        .orElseGet(() -> branchRepository.save(Branch.builder()
+                                .name(org.getName() + " Main Branch")
+                                .code(org.getCode() + "-BR-01")
+                                .address("Headquarters")
+                                .city("Mumbai")
+                                .state("Maharashtra")
+                                .pincode("400001")
+                                .status("ACTIVE")
+                                .build()));
             }
         }
 
@@ -398,5 +408,24 @@ public class UserService {
                 ApplicationConstants.Roles.SUPER_ADMIN.equalsIgnoreCase(principal.getRole()) ||
                 ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(principal.getUserType())
         );
+    }
+
+    private OrganizationRole autoSeedRole(String roleName) {
+        String name = roleName != null ? roleName.trim().toUpperCase() : "ADMIN";
+        String panel = "CUSTOMER".equalsIgnoreCase(name) ? "CUSTOMER" : "BANK_NBFC";
+        String description = switch (name) {
+            case "SUPER_ADMIN" -> "Bank/NBFC Super Admin — full control within this Bank/NBFC";
+            case "ADMIN" -> "Bank/NBFC internal admin — configures org and manages users";
+            case "MAKER" -> "Creates and initiates loan records for Checker approval";
+            case "CHECKER" -> "Reviews and approves Maker actions";
+            case "VIEWER" -> "Read-only access";
+            case "CUSTOMER" -> "Loan applicant";
+            default -> name + " role";
+        };
+        return organizationRoleRepository.save(OrganizationRole.builder()
+                .name(name)
+                .panel(panel)
+                .description(description)
+                .build());
     }
 }
