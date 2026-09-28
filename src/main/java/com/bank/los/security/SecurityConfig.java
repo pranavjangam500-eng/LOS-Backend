@@ -83,14 +83,25 @@ public class SecurityConfig {
                 .toList();
 
         if (allowedOrigins.contains("*")) {
-            configuration.setAllowedOrigins(List.of("*"));
-            configuration.setAllowCredentials(false);
+            configuration.setAllowedOriginPatterns(List.of("*"));
         } else {
             configuration.setAllowedOrigins(allowedOrigins);
-            configuration.setAllowCredentials(true);
         }
+        configuration.setAllowCredentials(true);
 
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Bank-Code", "X-Organization-Code", "X-Tenant-Code", "Accept", "X-Requested-With"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Bank-Code",
+                "X-Organization-Code",
+                "X-Tenant-Code",
+                "Accept",
+                "Origin",
+                "X-Requested-With",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Bank-Code", "X-Organization-Code", "X-Tenant-Code"));
         configuration.setMaxAge(3600L);
 
