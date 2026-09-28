@@ -28,12 +28,17 @@ public class CreateUserRequest {
 
     @JsonProperty("organization_id")
     @JsonAlias({"organizationId", "bankId", "bank_id", "Organisation_id", "organisationId", "orgId"})
-    @Schema(description = "Target Bank / Organisation ID to map the user into", example = "1")
+    @Schema(description = "Target Bank / Organisation ID (numeric PK) to map the user into", example = "5")
     private Long organizationId;
+
+    @JsonProperty("organization_uuid")
+    @JsonAlias({"orgUuid", "organizationUuid", "org_uuid"})
+    @Schema(description = "Target Bank / Organisation UUID", example = "427775a5-81d8-402d-84a4-fd2cac160566")
+    private java.util.UUID organizationUuid;
 
     @JsonProperty("organization_code")
     @JsonAlias({"organizationCode", "bankCode", "bank_code", "orgCode"})
-    @Schema(description = "Target Organisation Code (alternative to organizationId)", example = "HDFC01")
+    @Schema(description = "Target Organisation Code (alternative to organizationId)", example = "AXIS01")
     private String organizationCode;
 
     @JsonProperty("emp_no")

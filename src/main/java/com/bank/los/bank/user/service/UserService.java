@@ -120,11 +120,14 @@ public class UserService {
             if (request.getOrganizationId() != null) {
                 org = organizationRepository.findById(request.getOrganizationId())
                         .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", request.getOrganizationId()));
+            } else if (request.getOrganizationUuid() != null) {
+                org = organizationRepository.findByUuid(request.getOrganizationUuid())
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "uuid", request.getOrganizationUuid()));
             } else if (request.getOrganizationCode() != null && !request.getOrganizationCode().isBlank()) {
                 org = organizationRepository.findByCode(request.getOrganizationCode().trim().toUpperCase())
                         .orElseThrow(() -> new ResourceNotFoundException("Organization", "code", request.getOrganizationCode()));
             } else {
-                throw new BusinessException("ORGANIZATION_REQUIRED", "Please specify organizationId or organizationCode when creating a bank user as Super Admin");
+                throw new BusinessException("ORGANIZATION_REQUIRED", "Please specify organizationId, organizationUuid, or organizationCode when creating a bank user as Super Admin");
             }
         } else {
             org = organizationRepository.findByCode(principal.getOrganizationCode())
