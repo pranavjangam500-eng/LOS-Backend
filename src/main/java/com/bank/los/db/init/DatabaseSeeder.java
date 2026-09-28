@@ -49,6 +49,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final PasswordEncoder passwordEncoder;
     private final BankDataSourceProvider bankDataSourceProvider;
+    private final com.bank.los.security.TenantResolutionService tenantResolutionService;
 
     @Override
     public void run(String... args) {
@@ -106,6 +107,9 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .dbHost("localhost")
                         .dbPort(5432)
                         .build()));
+
+        tenantResolutionService.cacheOrganization(hdfc);
+        tenantResolutionService.cacheOrganization(bajaj);
 
 
         // Super Admin user (platform team)

@@ -37,6 +37,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         String orgCode = directory.getOrganization() != null ? directory.getOrganization().getCode() : null;
         String orgDb = directory.getOrganization() != null ? directory.getOrganization().getDbName() : null;
 
+        Long orgId = directory.getOrganization() != null ? directory.getOrganization().getId() : null;
+        java.util.UUID orgUuid = directory.getOrganization() != null ? directory.getOrganization().getUuid() : null;
+
         if ("INTERNAL".equalsIgnoreCase(userType)) {
             OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
             InternalUser internalUser = internalUserRepository.findByEmail(identifier)
@@ -52,6 +55,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .password(internalUser.getPasswordHash())
                     .role(internalUser.getRole().getName())
                     .userType("INTERNAL")
+                    .organizationId(0L)
+                    .organizationCode("MASTER")
+                    .organizationDbName(OrganizationContext.MASTER_ORG_ID)
                     .active(Boolean.TRUE.equals(internalUser.getIsActive()))
                     .build();
         }
@@ -72,6 +78,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .password(staffUser.getPasswordHash())
                     .role(staffUser.getRole().getName())
                     .userType("STAFF")
+                    .organizationId(orgId)
+                    .organizationUuid(orgUuid)
                     .organizationCode(orgCode)
                     .organizationDbName(orgDb)
                     .branchId(staffUser.getLoginBranch() != null ? staffUser.getLoginBranch().getId() : null)
@@ -90,6 +98,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .password(customer.getPasswordHash())
                     .role("CUSTOMER")
                     .userType("CUSTOMER")
+                    .organizationId(orgId)
+                    .organizationUuid(orgUuid)
                     .organizationCode(orgCode)
                     .organizationDbName(orgDb)
                     .branchId(customer.getBranch() != null ? customer.getBranch().getId() : null)

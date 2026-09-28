@@ -25,8 +25,8 @@ class JwtTokenProviderTest {
                 .fullName("Test Maker")
                 .role("MAKER")
                 .userType("STAFF")
+                .organizationId(1L)
                 .organizationCode("HDFC01")
-                .tenantDbName("los_hdfc01_db")
                 .branchId(1L)
                 .active(true)
                 .build();
@@ -41,8 +41,9 @@ class JwtTokenProviderTest {
         assertEquals("MAKER", claims.get(SecurityConstants.CLAIM_ROLE));
         assertEquals("STAFF", claims.get(SecurityConstants.CLAIM_USER_TYPE));
         assertEquals("HDFC01", claims.get(SecurityConstants.CLAIM_ORG_CODE));
-        assertEquals("los_hdfc01_db", claims.get(SecurityConstants.CLAIM_TENANT_DB));
-        assertEquals(42, claims.get(SecurityConstants.CLAIM_USER_ID, Number.class).longValue());
+        assertEquals(1L, claims.get(SecurityConstants.CLAIM_ORG_ID, Number.class).longValue());
+        assertEquals(1L, claims.get(SecurityConstants.CLAIM_TENANT_ID, Number.class).longValue());
+        assertEquals(42L, claims.get(SecurityConstants.CLAIM_USER_ID, Number.class).longValue());
     }
 
     @Test

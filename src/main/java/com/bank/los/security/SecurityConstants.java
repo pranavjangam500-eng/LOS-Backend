@@ -13,9 +13,12 @@ public final class SecurityConstants {
     public static final String CLAIM_USER_ID         = "userId";
     public static final String CLAIM_USER_TYPE       = "userType";
     public static final String CLAIM_ROLE            = "role";
+    public static final String CLAIM_ORG_ID          = "orgId";
+    public static final String CLAIM_TENANT_ID       = "tenantId";
+    public static final String CLAIM_ORG_UUID        = "orgUuid";
     public static final String CLAIM_BANK_CODE       = "bankCode";
-    public static final String CLAIM_BANK_DB         = "bankDb";
     public static final String CLAIM_ORG_CODE        = "orgCode";
+    public static final String CLAIM_BANK_DB         = "bankDb";
     public static final String CLAIM_ORG_DB          = "orgDb";
     public static final String CLAIM_TENANT_DB       = "tenantDb";      // alias for backward compatibility
     public static final String CLAIM_BRANCH_ID       = "branchId";

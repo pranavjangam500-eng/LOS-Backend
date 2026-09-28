@@ -24,6 +24,7 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final TenantResolutionService tenantResolutionService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -39,31 +40,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = claims.getSubject();
                 String userType = claims.get(SecurityConstants.CLAIM_USER_TYPE, String.class);
                 String role = claims.get(SecurityConstants.CLAIM_ROLE, String.class);
-                String bankCode = claims.get(SecurityConstants.CLAIM_BANK_CODE, String.class);
-                if (bankCode == null) {
-                    bankCode = claims.get(SecurityConstants.CLAIM_ORG_CODE, String.class);
+                
+                // Extract tenant identifiers from verified JWT
+                Number orgIdNum = claims.get(SecurityConstants.CLAIM_ORG_ID, Number.class);
+                if (orgIdNum == null) {
+                    orgIdNum = claims.get(SecurityConstants.CLAIM_TENANT_ID, Number.class);
                 }
-                String bankDb = claims.get(SecurityConstants.CLAIM_BANK_DB, String.class);
-                if (bankDb == null) {
-                    bankDb = claims.get(SecurityConstants.CLAIM_ORG_DB, String.class);
+                Long orgId = orgIdNum != null ? orgIdNum.longValue() : null;
+
+                String orgUuidStr = claims.get(SecurityConstants.CLAIM_ORG_UUID, String.class);
+                java.util.UUID orgUuid = orgUuidStr != null ? java.util.UUID.fromString(orgUuidStr) : null;
+
+                String orgCode = claims.get(SecurityConstants.CLAIM_ORG_CODE, String.class);
+                if (orgCode == null) {
+                    orgCode = claims.get(SecurityConstants.CLAIM_BANK_CODE, String.class);
                 }
-                if (bankDb == null) {
-                    bankDb = claims.get(SecurityConstants.CLAIM_TENANT_DB, String.class);
-                }
+
                 String fullName = claims.get(SecurityConstants.CLAIM_FULL_NAME, String.class);
 
                 Number branchIdNum = claims.get(SecurityConstants.CLAIM_BRANCH_ID, Number.class);
                 Long branchId = branchIdNum != null ? branchIdNum.longValue() : null;
 
-                // Configure dynamic multi-bank routing context
-                if (StringUtils.hasText(bankDb)) {
-                    BankContext.setCurrentBank(bankDb);
-                } else {
-                    BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
-                }
+                // SECURE RESOLUTION: Look up the Master DB to resolve org_id -> physical db_name.
+                // NEVER trust client headers for database routing.
+                String resolvedDb = tenantResolutionService.resolveTenantDb(orgId, orgCode, orgUuid, userType);
 
-                if (StringUtils.hasText(bankCode)) {
-                    BankContext.setCurrentBankCode(bankCode);
+                // Configure dynamic multi-tenant routing context
+                OrganizationContext.setCurrentOrganization(resolvedDb);
+                BankContext.setCurrentBank(resolvedDb);
+
+                if (StringUtils.hasText(orgCode)) {
+                    OrganizationContext.setCurrentOrgCode(orgCode);
+                    BankContext.setCurrentBankCode(orgCode);
                 }
 
                 UserPrincipal userPrincipal = UserPrincipal.builder()
@@ -71,8 +79,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .email(username)
                         .userType(userType)
                         .role(role)
-                        .organizationCode(bankCode)
-                        .organizationDbName(bankDb)
+                        .organizationId(orgId)
+                        .organizationUuid(orgUuid)
+                        .organizationCode(orgCode)
+                        .organizationDbName(resolvedDb)
                         .branchId(branchId)
                         .fullName(fullName)
                         .active(true)
@@ -87,21 +97,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
-                // If header provides X-Bank-Code, X-Organization-Code or X-Tenant-Code
-                String bankHeader = request.getHeader(SecurityConstants.BANK_HEADER);
-                if (!StringUtils.hasText(bankHeader)) {
-                    bankHeader = request.getHeader(SecurityConstants.ORGANIZATION_HEADER);
-                }
-                if (!StringUtils.hasText(bankHeader)) {
-                    bankHeader = request.getHeader(SecurityConstants.TENANT_HEADER);
-                }
-                if (StringUtils.hasText(bankHeader)) {
-                    BankContext.setCurrentBankCode(bankHeader);
-                }
+                // Default unauthenticated requests safely to Master DB
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
             }
 
             filterChain.doFilter(request, response);
         } finally {
+            OrganizationContext.clear();
             BankContext.clear();
         }
     }

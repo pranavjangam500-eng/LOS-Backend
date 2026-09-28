@@ -28,6 +28,8 @@ import com.bank.los.common.validation.PasswordPolicy;
 import com.bank.los.config.BankContext;
 import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.JwtTokenProvider;
+import com.bank.los.security.SecurityConstants;
+import com.bank.los.security.TenantResolutionService;
 import com.bank.los.security.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +69,7 @@ public class AuthenticationService {
     private final OtpService                    otpService;
     private final EmailService                  emailService;
     private final PermissionService             permissionService;
+    private final TenantResolutionService       tenantResolutionService;
 
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
@@ -96,6 +99,7 @@ public class AuthenticationService {
                 throw new BusinessException("Your organization account is suspended.");
             if (ApplicationConstants.OrgStatus.INACTIVE.equalsIgnoreCase(org.getStatus()))
                 throw new BusinessException("Your organization account is inactive.");
+            tenantResolutionService.cacheOrganization(org);
         }
 
         // ── INTERNAL / SUPER_ADMIN ────────────────────────────────────────
@@ -194,33 +198,39 @@ public class AuthenticationService {
     //  VERIFY OTP  (Step 2 of 2 — issues full JWT for staff users)
     // =====================================================================
 
-    @Transactional
     public LoginResponse verifyOtp(VerifyOtpRequest request) {
         if (!jwtTokenProvider.validateToken(request.getTempSessionToken())) {
             throw new UnauthorizedException("Session expired. Please login again.");
         }
 
         Claims claims  = jwtTokenProvider.getClaimsFromToken(request.getTempSessionToken());
-        Long   userId  = claims.get("userId", Number.class).longValue();
-        String bankDb  = claims.get("bankDb", String.class);
-        if (bankDb == null) {
-            bankDb = claims.get("orgDb", String.class);
+        Long   userId  = claims.get(SecurityConstants.CLAIM_USER_ID, Number.class).longValue();
+        
+        Number orgIdNum = claims.get(SecurityConstants.CLAIM_ORG_ID, Number.class);
+        if (orgIdNum == null) {
+            orgIdNum = claims.get(SecurityConstants.CLAIM_TENANT_ID, Number.class);
         }
-        if (bankDb == null) {
-            bankDb = claims.get("tenantDb", String.class);
+        Long orgId = orgIdNum != null ? orgIdNum.longValue() : null;
+
+        String orgCode = claims.get(SecurityConstants.CLAIM_ORG_CODE, String.class);
+        if (orgCode == null) {
+            orgCode = claims.get(SecurityConstants.CLAIM_BANK_CODE, String.class);
         }
-        String bankCode = claims.get("bankCode", String.class);
-        if (bankCode == null) {
-            bankCode = claims.get("orgCode", String.class);
-        }
-        String userType = claims.get("userType", String.class);
+        String userType = claims.get(SecurityConstants.CLAIM_USER_TYPE, String.class);
 
         if (!ApplicationConstants.UserTypes.STAFF.equalsIgnoreCase(userType)) {
             throw new BusinessException("OTP verification only applicable to bank staff.");
         }
 
-        BankContext.setCurrentBank(bankDb);
-        BankContext.setCurrentBankCode(bankCode);
+        // SECURE RESOLUTION: Always resolve database from Master DB via TenantResolutionService
+        String resolvedDb = tenantResolutionService.resolveTenantDb(orgId, orgCode, null, userType);
+
+        OrganizationContext.setCurrentOrganization(resolvedDb);
+        BankContext.setCurrentBank(resolvedDb);
+        if (orgCode != null) {
+            OrganizationContext.setCurrentOrgCode(orgCode);
+            BankContext.setCurrentBankCode(orgCode);
+        }
 
         OrganizationUser user = organizationUserRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("User not found."));
@@ -233,16 +243,17 @@ public class AuthenticationService {
         organizationUserRepository.save(user);
 
         Organization org = Organization.builder()
-                .code(bankCode)
-                .dbName(bankDb)
-                .name(bankCode)
+                .id(orgId)
+                .institutionCode(orgCode)
+                .dbName(resolvedDb)
+                .name(orgCode)
                 .build();
         UserPrincipal principal = buildStaffPrincipal(user, org);
         LoginResponse response = buildFullAuthResponse(principal, authMapper.toProfileResponse(user, org), user.getInactiveSessionTimeout());
 
-        registerSession(principal.getJti(), userId, user.getInactiveSessionTimeout(), bankDb);
+        registerSession(principal.getJti(), userId, user.getInactiveSessionTimeout(), resolvedDb);
 
-        log.info("Staff login complete after 2FA: empNo={}, bank={}", user.getEmpNo(), bankCode);
+        log.info("Staff login complete after 2FA: empNo={}, bank={}", user.getEmpNo(), orgCode);
         return response;
     }
 
@@ -495,6 +506,7 @@ public class AuthenticationService {
                 .fullName(user.getFullName())
                 .role(user.getRole() != null ? user.getRole().getName() : ApplicationConstants.Roles.INTERNAL_ADMIN)
                 .userType(ApplicationConstants.UserTypes.INTERNAL)
+                .organizationId(0L)
                 .organizationCode("MASTER")
                 .organizationDbName(OrganizationContext.MASTER_ORG_ID)
                 .active(true)
@@ -511,6 +523,8 @@ public class AuthenticationService {
                 .fullName(user.getFullName())
                 .role(user.getRole() != null ? user.getRole().getName() : ApplicationConstants.Roles.VIEWER)
                 .userType(ApplicationConstants.UserTypes.STAFF)
+                .organizationId(org != null ? org.getId() : null)
+                .organizationUuid(org != null ? org.getUuid() : null)
                 .organizationCode(org != null ? org.getCode() : null)
                 .organizationDbName(org != null ? org.getDbName() : null)
                 .branchId(user.getLoginBranch() != null ? user.getLoginBranch().getId() : null)
@@ -527,6 +541,8 @@ public class AuthenticationService {
                 .fullName(customer.getFirstName() + " " + customer.getLastName())
                 .role(ApplicationConstants.Roles.CUSTOMER)
                 .userType(ApplicationConstants.UserTypes.CUSTOMER)
+                .organizationId(org != null ? org.getId() : null)
+                .organizationUuid(org != null ? org.getUuid() : null)
                 .organizationCode(org.getCode())
                 .organizationDbName(org.getDbName())
                 .branchId(customer.getBranch() != null ? customer.getBranch().getId() : null)

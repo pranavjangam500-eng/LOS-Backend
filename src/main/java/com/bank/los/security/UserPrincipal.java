@@ -24,6 +24,8 @@ public class UserPrincipal implements UserDetails {
     private String fullName;
     private String userType;      // INTERNAL / STAFF / CUSTOMER
     private String role;          // INTERNAL_ADMIN / ADMIN / MAKER / CHECKER / VIEWER / CUSTOMER
+    private Long   organizationId; // tenant_id in Master DB
+    private java.util.UUID organizationUuid;
     private String organizationCode;
     private String organizationDbName;
     private Long   branchId;
@@ -36,6 +38,15 @@ public class UserPrincipal implements UserDetails {
 
     private boolean active;
 
+    // Backward-compatible alias for tenantId
+    public Long getTenantId() {
+        return organizationId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.organizationId = tenantId;
+    }
+
     // Backward-compatible alias for tenantDbName
     public String getTenantDbName() {
         return organizationDbName;
@@ -47,6 +58,12 @@ public class UserPrincipal implements UserDetails {
 
     public static class UserPrincipalBuilder {
         private String organizationDbName;
+        private Long   organizationId;
+
+        public UserPrincipalBuilder tenantId(Long tenantId) {
+            this.organizationId = tenantId;
+            return this;
+        }
 
         public UserPrincipalBuilder tenantDbName(String tenantDbName) {
             this.organizationDbName = tenantDbName;

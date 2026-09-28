@@ -19,6 +19,7 @@ import com.bank.los.config.BankContext;
 import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.JwtTokenProvider;
 import com.bank.los.security.SecurityConstants;
+import com.bank.los.security.TenantResolutionService;
 import com.bank.los.security.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class TokenService {
     private final LoginDirectoryRepository loginDirectoryRepository;
     private final OrganizationRepository organizationRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TenantResolutionService tenantResolutionService;
 
     @Transactional
     public RefreshToken createRefreshToken(UserPrincipal principal) {
@@ -79,20 +81,21 @@ public class TokenService {
         Claims claims = jwtTokenProvider.getClaimsFromToken(rawRefreshToken);
         Long userId = claims.get(SecurityConstants.CLAIM_USER_ID, Number.class).longValue();
         String userType = claims.get(SecurityConstants.CLAIM_USER_TYPE, String.class);
-        String bankCode = claims.get(SecurityConstants.CLAIM_BANK_CODE, String.class);
-        if (bankCode == null) {
-            bankCode = claims.get(SecurityConstants.CLAIM_ORG_CODE, String.class);
+        
+        Number orgIdNum = claims.get(SecurityConstants.CLAIM_ORG_ID, Number.class);
+        if (orgIdNum == null) {
+            orgIdNum = claims.get(SecurityConstants.CLAIM_TENANT_ID, Number.class);
         }
-        String bankDb = claims.get(SecurityConstants.CLAIM_BANK_DB, String.class);
-        if (bankDb == null) {
-            bankDb = claims.get(SecurityConstants.CLAIM_ORG_DB, String.class);
-        }
-        if (bankDb == null) {
-            bankDb = claims.get(SecurityConstants.CLAIM_TENANT_DB, String.class);
+        Long orgId = orgIdNum != null ? orgIdNum.longValue() : null;
+
+        String orgCode = claims.get(SecurityConstants.CLAIM_ORG_CODE, String.class);
+        if (orgCode == null) {
+            orgCode = claims.get(SecurityConstants.CLAIM_BANK_CODE, String.class);
         }
 
-        if (bankDb == null) bankDb = BankContext.MASTER_BANK_ID;
-        BankContext.setCurrentBank(bankDb);
+        String resolvedDb = tenantResolutionService.resolveTenantDb(orgId, orgCode, null, userType);
+        OrganizationContext.setCurrentOrganization(resolvedDb);
+        BankContext.setCurrentBank(resolvedDb);
 
         RefreshToken storedToken = refreshTokenRepository.findByToken(rawRefreshToken)
                 .orElseThrow(() -> new UnauthorizedException("Refresh token record not found"));
@@ -104,7 +107,7 @@ public class TokenService {
             throw new UnauthorizedException("Refresh token has expired");
         }
 
-        UserPrincipal principal = rebuildPrincipal(userId, userType, bankCode, bankDb);
+        UserPrincipal principal = rebuildPrincipal(userId, userType, orgId, orgCode, resolvedDb);
         String newAccessToken = jwtTokenProvider.generateAccessToken(principal);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(principal);
 
@@ -124,20 +127,22 @@ public class TokenService {
     public void revokeRefreshToken(String rawRefreshToken) {
         if (jwtTokenProvider.validateToken(rawRefreshToken)) {
             Claims claims = jwtTokenProvider.getClaimsFromToken(rawRefreshToken);
-            String bankDb = claims.get(SecurityConstants.CLAIM_BANK_DB, String.class);
-            if (bankDb == null) {
-                bankDb = claims.get(SecurityConstants.CLAIM_ORG_DB, String.class);
+            Number orgIdNum = claims.get(SecurityConstants.CLAIM_ORG_ID, Number.class);
+            if (orgIdNum == null) {
+                orgIdNum = claims.get(SecurityConstants.CLAIM_TENANT_ID, Number.class);
             }
-            if (bankDb == null) {
-                bankDb = claims.get(SecurityConstants.CLAIM_TENANT_DB, String.class);
-            }
-            if (bankDb == null) bankDb = BankContext.MASTER_BANK_ID;
-            BankContext.setCurrentBank(bankDb);
+            Long orgId = orgIdNum != null ? orgIdNum.longValue() : null;
+            String orgCode = claims.get(SecurityConstants.CLAIM_ORG_CODE, String.class);
+            String userType = claims.get(SecurityConstants.CLAIM_USER_TYPE, String.class);
+
+            String resolvedDb = tenantResolutionService.resolveTenantDb(orgId, orgCode, null, userType);
+            OrganizationContext.setCurrentOrganization(resolvedDb);
+            BankContext.setCurrentBank(resolvedDb);
         }
         refreshTokenRepository.revokeByToken(rawRefreshToken);
     }
 
-    private UserPrincipal rebuildPrincipal(Long userId, String userType, String orgCode, String orgDb) {
+    private UserPrincipal rebuildPrincipal(Long userId, String userType, Long orgId, String orgCode, String orgDb) {
         if (ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(userType)) {
             OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
             InternalUser u = internalUserRepository.findById(userId)
@@ -149,6 +154,7 @@ public class TokenService {
                     .fullName(u.getFullName())
                     .role(u.getRole().getName())
                     .userType("INTERNAL")
+                    .organizationId(0L)
                     .organizationCode("MASTER")
                     .organizationDbName(OrganizationContext.MASTER_ORG_ID)
                     .active(true)
@@ -164,6 +170,7 @@ public class TokenService {
                     .fullName(u.getFullName())
                     .role(u.getRole().getName())
                     .userType("STAFF")
+                    .organizationId(orgId)
                     .organizationCode(orgCode)
                     .organizationDbName(orgDb)
                     .branchId(u.getLoginBranch() != null ? u.getLoginBranch().getId() : null)
@@ -180,6 +187,7 @@ public class TokenService {
                     .fullName(c.getFirstName() + " " + c.getLastName())
                     .role("CUSTOMER")
                     .userType("CUSTOMER")
+                    .organizationId(orgId)
                     .organizationCode(orgCode)
                     .organizationDbName(orgDb)
                     .branchId(c.getBranch() != null ? c.getBranch().getId() : null)

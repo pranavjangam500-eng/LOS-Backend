@@ -47,11 +47,13 @@ public class JwtTokenProvider {
         claims.put(SecurityConstants.CLAIM_USER_ID,   userPrincipal.getId());
         claims.put(SecurityConstants.CLAIM_USER_TYPE, userPrincipal.getUserType());
         claims.put(SecurityConstants.CLAIM_ROLE,      userPrincipal.getRole());
+        claims.put(SecurityConstants.CLAIM_ORG_ID,    userPrincipal.getOrganizationId());
+        claims.put(SecurityConstants.CLAIM_TENANT_ID, userPrincipal.getOrganizationId());
+        if (userPrincipal.getOrganizationUuid() != null) {
+            claims.put(SecurityConstants.CLAIM_ORG_UUID, userPrincipal.getOrganizationUuid().toString());
+        }
         claims.put(SecurityConstants.CLAIM_BANK_CODE, userPrincipal.getOrganizationCode());
-        claims.put(SecurityConstants.CLAIM_BANK_DB,   userPrincipal.getOrganizationDbName());
         claims.put(SecurityConstants.CLAIM_ORG_CODE,  userPrincipal.getOrganizationCode());
-        claims.put(SecurityConstants.CLAIM_ORG_DB,    userPrincipal.getOrganizationDbName());
-        claims.put(SecurityConstants.CLAIM_TENANT_DB, userPrincipal.getOrganizationDbName());
         claims.put(SecurityConstants.CLAIM_BRANCH_ID, userPrincipal.getBranchId());
         claims.put(SecurityConstants.CLAIM_FULL_NAME, userPrincipal.getFullName());
 
@@ -77,8 +79,8 @@ public class JwtTokenProvider {
         Map<String, Object> claims = new HashMap<>();
         claims.put(SecurityConstants.CLAIM_USER_ID,   userPrincipal.getId());
         claims.put(SecurityConstants.CLAIM_USER_TYPE, userPrincipal.getUserType());
-        claims.put(SecurityConstants.CLAIM_ORG_DB,    userPrincipal.getOrganizationDbName());
-        claims.put(SecurityConstants.CLAIM_TENANT_DB, userPrincipal.getOrganizationDbName());
+        claims.put(SecurityConstants.CLAIM_ORG_ID,    userPrincipal.getOrganizationId());
+        claims.put(SecurityConstants.CLAIM_TENANT_ID, userPrincipal.getOrganizationId());
         claims.put(SecurityConstants.CLAIM_ORG_CODE,  userPrincipal.getOrganizationCode());
         claims.put("temp", true); // marks this as a temp/challenge token, not a full auth token
 
@@ -100,9 +102,9 @@ public class JwtTokenProvider {
         claims.put("jti", java.util.UUID.randomUUID().toString());
         claims.put(SecurityConstants.CLAIM_USER_ID,   userPrincipal.getId());
         claims.put(SecurityConstants.CLAIM_USER_TYPE, userPrincipal.getUserType());
+        claims.put(SecurityConstants.CLAIM_ORG_ID,    userPrincipal.getOrganizationId());
+        claims.put(SecurityConstants.CLAIM_TENANT_ID, userPrincipal.getOrganizationId());
         claims.put(SecurityConstants.CLAIM_ORG_CODE,  userPrincipal.getOrganizationCode());
-        claims.put(SecurityConstants.CLAIM_ORG_DB,    userPrincipal.getOrganizationDbName());
-        claims.put(SecurityConstants.CLAIM_TENANT_DB, userPrincipal.getOrganizationDbName());
 
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())
