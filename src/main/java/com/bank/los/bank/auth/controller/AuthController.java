@@ -72,10 +72,24 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Logout user and revoke refresh token")
-    public ResponseEntity<ApiResponse<String>> logout(@Valid @RequestBody LogoutRequest request) {
-        tokenService.revokeRefreshToken(request.getRefreshToken());
+    @Operation(summary = "Logout user, invalidate active session, and revoke refresh token",
+               security = @SecurityRequirement(name = "BearerAuth"))
+    public ResponseEntity<ApiResponse<String>> logout(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestBody(required = false) LogoutRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
+        String ipAddress = getClientIp(httpRequest);
+        authenticationService.logout(principal, request, ipAddress);
         return ResponseEntity.ok(ApiResponse.ok("Logged out successfully", "OK"));
+    }
+
+    private String getClientIp(jakarta.servlet.http.HttpServletRequest request) {
+        if (request == null) return "127.0.0.1";
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null || xfHeader.isEmpty()) {
+            return request.getRemoteAddr() != null ? request.getRemoteAddr() : "127.0.0.1";
+        }
+        return xfHeader.split(",")[0].trim();
     }
 
     @GetMapping("/health")

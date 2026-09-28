@@ -74,6 +74,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     BankContext.setCurrentBankCode(orgCode);
                 }
 
+                String jti = claims.getId();
+                if (jti == null) {
+                    jti = claims.get(SecurityConstants.CLAIM_JTI, String.class);
+                }
+
                 UserPrincipal userPrincipal = UserPrincipal.builder()
                         .id(userId)
                         .email(username)
@@ -86,6 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .branchId(branchId)
                         .fullName(fullName)
                         .active(true)
+                        .jti(jti)
                         .build();
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

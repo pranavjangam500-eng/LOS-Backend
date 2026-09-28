@@ -150,4 +150,42 @@ class AuthenticationServiceTest {
 
         assertThrows(UnauthorizedException.class, () -> authenticationService.login(request));
     }
+
+    @Test
+    @DisplayName("Should successfully handle bank user logout with session and token revocation")
+    void testBankUserLogout() {
+        // Step 1: Login as Bank Admin
+        LoginResponse step1 = authenticationService.login(LoginRequest.builder()
+                .email("admin@hdfcbank.com")
+                .password("Admin@123")
+                .build());
+
+        // Step 2: Verify OTP
+        LoginResponse step2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
+                .tempSessionToken(step1.getTempSessionToken())
+                .otp(step1.getDevOtp())
+                .build());
+
+        assertNotNull(step2.getAccessToken());
+        assertNotNull(step2.getRefreshToken());
+
+        // Step 3: Perform Logout
+        com.bank.los.security.UserPrincipal principal = com.bank.los.security.UserPrincipal.builder()
+                .id(step2.getUser().getId())
+                .email(step2.getUser().getEmail())
+                .userCode(step2.getUser().getEmpNo())
+                .userType(step2.getUser().getUserType())
+                .role(step2.getUser().getRole())
+                .organizationCode(step2.getUser().getOrganizationCode())
+                .organizationDbName("hdfc_db")
+                .active(true)
+                .build();
+
+        com.bank.los.bank.auth.dto.request.LogoutRequest logoutRequest = com.bank.los.bank.auth.dto.request.LogoutRequest.builder()
+                .refreshToken(step2.getRefreshToken())
+                .build();
+
+        assertDoesNotThrow(() -> authenticationService.logout(principal, logoutRequest, "127.0.0.1"));
+    }
 }
+

@@ -1,7 +1,6 @@
 package com.bank.los.bank.auth.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,9 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "Request body for user logout")
+@Schema(description = "Request body for user logout (optional refresh token)")
 public class LogoutRequest {
 
-    @NotBlank(message = "Refresh token is required")
+    @Schema(description = "Optional refresh token to revoke upon logout")
     private String refreshToken;
 }

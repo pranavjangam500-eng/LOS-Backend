@@ -50,6 +50,12 @@ import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
+import com.bank.los.administration.audit.service.AdminAuditService;
+import com.bank.los.bank.audit.service.BankAuditService;
+import com.bank.los.bank.master.repository.RefreshTokenRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -62,6 +68,7 @@ public class AuthenticationService {
     private final CustomerRepository            customerRepository;
     private final SelfServiceResetTokenRepository resetTokenRepository;
     private final SessionActivityRepository     sessionActivityRepository;
+    private final RefreshTokenRepository        refreshTokenRepository;
     private final PasswordEncoder               passwordEncoder;
     private final JwtTokenProvider              jwtTokenProvider;
     private final TokenService                  tokenService;
@@ -70,6 +77,8 @@ public class AuthenticationService {
     private final EmailService                  emailService;
     private final PermissionService             permissionService;
     private final TenantResolutionService       tenantResolutionService;
+    private final BankAuditService              bankAuditService;
+    private final AdminAuditService             adminAuditService;
 
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
@@ -443,6 +452,88 @@ public class AuthenticationService {
         Customer customer = customerRepository.findById(principal.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         return authMapper.toProfileResponse(customer, org);
+    }
+
+    // =====================================================================
+    //  LOGOUT
+    // =====================================================================
+
+    @Transactional
+    public void logout(UserPrincipal principal, LogoutRequest request, String ipAddress) {
+        log.info("Processing logout request. Principal: {}, Request: {}",
+                principal != null ? principal.getUsername() : "anonymous",
+                request != null ? (request.getRefreshToken() != null ? "[provided]" : "[empty]") : "[none]");
+
+        // 1. If explicit refresh token was provided in request body, revoke it
+        if (request != null && StringUtils.hasText(request.getRefreshToken())) {
+            try {
+                tokenService.revokeRefreshToken(request.getRefreshToken());
+            } catch (Exception ex) {
+                log.debug("Notice revoking explicit refresh token: {}", ex.getMessage());
+            }
+        }
+
+        // 2. If authenticated principal is available, perform session invalidation, token cleanup, and audit logging
+        if (principal != null) {
+            String orgDb = principal.getOrganizationDbName();
+            if (orgDb == null) {
+                orgDb = ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(principal.getUserType())
+                        ? OrganizationContext.MASTER_ORG_ID
+                        : OrganizationContext.MASTER_ORG_ID;
+            }
+            OrganizationContext.setCurrentOrganization(orgDb);
+            BankContext.setCurrentBank(orgDb);
+
+            // Invalidate session activity
+            if (StringUtils.hasText(principal.getJti())) {
+                try {
+                    sessionActivityRepository.invalidateByJti(principal.getJti());
+                } catch (Exception ex) {
+                    log.debug("Notice invalidating session by jti: {}", ex.getMessage());
+                }
+            }
+            if (principal.getId() != null) {
+                try {
+                    sessionActivityRepository.invalidateAllForUser(principal.getId());
+                } catch (Exception ex) {
+                    log.debug("Notice invalidating session for user: {}", ex.getMessage());
+                }
+            }
+
+            // Revoke all refresh tokens for this user in their tenant DB / Master DB
+            if (principal.getId() != null && principal.getUserType() != null) {
+                try {
+                    refreshTokenRepository.revokeAllForUser(principal.getId(), principal.getUserType());
+                } catch (Exception ex) {
+                    log.debug("Notice revoking refresh tokens on logout: {}", ex.getMessage());
+                }
+            }
+
+            // Audit log
+            if (ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(principal.getUserType())) {
+                adminAuditService.logAdminAction(
+                        principal.getId(),
+                        principal.getUsername(),
+                        "USER_LOGOUT",
+                        "AUTH",
+                        principal.getOrganizationCode(),
+                        "Internal admin logged out successfully",
+                        ipAddress
+                );
+            } else {
+                bankAuditService.logAction(
+                        principal,
+                        "USER_LOGOUT",
+                        "AUTH",
+                        "Bank user logged out successfully",
+                        ipAddress
+                );
+            }
+
+            SecurityContextHolder.clearContext();
+            log.info("User {} (type={}, org={}) logged out successfully",
+                    principal.getUsername(), principal.getUserType(), principal.getOrganizationCode());
+        }
     }
 
     private void validateInternalUser(InternalUser user, String rawPassword, String identifier) {
