@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/organizations")
+@RequestMapping({"/api/v1/administration/organizations", "/api/v1/organizations"})
 @RequiredArgsConstructor
 @Tag(name = "Organization Management", description = "Endpoints for onboarding and managing Bank/NBFC organizations (Internal Admin only)")
 @SecurityRequirement(name = "BearerAuth")

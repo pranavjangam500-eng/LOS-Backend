@@ -17,8 +17,16 @@ public class BankUserManagementService {
 
     private final UserService userService;
 
+    public List<UserResponse> listAllUsers(UserPrincipal principal, Long organizationId) {
+        return userService.getAllUsers(principal, organizationId);
+    }
+
     public List<UserResponse> listAllUsersForOrganization(UserPrincipal principal, Long organizationId) {
         return userService.getAllUsers(principal, organizationId);
+    }
+
+    public UserResponse getUserById(UserPrincipal principal, Long userId, Long organizationId) {
+        return userService.getUserById(principal, userId, organizationId);
     }
 
     public UserResponse provisionBankAdmin(UserPrincipal principal, CreateUserRequest request) {

@@ -18,13 +18,34 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/administration/user-management")
+@RequestMapping({"/api/v1/administration/user-management", "/api/v1/administration/users"})
 @RequiredArgsConstructor
 @Tag(name = "Bank User Administration", description = "Endpoints for platform administrators to provision and manage bank users")
 @SecurityRequirement(name = "BearerAuth")
 public class BankUserManagementController {
 
     private final BankUserManagementService bankUserManagementService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "List all staff and users across all organizations or for a specific organization")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> listAllUsers(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @RequestParam(required = false) Long organizationId) {
+        List<UserResponse> users = bankUserManagementService.listAllUsers(principal, organizationId);
+        return ResponseEntity.ok(ApiResponse.ok(users));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Get user details by ID for platform administration")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestParam(required = false) Long organizationId) {
+        UserResponse user = bankUserManagementService.getUserById(principal, id, organizationId);
+        return ResponseEntity.ok(ApiResponse.ok(user));
+    }
 
     @GetMapping("/organizations/{orgId}/users")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
