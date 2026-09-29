@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/administration/lookups")
+@RequestMapping({"/api/v1/administration/lookups", "/api/v1/admin/lookups"})
 @RequiredArgsConstructor
 @Tag(name = "Administration Lookups", description = "Central Platform Lookup Management (System Admin Master Database)")
 @SecurityRequirement(name = "BearerAuth")
@@ -106,6 +106,18 @@ public class AdministrationLookupController {
     public ResponseEntity<ApiResponse<List<LookupTypeResponse>>> getBankLookups(@PathVariable String bankCode) {
         List<LookupTypeResponse> bankLookups = administrationLookupService.getBankLookups(bankCode);
         return ResponseEntity.ok(ApiResponse.ok(bankLookups));
+    }
+
+    @PutMapping("/banks/{bankCode}/types/{code}/capabilities")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Configure bank capabilities (canView, canAdd, canImportFromMaster, canEdit, canDelete, canActivate, canDeactivate) for a specific lookup type")
+    public ResponseEntity<ApiResponse<LookupTypeResponse>> updateBankLookupCapabilities(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable String bankCode,
+            @PathVariable String code,
+            @Valid @RequestBody UpdateBankLookupCapabilitiesRequest request) {
+        LookupTypeResponse updated = administrationLookupService.updateBankLookupCapabilities(bankCode, code, request, principal);
+        return ResponseEntity.ok(ApiResponse.ok("Lookup capabilities for bank " + bankCode + " updated successfully", updated));
     }
 
     @PostMapping("/sync/{bankCode}")

@@ -286,6 +286,18 @@ class BankLookupServiceTest {
     @Test
     @DisplayName("Get options by lookup code returns active sub-types")
     void testGetOptionsByLookupCode() {
+        when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_VIEW))).thenReturn(true);
+
+        BankLookupType loanType = BankLookupType.builder()
+                .id(4L)
+                .code("10004")
+                .description("Loan Type")
+                .isFixed(false)
+                .canView(true)
+                .build();
+
+        when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+
         BankLookupSubType option1 = BankLookupSubType.builder()
                 .id(1L)
                 .lookupTypeCode("10004")
@@ -313,5 +325,116 @@ class BankLookupServiceTest {
         assertEquals(2, options.size());
         assertEquals("Personal Loan", options.get(0).getSubTypeDescription());
         assertEquals("Home Loan", options.get(1).getSubTypeDescription());
+    }
+
+    @Test
+    @DisplayName("Dual Authorization: User has LOOKUP_BANK_EDIT, but Loan Type canEdit=false -> DENY")
+    void testDualAuthorization_EditPermissionAllowed_CapabilityDisabled_ThrowsBusinessException() {
+        when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_EDIT))).thenReturn(true);
+
+        BankLookupType loanType = BankLookupType.builder()
+                .id(4L)
+                .code("10004")
+                .description("Loan Type")
+                .isFixed(false)
+                .canEdit(false)
+                .build();
+
+        BankLookupSubType subType = BankLookupSubType.builder()
+                .id(20L)
+                .lookupTypeCode("10004")
+                .subTypeCode("2")
+                .subTypeDescription("Home Loan")
+                .isFixed(false)
+                .build();
+
+        when(bankLookupSubTypeRepository.findById(20L)).thenReturn(Optional.of(subType));
+        when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+
+        BankUpdateLookupSubTypeRequest req = BankUpdateLookupSubTypeRequest.builder()
+                .subTypeDescription("Updated Home Loan")
+                .build();
+
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                bankLookupService.updateBankSubType(bankPrincipal, 20L, req));
+
+        assertTrue(ex.getMessage().contains("does not allow editing"));
+    }
+
+    @Test
+    @DisplayName("Dual Authorization: User has LOOKUP_BANK_ADD, but Loan Type canAdd=false -> DENY")
+    void testDualAuthorization_AddPermissionAllowed_CapabilityDisabled_ThrowsBusinessException() {
+        when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_ADD))).thenReturn(true);
+
+        BankLookupType loanType = BankLookupType.builder()
+                .id(4L)
+                .code("10004")
+                .description("Loan Type")
+                .isFixed(false)
+                .canAdd(false)
+                .build();
+
+        when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+
+        BankCreateLookupSubTypeRequest req = BankCreateLookupSubTypeRequest.builder()
+                .subTypeCode("99")
+                .subTypeDescription("Gold Loan")
+                .build();
+
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                bankLookupService.addBankSubType(bankPrincipal, "10004", req));
+
+        assertTrue(ex.getMessage().contains("does not allow adding custom options"));
+    }
+
+    @Test
+    @DisplayName("Dual Authorization: User has LOOKUP_BANK_DELETE, but Loan Type canDelete=false -> DENY")
+    void testDualAuthorization_DeletePermissionAllowed_CapabilityDisabled_ThrowsBusinessException() {
+        when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_DELETE))).thenReturn(true);
+
+        BankLookupType loanType = BankLookupType.builder()
+                .id(4L)
+                .code("10004")
+                .description("Loan Type")
+                .isFixed(false)
+                .canDelete(false)
+                .build();
+
+        BankLookupSubType subType = BankLookupSubType.builder()
+                .id(20L)
+                .lookupTypeCode("10004")
+                .subTypeCode("2")
+                .subTypeDescription("Home Loan")
+                .isFixed(false)
+                .build();
+
+        when(bankLookupSubTypeRepository.findById(20L)).thenReturn(Optional.of(subType));
+        when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                bankLookupService.deleteBankSubType(bankPrincipal, 20L));
+
+        assertTrue(ex.getMessage().contains("does not allow deleting"));
+    }
+
+    @Test
+    @DisplayName("Dual Authorization: View lookup when canView=false throws BusinessException")
+    void testDualAuthorization_ViewDisabled_ThrowsBusinessException() {
+        when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_VIEW))).thenReturn(true);
+
+        BankLookupType loanType = BankLookupType.builder()
+                .id(4L)
+                .code("10004")
+                .description("Loan Type")
+                .isFixed(false)
+                .canView(false)
+                .build();
+
+        when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                bankLookupService.getLookupTypeByCode(bankPrincipal, "10004"));
+
+        assertTrue(ex.getMessage().contains("viewing is disabled"));
     }
 }

@@ -1,5 +1,6 @@
 package com.bank.los.administration.lookup;
 
+import com.bank.los.administration.audit.service.AdminAuditService;
 import com.bank.los.administration.lookup.dto.*;
 import com.bank.los.administration.lookup.service.AdministrationLookupService;
 import com.bank.los.administration.master.entity.MasterLookupSubType;
@@ -47,6 +48,9 @@ class AdministrationLookupServiceTest {
 
     @Mock
     private BankLookupSubTypeRepository bankLookupSubTypeRepository;
+
+    @Mock
+    private AdminAuditService adminAuditService;
 
     @InjectMocks
     private AdministrationLookupService lookupService;
@@ -174,5 +178,42 @@ class AdministrationLookupServiceTest {
         assertDoesNotThrow(() -> lookupService.syncMasterLookupsToBank("HDFC01"));
         verify(bankLookupTypeRepository, atLeastOnce()).save(any(BankLookupType.class));
         verify(bankLookupSubTypeRepository, atLeastOnce()).save(any(BankLookupSubType.class));
+    }
+
+    @Test
+    @DisplayName("Admin can update bank lookup capabilities")
+    void testUpdateBankLookupCapabilities() {
+        Organization org = Organization.builder()
+                .id(1L)
+                .institutionCode("HDFC01")
+                .dbName("los_hdfc01_db")
+                .build();
+
+        when(organizationRepository.findByCode("HDFC01")).thenReturn(Optional.of(org));
+
+        BankLookupType loanType = BankLookupType.builder()
+                .id(4L)
+                .code("10004")
+                .description("Loan Type")
+                .isFixed(false)
+                .canEdit(true)
+                .canDelete(true)
+                .build();
+
+        when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+        when(bankLookupTypeRepository.save(any(BankLookupType.class))).thenAnswer(i -> i.getArgument(0));
+
+        UpdateBankLookupCapabilitiesRequest req = UpdateBankLookupCapabilitiesRequest.builder()
+                .canEdit(false)
+                .canDelete(false)
+                .build();
+
+        LookupTypeResponse response = lookupService.updateBankLookupCapabilities("HDFC01", "10004", req, adminPrincipal);
+
+        assertNotNull(response);
+        assertFalse(response.getCanEdit());
+        assertFalse(response.getCanDelete());
+        assertTrue(response.getCanView());
+        verify(adminAuditService, times(1)).logAdminAction(any(), any(), eq("UPDATE_BANK_LOOKUP_CAPABILITIES"), any(), eq("HDFC01"), any(), any());
     }
 }

@@ -19,6 +19,28 @@ public class LookupTypeResponse {
     private String description;
     private Boolean isFixed;
     private Boolean isActive;
+
+    @Builder.Default
+    private Boolean canView = true;
+
+    @Builder.Default
+    private Boolean canAdd = true;
+
+    @Builder.Default
+    private Boolean canImportFromMaster = true;
+
+    @Builder.Default
+    private Boolean canEdit = true;
+
+    @Builder.Default
+    private Boolean canDelete = true;
+
+    @Builder.Default
+    private Boolean canActivate = true;
+
+    @Builder.Default
+    private Boolean canDeactivate = true;
+
     private Long createdBy;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")

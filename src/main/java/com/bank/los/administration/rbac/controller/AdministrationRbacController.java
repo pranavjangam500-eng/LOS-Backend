@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/administration/rbac")
+@RequestMapping({"/api/v1/administration/rbac", "/api/v1/admin/rbac"})
 @RequiredArgsConstructor
 @Tag(name = "Administration RBAC", description = "Central Platform Permission & Master Role Management")
 @SecurityRequirement(name = "BearerAuth")

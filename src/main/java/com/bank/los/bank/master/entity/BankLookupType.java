@@ -39,6 +39,34 @@ public class BankLookupType {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Builder.Default
+    @Column(name = "can_view", nullable = false)
+    private Boolean canView = true;
+
+    @Builder.Default
+    @Column(name = "can_add", nullable = false)
+    private Boolean canAdd = true;
+
+    @Builder.Default
+    @Column(name = "can_import_from_master", nullable = false)
+    private Boolean canImportFromMaster = true;
+
+    @Builder.Default
+    @Column(name = "can_edit", nullable = false)
+    private Boolean canEdit = true;
+
+    @Builder.Default
+    @Column(name = "can_delete", nullable = false)
+    private Boolean canDelete = true;
+
+    @Builder.Default
+    @Column(name = "can_activate", nullable = false)
+    private Boolean canActivate = true;
+
+    @Builder.Default
+    @Column(name = "can_deactivate", nullable = false)
+    private Boolean canDeactivate = true;
+
     @Column(name = "created_by")
     private Long createdBy;
 

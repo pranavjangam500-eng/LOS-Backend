@@ -1,5 +1,6 @@
 package com.bank.los.administration.lookup.service;
 
+import com.bank.los.administration.audit.service.AdminAuditService;
 import com.bank.los.administration.lookup.dto.*;
 import com.bank.los.administration.master.entity.MasterLookupSubType;
 import com.bank.los.administration.master.entity.MasterLookupType;
@@ -34,6 +35,7 @@ public class AdministrationLookupService {
     private final OrganizationRepository organizationRepository;
     private final BankLookupTypeRepository bankLookupTypeRepository;
     private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
+    private final AdminAuditService adminAuditService;
 
     @Transactional(readOnly = true)
     public List<LookupTypeResponse> getAllLookupTypes() {
@@ -275,6 +277,52 @@ public class AdministrationLookupService {
         }
     }
 
+    @Transactional
+    public LookupTypeResponse updateBankLookupCapabilities(
+            String bankCode,
+            String lookupTypeCode,
+            UpdateBankLookupCapabilitiesRequest request,
+            UserPrincipal principal) {
+        Organization org = organizationRepository.findByCode(bankCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Bank / Organization not found with code: " + bankCode));
+
+        String previousBank = BankContext.getCurrentBank();
+        String previousOrg = OrganizationContext.getCurrentOrganization();
+        try {
+            BankContext.setCurrentBank(org.getDbName());
+            OrganizationContext.setCurrentOrganization(org.getDbName());
+
+            BankLookupType bt = bankLookupTypeRepository.findByCode(lookupTypeCode)
+                    .orElseThrow(() -> new ResourceNotFoundException("Lookup type not found in bank database with code: " + lookupTypeCode));
+
+            if (request.getCanView() != null) bt.setCanView(request.getCanView());
+            if (request.getCanAdd() != null) bt.setCanAdd(request.getCanAdd());
+            if (request.getCanImportFromMaster() != null) bt.setCanImportFromMaster(request.getCanImportFromMaster());
+            if (request.getCanEdit() != null) bt.setCanEdit(request.getCanEdit());
+            if (request.getCanDelete() != null) bt.setCanDelete(request.getCanDelete());
+            if (request.getCanActivate() != null) bt.setCanActivate(request.getCanActivate());
+            if (request.getCanDeactivate() != null) bt.setCanDeactivate(request.getCanDeactivate());
+
+            bt.setModifiedBy(principal != null ? principal.getId() : null);
+            BankLookupType saved = bankLookupTypeRepository.save(bt);
+
+            if (principal != null) {
+                adminAuditService.logAdminAction(
+                        principal.getId(), principal.getEmail(), "UPDATE_BANK_LOOKUP_CAPABILITIES",
+                        "LOOKUP", bankCode,
+                        "Updated capabilities for lookup " + lookupTypeCode + " in bank " + bankCode,
+                        null
+                );
+            }
+
+            log.info("Admin updated capabilities for lookup {} in bank {}", lookupTypeCode, bankCode);
+            return mapBankTypeToResponse(saved);
+        } finally {
+            BankContext.setCurrentBank(previousBank != null ? previousBank : BankContext.MASTER_DB_NAME);
+            OrganizationContext.setCurrentOrganization(previousOrg != null ? previousOrg : OrganizationContext.MASTER_ORG_ID);
+        }
+    }
+
     // =========================================================================
     //  MAPPERS
     // =========================================================================
@@ -326,6 +374,13 @@ public class AdministrationLookupService {
                 .description(entity.getDescription())
                 .isFixed(entity.getIsFixed())
                 .isActive(entity.getIsActive())
+                .canView(entity.getCanView() != null ? entity.getCanView() : true)
+                .canAdd(entity.getCanAdd() != null ? entity.getCanAdd() : true)
+                .canImportFromMaster(entity.getCanImportFromMaster() != null ? entity.getCanImportFromMaster() : true)
+                .canEdit(entity.getCanEdit() != null ? entity.getCanEdit() : true)
+                .canDelete(entity.getCanDelete() != null ? entity.getCanDelete() : true)
+                .canActivate(entity.getCanActivate() != null ? entity.getCanActivate() : true)
+                .canDeactivate(entity.getCanDeactivate() != null ? entity.getCanDeactivate() : true)
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt())
                 .modifiedBy(entity.getModifiedBy())

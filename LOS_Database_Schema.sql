@@ -244,15 +244,22 @@ CREATE INDEX idx_customers_branch_id ON customer.customers(branch_id);
 -- identity.lookup_types (Table 51001) - Bank Lookup Types
 -- ---------------------------------------------------------------------
 CREATE TABLE identity.lookup_types (
-    id            BIGSERIAL PRIMARY KEY,
-    code          VARCHAR(50) NOT NULL UNIQUE,
-    description   VARCHAR(255) NOT NULL,
-    is_fixed      BOOLEAN NOT NULL DEFAULT false,
-    is_active     BOOLEAN NOT NULL DEFAULT true,
-    created_by    BIGINT,
-    created_at    TIMESTAMP NOT NULL DEFAULT now(),
-    modified_by   BIGINT,
-    updated_at    TIMESTAMP NOT NULL DEFAULT now()
+    id                      BIGSERIAL PRIMARY KEY,
+    code                    VARCHAR(50) NOT NULL UNIQUE,
+    description             VARCHAR(255) NOT NULL,
+    is_fixed                BOOLEAN NOT NULL DEFAULT false,
+    is_active               BOOLEAN NOT NULL DEFAULT true,
+    can_view                BOOLEAN NOT NULL DEFAULT true,
+    can_add                 BOOLEAN NOT NULL DEFAULT true,
+    can_import_from_master  BOOLEAN NOT NULL DEFAULT true,
+    can_edit                BOOLEAN NOT NULL DEFAULT true,
+    can_delete              BOOLEAN NOT NULL DEFAULT true,
+    can_activate            BOOLEAN NOT NULL DEFAULT true,
+    can_deactivate          BOOLEAN NOT NULL DEFAULT true,
+    created_by              BIGINT,
+    created_at              TIMESTAMP NOT NULL DEFAULT now(),
+    modified_by             BIGINT,
+    updated_at              TIMESTAMP NOT NULL DEFAULT now()
 );
 
 -- ---------------------------------------------------------------------
