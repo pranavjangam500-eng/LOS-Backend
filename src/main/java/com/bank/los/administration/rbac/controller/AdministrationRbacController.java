@@ -62,6 +62,19 @@ public class AdministrationRbacController {
         return ResponseEntity.ok(ApiResponse.ok(summary));
     }
 
+    @PutMapping("/banks/{bankCode}/roles/{roleName}/permissions")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Configure permissions for a bank role as System Admin (accepts access permission codes like 201, 202 or names)")
+    public ResponseEntity<ApiResponse<com.bank.los.bank.rbac.dto.BankRolePermissionResponse>> updateBankRolePermissions(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable String bankCode,
+            @PathVariable String roleName,
+            @Valid @RequestBody com.bank.los.bank.rbac.dto.UpdateRolePermissionsRequest request) {
+        com.bank.los.bank.rbac.dto.BankRolePermissionResponse response = administrationRbacService.updateBankRolePermissions(
+                bankCode, roleName, request.getPermissions(), principal);
+        return ResponseEntity.ok(ApiResponse.ok("Bank role permissions updated successfully", response));
+    }
+
     @PostMapping("/sync/{bankCode}")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
     @Operation(summary = "Push/Sync master permissions to a specific Bank/NBFC without altering bank overrides")

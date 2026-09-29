@@ -293,6 +293,108 @@ public class BankRbacService {
                 .build();
     }
 
+    public static String resolveAccessPermissionCode(String codeOrName) {
+        if (codeOrName == null) return null;
+        String clean = codeOrName.trim().toUpperCase();
+        return switch (clean) {
+            case "201" -> "USER_CREATE";
+            case "202" -> "USER_UPDATE";
+            case "203" -> "USER_VIEW";
+            case "204" -> "USER_DEACTIVATE";
+            case "205" -> "USER_VERIFY";
+            case "206" -> "USER_RESET_PASSWORD";
+            case "207" -> "BRANCH_CREATE";
+            case "208" -> "BRANCH_UPDATE";
+            case "209" -> "BRANCH_VIEW";
+            case "210" -> "REPORT_VIEW";
+            case "211" -> "REPORT_EXPORT";
+            case "212" -> "DASHBOARD_VIEW";
+            case "213" -> "DASHBOARD_ANALYTICS_VIEW";
+            case "214" -> "ROLE_PERMISSION_MANAGE";
+            case "215" -> "LOOKUP_BANK_VIEW";
+            case "216" -> "LOOKUP_BANK_ADD";
+            case "217" -> "LOOKUP_BANK_ADD_FROM_MASTER";
+            case "218" -> "LOOKUP_BANK_EDIT";
+            case "219" -> "LOOKUP_BANK_DELETE";
+            case "220" -> "LOOKUP_BANK_ACTIVATE";
+            case "221" -> "LOOKUP_BANK_DEACTIVATE";
+            default -> clean;
+        };
+    }
+
+    @Transactional
+    public BankRolePermissionResponse updateRolePermissions(String roleName, List<String> permissions, UserPrincipal principal) {
+        setTenantContext(principal);
+
+        OrganizationRole role = organizationRoleRepository.findByName(roleName.trim().toUpperCase())
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with name: " + roleName));
+
+        String orgDb = principal != null ? principal.getOrganizationDbName() : BankContext.getCurrentBank();
+        DataSource ds = bankDataSourceProvider.getBankDataSource(orgDb);
+        if (ds == null) {
+            throw new BusinessException("Cannot connect to organization database: " + orgDb);
+        }
+
+        try (Connection conn = ds.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Delete existing role permissions
+                try (PreparedStatement delPs = conn.prepareStatement("DELETE FROM identity.role_permissions WHERE role_id = ?")) {
+                    delPs.setInt(1, role.getId());
+                    delPs.executeUpdate();
+                }
+
+                // Insert new role permissions
+                if (permissions != null) {
+                    for (String permInput : permissions) {
+                        String permCode = resolveAccessPermissionCode(permInput);
+                        if (permCode != null && !permCode.isEmpty()) {
+                            permissionRepository.findByCode(permCode).ifPresent(p -> {
+                                try (PreparedStatement insPs = conn.prepareStatement(
+                                        "INSERT INTO identity.role_permissions (role_id, permission_id) VALUES (?, ?)")) {
+                                    insPs.setInt(1, role.getId());
+                                    insPs.setInt(2, p.getId());
+                                    insPs.executeUpdate();
+                                } catch (Exception ex) {
+                                    log.error("Error inserting role permission: {}", ex.getMessage());
+                                }
+                            });
+                        }
+                    }
+                }
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw new BusinessException("Failed to update role permissions: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            throw new BusinessException("Database error while updating role permissions: " + e.getMessage());
+        }
+
+        log.info("Updated permissions for Role '{}' in org={}", role.getName(), orgDb);
+
+        if (principal != null) {
+            bankAuditService.logAction(
+                    principal, "UPDATE_ROLE_PERMISSIONS", "RBAC",
+                    "Updated base permissions for role " + role.getName() + " to: " + permissions, null
+            );
+        }
+
+        List<String> basePerms = getBaseRolePermissions(orgDb, role.getName());
+        List<PermissionOverrideResponse> overrides = getOverridesForTarget(orgDb, "ROLE", role.getName());
+        List<String> effective = permissionService.getEffectivePermissions(orgDb, role.getName(), null);
+
+        return BankRolePermissionResponse.builder()
+                .roleId(role.getId())
+                .roleName(role.getName())
+                .panel(role.getPanel())
+                .description(role.getDescription())
+                .basePermissions(basePerms)
+                .overrides(overrides)
+                .effectivePermissions(effective)
+                .build();
+    }
+
     // =========================================================================
     //  HELPERS
     // =========================================================================

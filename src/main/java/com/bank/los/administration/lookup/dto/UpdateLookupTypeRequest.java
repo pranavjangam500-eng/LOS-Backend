@@ -18,4 +18,6 @@ public class UpdateLookupTypeRequest {
     private Boolean isFixed;
 
     private Boolean isActive;
+
+    private java.util.List<String> permissions;
 }

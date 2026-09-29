@@ -144,6 +144,19 @@ CREATE TABLE identity.lookup_sub_types (
 
 CREATE INDEX idx_master_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
 
+-- ---------------------------------------------------------------------
+-- identity.master_lookup_type_permissions - Dynamic Master Lookup Permissions
+-- ---------------------------------------------------------------------
+CREATE TABLE identity.master_lookup_type_permissions (
+    id                BIGSERIAL PRIMARY KEY,
+    lookup_type_code  VARCHAR(50) NOT NULL,
+    permission_code   VARCHAR(50) NOT NULL,
+    created_at        TIMESTAMP NOT NULL DEFAULT now(),
+    CONSTRAINT uk_master_lt_permission UNIQUE (lookup_type_code, permission_code)
+);
+
+CREATE INDEX idx_master_lt_perm_code ON identity.master_lookup_type_permissions(lookup_type_code);
+
 -- =====================================================================
 -- END OF PART A
 -- =====================================================================

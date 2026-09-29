@@ -44,8 +44,35 @@ public class BankLookupService {
     private final BankAuditService bankAuditService;
 
     public static final Set<String> DEFAULT_LOOKUP_PERMISSIONS = Set.of(
-            "VIEW", "ADD", "ADD_FROM_MASTER", "EDIT", "DELETE", "ACTIVATE", "DEACTIVATE"
+            "101", "102", "103", "104", "105", "106", "107"
     );
+
+    public static String resolveActionFromCode(String codeOrAction) {
+        if (codeOrAction == null) return null;
+        String clean = codeOrAction.trim().toUpperCase();
+        return switch (clean) {
+            case "101", "VIEW", "LOOKUP_BANK_VIEW" -> "VIEW";
+            case "102", "EDIT", "LOOKUP_BANK_EDIT" -> "EDIT";
+            case "103", "DELETE", "LOOKUP_BANK_DELETE" -> "DELETE";
+            case "104", "ADD", "LOOKUP_BANK_ADD" -> "ADD";
+            case "105", "ADD_FROM_MASTER", "LOOKUP_BANK_ADD_FROM_MASTER" -> "ADD_FROM_MASTER";
+            case "106", "ACTIVATE", "LOOKUP_BANK_ACTIVATE" -> "ACTIVATE";
+            case "107", "DEACTIVATE", "LOOKUP_BANK_DEACTIVATE" -> "DEACTIVATE";
+            default -> clean;
+        };
+    }
+
+    public boolean isLookupActionAllowed(String lookupTypeCode, String action) {
+        List<BankLookupTypePermission> perms = bankLookupTypePermissionRepository.findByLookupTypeCode(lookupTypeCode);
+        if (perms.isEmpty()) {
+            return true;
+        }
+        String targetAction = resolveActionFromCode(action);
+        return perms.stream().anyMatch(p -> {
+            String allowedAction = resolveActionFromCode(p.getPermissionCode());
+            return allowedAction != null && allowedAction.equalsIgnoreCase(targetAction);
+        });
+    }
 
     @Transactional(readOnly = true)
     public List<LookupTypeResponse> getAllLookupTypes(UserPrincipal principal) {
@@ -316,14 +343,6 @@ public class BankLookupService {
         }
 
         return mapSubTypeToResponse(saved);
-    }
-
-    public boolean isLookupActionAllowed(String lookupTypeCode, String action) {
-        List<BankLookupTypePermission> perms = bankLookupTypePermissionRepository.findByLookupTypeCode(lookupTypeCode);
-        if (perms.isEmpty()) {
-            return true;
-        }
-        return perms.stream().anyMatch(p -> p.getPermissionCode().equalsIgnoreCase(action));
     }
 
     private void checkPermission(UserPrincipal principal, String requiredPermission) {

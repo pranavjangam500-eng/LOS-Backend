@@ -37,6 +37,7 @@ public class AdministrationLookupService {
 
     private final MasterLookupTypeRepository masterLookupTypeRepository;
     private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
+    private final com.bank.los.administration.master.repository.MasterLookupTypePermissionRepository masterLookupTypePermissionRepository;
     private final OrganizationRepository organizationRepository;
     private final BankLookupTypeRepository bankLookupTypeRepository;
     private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
@@ -79,6 +80,21 @@ public class AdministrationLookupService {
                 .build();
 
         MasterLookupType saved = masterLookupTypeRepository.save(lookupType);
+
+        // Save permissions
+        List<String> permsToSave = (request.getPermissions() != null && !request.getPermissions().isEmpty())
+                ? request.getPermissions()
+                : new java.util.ArrayList<>(BankLookupService.DEFAULT_LOOKUP_PERMISSIONS);
+
+        for (String perm : permsToSave) {
+            if (perm != null && !perm.trim().isEmpty()) {
+                masterLookupTypePermissionRepository.save(com.bank.los.administration.master.entity.MasterLookupTypePermission.builder()
+                        .lookupTypeCode(saved.getCode())
+                        .permissionCode(perm.trim().toUpperCase())
+                        .build());
+            }
+        }
+
         log.info("Created new Master Lookup Type code={} by admin={}", saved.getCode(), principal != null ? principal.getEmail() : "SYSTEM");
         return mapToResponse(saved);
     }
@@ -101,6 +117,19 @@ public class AdministrationLookupService {
         type.setModifiedBy(principal != null ? principal.getId() : null);
 
         MasterLookupType saved = masterLookupTypeRepository.save(type);
+
+        if (request.getPermissions() != null) {
+            masterLookupTypePermissionRepository.deleteByLookupTypeCode(code);
+            for (String perm : request.getPermissions()) {
+                if (perm != null && !perm.trim().isEmpty()) {
+                    masterLookupTypePermissionRepository.save(com.bank.los.administration.master.entity.MasterLookupTypePermission.builder()
+                            .lookupTypeCode(code)
+                            .permissionCode(perm.trim().toUpperCase())
+                            .build());
+                }
+            }
+        }
+
         log.info("Updated Master Lookup Type code={} by admin={}", saved.getCode(), principal != null ? principal.getEmail() : "SYSTEM");
         return mapToResponse(saved);
     }
@@ -118,6 +147,7 @@ public class AdministrationLookupService {
         }
 
         masterLookupSubTypeRepository.deleteByLookupTypeCode(code);
+        masterLookupTypePermissionRepository.deleteByLookupTypeCode(code);
         masterLookupTypeRepository.delete(type);
         log.info("Deleted Master Lookup Type code={}", code);
     }
@@ -239,14 +269,25 @@ public class AdministrationLookupService {
                 bt.setIsActive(mt.getIsActive());
                 bankLookupTypeRepository.save(bt);
 
-                // Initialize default lookup permissions if not already configured
+                // Initialize lookup permissions from master DB or defaults if not already configured
                 List<BankLookupTypePermission> existingPerms = bankLookupTypePermissionRepository.findByLookupTypeCode(mt.getCode());
                 if (existingPerms.isEmpty()) {
-                    for (String perm : BankLookupService.DEFAULT_LOOKUP_PERMISSIONS) {
-                        bankLookupTypePermissionRepository.save(BankLookupTypePermission.builder()
-                                .lookupTypeCode(mt.getCode())
-                                .permissionCode(perm)
-                                .build());
+                    List<com.bank.los.administration.master.entity.MasterLookupTypePermission> masterPerms =
+                            masterLookupTypePermissionRepository.findByLookupTypeCode(mt.getCode());
+                    if (!masterPerms.isEmpty()) {
+                        for (com.bank.los.administration.master.entity.MasterLookupTypePermission mp : masterPerms) {
+                            bankLookupTypePermissionRepository.save(BankLookupTypePermission.builder()
+                                    .lookupTypeCode(mt.getCode())
+                                    .permissionCode(mp.getPermissionCode())
+                                    .build());
+                        }
+                    } else {
+                        for (String perm : BankLookupService.DEFAULT_LOOKUP_PERMISSIONS) {
+                            bankLookupTypePermissionRepository.save(BankLookupTypePermission.builder()
+                                    .lookupTypeCode(mt.getCode())
+                                    .permissionCode(perm)
+                                    .build());
+                        }
                     }
                 }
             }
@@ -354,13 +395,19 @@ public class AdministrationLookupService {
                 ? entity.getSubTypes().stream().map(this::mapSubTypeToResponse).collect(Collectors.toList())
                 : List.of();
 
+        List<com.bank.los.administration.master.entity.MasterLookupTypePermission> perms =
+                masterLookupTypePermissionRepository.findByLookupTypeCode(entity.getCode());
+        Set<String> permCodes = perms.isEmpty()
+                ? new HashSet<>(BankLookupService.DEFAULT_LOOKUP_PERMISSIONS)
+                : perms.stream().map(com.bank.los.administration.master.entity.MasterLookupTypePermission::getPermissionCode).collect(Collectors.toSet());
+
         return LookupTypeResponse.builder()
                 .id(entity.getId())
                 .code(entity.getCode())
                 .description(entity.getDescription())
                 .isFixed(entity.getIsFixed())
                 .isActive(entity.getIsActive())
-                .permissions(new HashSet<>(BankLookupService.DEFAULT_LOOKUP_PERMISSIONS))
+                .permissions(permCodes)
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt())
                 .modifiedBy(entity.getModifiedBy())

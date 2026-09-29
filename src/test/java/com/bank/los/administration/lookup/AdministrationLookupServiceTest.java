@@ -43,6 +43,9 @@ class AdministrationLookupServiceTest {
     private MasterLookupSubTypeRepository masterLookupSubTypeRepository;
 
     @Mock
+    private com.bank.los.administration.master.repository.MasterLookupTypePermissionRepository masterLookupTypePermissionRepository;
+
+    @Mock
     private OrganizationRepository organizationRepository;
 
     @Mock
@@ -94,6 +97,31 @@ class AdministrationLookupServiceTest {
         assertEquals("10008", response.getCode());
         assertEquals("Collateral Type", response.getDescription());
         assertFalse(response.getIsFixed());
+    }
+
+    @Test
+    @DisplayName("Admin creates master lookup type with custom permission codes (101, 102, 103)")
+    void testCreateLookupType_WithPermissions() {
+        CreateLookupTypeRequest request = CreateLookupTypeRequest.builder()
+                .code("10010")
+                .description("Custom Lookup")
+                .isFixed(false)
+                .isActive(true)
+                .permissions(List.of("101", "102", "103"))
+                .build();
+
+        when(masterLookupTypeRepository.existsByCode("10010")).thenReturn(false);
+        when(masterLookupTypeRepository.save(any(MasterLookupType.class))).thenAnswer(i -> {
+            MasterLookupType t = i.getArgument(0);
+            t.setId(11L);
+            return t;
+        });
+
+        LookupTypeResponse response = lookupService.createLookupType(request, adminPrincipal);
+
+        assertNotNull(response);
+        assertEquals("10010", response.getCode());
+        verify(masterLookupTypePermissionRepository, times(3)).save(any());
     }
 
     @Test

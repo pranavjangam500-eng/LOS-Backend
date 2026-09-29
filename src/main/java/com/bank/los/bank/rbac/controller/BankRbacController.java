@@ -44,6 +44,17 @@ public class BankRbacController {
         return ResponseEntity.ok(ApiResponse.ok(roles));
     }
 
+    @PutMapping("/roles/{roleName}/permissions")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN') or hasAuthority('ROLE_PERMISSION_MANAGE')")
+    @Operation(summary = "Assign or update permissions for a specific role (accepts access permission codes like 201, 202 or names)")
+    public ResponseEntity<ApiResponse<BankRolePermissionResponse>> updateRolePermissions(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable String roleName,
+            @Valid @RequestBody UpdateRolePermissionsRequest request) {
+        BankRolePermissionResponse response = bankRbacService.updateRolePermissions(roleName, request.getPermissions(), principal);
+        return ResponseEntity.ok(ApiResponse.ok("Role permissions updated successfully", response));
+    }
+
     @GetMapping("/designations")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN') or hasAuthority('ROLE_PERMISSION_MANAGE')")
     @Operation(summary = "List all designations with mapped roles and inherited/effective permissions")

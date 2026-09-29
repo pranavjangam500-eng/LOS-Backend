@@ -24,4 +24,6 @@ public class CreateLookupTypeRequest {
 
     @Builder.Default
     private Boolean isActive = true;
+
+    private java.util.List<String> permissions;
 }

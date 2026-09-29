@@ -156,6 +156,36 @@ public class AdministrationRbacService {
         }
     }
 
+    @Transactional
+    public BankRolePermissionResponse updateBankRolePermissions(String bankCode, String roleName, List<String> permissions, UserPrincipal principal) {
+        Organization org = organizationRepository.findByCode(bankCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Bank not found with code: " + bankCode));
+
+        String prevBank = BankContext.getCurrentBank();
+        String prevOrg = OrganizationContext.getCurrentOrganization();
+
+        try {
+            BankContext.setCurrentBank(org.getDbName());
+            OrganizationContext.setCurrentOrganization(org.getDbName());
+
+            BankRolePermissionResponse response = bankRbacService.updateRolePermissions(roleName, permissions, principal);
+
+            if (principal != null) {
+                adminAuditService.logAdminAction(
+                        principal.getId(), principal.getEmail(), "UPDATE_BANK_ROLE_PERMISSIONS",
+                        "RBAC", bankCode,
+                        "Updated permissions for role " + roleName + " in bank " + bankCode + ": " + permissions,
+                        null
+                );
+            }
+
+            return response;
+        } finally {
+            BankContext.setCurrentBank(prevBank != null ? prevBank : BankContext.MASTER_DB_NAME);
+            OrganizationContext.setCurrentOrganization(prevOrg != null ? prevOrg : OrganizationContext.MASTER_ORG_ID);
+        }
+    }
+
     public void syncPermissionsToBank(String bankCode) {
         Organization org = organizationRepository.findByCode(bankCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Bank not found with code: " + bankCode));

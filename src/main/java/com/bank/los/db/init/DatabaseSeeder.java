@@ -53,6 +53,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final LoginDirectoryRepository loginDirectoryRepository;
     private final MasterLookupTypeRepository masterLookupTypeRepository;
     private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
+    private final com.bank.los.administration.master.repository.MasterLookupTypePermissionRepository masterLookupTypePermissionRepository;
     private final com.bank.los.administration.master.repository.MasterPermissionRepository masterPermissionRepository;
 
     private final OrganizationRoleRepository organizationRoleRepository;
@@ -622,13 +623,50 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // 10008: Lookup Permissions (Fixed - System Permissions Catalogue for Lookups)
         seedMasterLookupType("10008", "Lookup Permissions", true);
-        seedMasterLookupSubType("10008", "Lookup Permissions", "VIEW", "View Lookup & Options", true, 1);
-        seedMasterLookupSubType("10008", "Lookup Permissions", "ADD", "Add Custom Option", true, 2);
-        seedMasterLookupSubType("10008", "Lookup Permissions", "ADD_FROM_MASTER", "Import Option from Master DB", true, 3);
-        seedMasterLookupSubType("10008", "Lookup Permissions", "EDIT", "Edit Option", true, 4);
-        seedMasterLookupSubType("10008", "Lookup Permissions", "DELETE", "Delete Option", true, 5);
-        seedMasterLookupSubType("10008", "Lookup Permissions", "ACTIVATE", "Activate Option", true, 6);
-        seedMasterLookupSubType("10008", "Lookup Permissions", "DEACTIVATE", "Deactivate Option", true, 7);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "101", "VIEW", true, 1);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "102", "EDIT", true, 2);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "103", "DELETE", true, 3);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "104", "ADD", true, 4);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "105", "ADD_FROM_MASTER", true, 5);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "106", "ACTIVATE", true, 6);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "107", "DEACTIVATE", true, 7);
+
+        // 10009: Access Permissions (Fixed - System Access Permissions for Roles)
+        seedMasterLookupType("10009", "Access Permissions", true);
+        seedMasterLookupSubType("10009", "Access Permissions", "201", "USER_CREATE", true, 1);
+        seedMasterLookupSubType("10009", "Access Permissions", "202", "USER_UPDATE", true, 2);
+        seedMasterLookupSubType("10009", "Access Permissions", "203", "USER_VIEW", true, 3);
+        seedMasterLookupSubType("10009", "Access Permissions", "204", "USER_DEACTIVATE", true, 4);
+        seedMasterLookupSubType("10009", "Access Permissions", "205", "USER_VERIFY", true, 5);
+        seedMasterLookupSubType("10009", "Access Permissions", "206", "USER_RESET_PASSWORD", true, 6);
+        seedMasterLookupSubType("10009", "Access Permissions", "207", "BRANCH_CREATE", true, 7);
+        seedMasterLookupSubType("10009", "Access Permissions", "208", "BRANCH_UPDATE", true, 8);
+        seedMasterLookupSubType("10009", "Access Permissions", "209", "BRANCH_VIEW", true, 9);
+        seedMasterLookupSubType("10009", "Access Permissions", "210", "REPORT_VIEW", true, 10);
+        seedMasterLookupSubType("10009", "Access Permissions", "211", "REPORT_EXPORT", true, 11);
+        seedMasterLookupSubType("10009", "Access Permissions", "212", "DASHBOARD_VIEW", true, 12);
+        seedMasterLookupSubType("10009", "Access Permissions", "213", "DASHBOARD_ANALYTICS_VIEW", true, 13);
+        seedMasterLookupSubType("10009", "Access Permissions", "214", "ROLE_PERMISSION_MANAGE", true, 14);
+        seedMasterLookupSubType("10009", "Access Permissions", "215", "LOOKUP_BANK_VIEW", true, 15);
+        seedMasterLookupSubType("10009", "Access Permissions", "216", "LOOKUP_BANK_ADD", true, 16);
+        seedMasterLookupSubType("10009", "Access Permissions", "217", "LOOKUP_BANK_ADD_FROM_MASTER", true, 17);
+        seedMasterLookupSubType("10009", "Access Permissions", "218", "LOOKUP_BANK_EDIT", true, 18);
+        seedMasterLookupSubType("10009", "Access Permissions", "219", "LOOKUP_BANK_DELETE", true, 19);
+        seedMasterLookupSubType("10009", "Access Permissions", "220", "LOOKUP_BANK_ACTIVATE", true, 20);
+        seedMasterLookupSubType("10009", "Access Permissions", "221", "LOOKUP_BANK_DEACTIVATE", true, 21);
+
+        // Seed default lookup permissions in master DB for all master lookup types
+        List<MasterLookupType> masterTypes = masterLookupTypeRepository.findAll();
+        for (MasterLookupType mt : masterTypes) {
+            if (masterLookupTypePermissionRepository.findByLookupTypeCode(mt.getCode()).isEmpty()) {
+                for (String perm : com.bank.los.bank.lookup.service.BankLookupService.DEFAULT_LOOKUP_PERMISSIONS) {
+                    masterLookupTypePermissionRepository.save(com.bank.los.administration.master.entity.MasterLookupTypePermission.builder()
+                            .lookupTypeCode(mt.getCode())
+                            .permissionCode(perm)
+                            .build());
+                }
+            }
+        }
     }
 
     private void seedMasterLookupType(String code, String description, boolean isFixed) {
