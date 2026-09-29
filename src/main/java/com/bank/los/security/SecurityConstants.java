@@ -23,8 +23,11 @@ public final class SecurityConstants {
     public static final String CLAIM_TENANT_DB       = "tenantDb";      // alias for backward compatibility
     public static final String CLAIM_BRANCH_ID       = "branchId";
     public static final String CLAIM_FULL_NAME       = "fullName";
+    public static final String CLAIM_DESIGNATION     = "designation";
+    public static final String CLAIM_PERMISSIONS     = "permissions";
     public static final String CLAIM_JTI             = "jti";          // JWT ID for session tracking
     public static final String CLAIM_TIMEOUT         = "timeoutSecs";  // inactive session timeout in JWT
+
 
     public static final String[] PUBLIC_URLS = {
             "/health",

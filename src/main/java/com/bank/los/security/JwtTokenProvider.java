@@ -56,8 +56,15 @@ public class JwtTokenProvider {
         claims.put(SecurityConstants.CLAIM_ORG_CODE,  userPrincipal.getOrganizationCode());
         claims.put(SecurityConstants.CLAIM_BRANCH_ID, userPrincipal.getBranchId());
         claims.put(SecurityConstants.CLAIM_FULL_NAME, userPrincipal.getFullName());
+        if (userPrincipal.getDesignation() != null) {
+            claims.put(SecurityConstants.CLAIM_DESIGNATION, userPrincipal.getDesignation());
+        }
+        if (userPrincipal.getPermissions() != null) {
+            claims.put(SecurityConstants.CLAIM_PERMISSIONS, userPrincipal.getPermissions());
+        }
 
         return Jwts.builder()
+
                 .id(jti)
                 .subject(userPrincipal.getUsername())
                 .issuer(issuer)

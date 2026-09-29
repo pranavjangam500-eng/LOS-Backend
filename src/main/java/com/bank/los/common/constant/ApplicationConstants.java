@@ -52,6 +52,7 @@ public final class ApplicationConstants {
         public static final String REPORT      = "REPORT";
         public static final String DASHBOARD   = "DASHBOARD";
         public static final String SYSTEM      = "SYSTEM";
+        public static final String LOOKUP      = "LOOKUP";
     }
 
     /** All permission codes seeded into identity.permissions */
@@ -105,7 +106,18 @@ public final class ApplicationConstants {
         public static final String ORGANIZATION_VIEW   = "ORGANIZATION_VIEW";
         public static final String ORGANIZATION_UPDATE = "ORGANIZATION_UPDATE";
         public static final String SYSTEM_AUDIT_VIEW   = "SYSTEM_AUDIT_VIEW";
+
+        // Granular Lookup Management
+        public static final String LOOKUP_MASTER_VIEW          = "LOOKUP_MASTER_VIEW";
+        public static final String LOOKUP_BANK_VIEW            = "LOOKUP_BANK_VIEW";
+        public static final String LOOKUP_BANK_ADD             = "LOOKUP_BANK_ADD";
+        public static final String LOOKUP_BANK_ADD_FROM_MASTER = "LOOKUP_BANK_ADD_FROM_MASTER";
+        public static final String LOOKUP_BANK_EDIT            = "LOOKUP_BANK_EDIT";
+        public static final String LOOKUP_BANK_DELETE          = "LOOKUP_BANK_DELETE";
+        public static final String LOOKUP_BANK_ACTIVATE        = "LOOKUP_BANK_ACTIVATE";
+        public static final String LOOKUP_BANK_DEACTIVATE      = "LOOKUP_BANK_DEACTIVATE";
     }
+
 
     /** 2FA & OTP */
     public static final int OTP_EXPIRY_MINUTES         = 5;

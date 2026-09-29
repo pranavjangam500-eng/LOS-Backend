@@ -2,17 +2,26 @@ package com.bank.los.db.init;
 
 import com.bank.los.administration.master.entity.InternalUser;
 import com.bank.los.administration.master.entity.LoginDirectory;
+import com.bank.los.administration.master.entity.MasterLookupSubType;
+
+import com.bank.los.administration.master.entity.MasterLookupType;
 import com.bank.los.administration.master.entity.MasterRole;
 import com.bank.los.administration.master.entity.Organization;
 import com.bank.los.administration.master.repository.InternalUserRepository;
 import com.bank.los.administration.master.repository.LoginDirectoryRepository;
+import com.bank.los.administration.master.repository.MasterLookupSubTypeRepository;
+import com.bank.los.administration.master.repository.MasterLookupTypeRepository;
 import com.bank.los.administration.master.repository.MasterRoleRepository;
 import com.bank.los.administration.master.repository.OrganizationRepository;
+import com.bank.los.bank.master.entity.BankLookupSubType;
+import com.bank.los.bank.master.entity.BankLookupType;
 import com.bank.los.bank.master.entity.Branch;
 import com.bank.los.bank.master.entity.Customer;
 import com.bank.los.bank.master.entity.OrganizationRole;
 import com.bank.los.bank.master.entity.OrganizationUser;
 import com.bank.los.bank.master.entity.Permission;
+import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
+import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.bank.master.repository.BranchRepository;
 import com.bank.los.bank.master.repository.CustomerRepository;
 import com.bank.los.bank.master.repository.OrganizationRoleRepository;
@@ -21,6 +30,7 @@ import com.bank.los.bank.master.repository.PermissionRepository;
 import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.config.BankContext;
 import com.bank.los.config.BankDataSourceProvider;
+import com.bank.los.config.OrganizationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -41,15 +51,23 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final OrganizationRepository organizationRepository;
     private final InternalUserRepository internalUserRepository;
     private final LoginDirectoryRepository loginDirectoryRepository;
+    private final MasterLookupTypeRepository masterLookupTypeRepository;
+    private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
+    private final com.bank.los.administration.master.repository.MasterPermissionRepository masterPermissionRepository;
 
     private final OrganizationRoleRepository organizationRoleRepository;
     private final BranchRepository branchRepository;
     private final OrganizationUserRepository organizationUserRepository;
     private final CustomerRepository customerRepository;
     private final PermissionRepository permissionRepository;
+    private final BankLookupTypeRepository bankLookupTypeRepository;
+    private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
+    private final com.bank.los.bank.master.repository.DesignationRoleMappingRepository designationRoleMappingRepository;
+    private final com.bank.los.bank.master.repository.PermissionOverrideRepository permissionOverrideRepository;
     private final PasswordEncoder passwordEncoder;
     private final BankDataSourceProvider bankDataSourceProvider;
     private final com.bank.los.security.TenantResolutionService tenantResolutionService;
+
 
     @Override
     public void run(String... args) {
@@ -148,7 +166,14 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // Login directory entries for Bajaj demo staff
         registerLoginDirectoryEntry("admin@bajajfinance.com", "EMP-BJ-001", "+919876500010", bajaj, ApplicationConstants.UserTypes.STAFF);
+
+        // Seed Master Lookups Catalogue (Tables 51001 and 51101)
+        seedMasterLookups();
+
+        // Seed Master Permissions (Table identity.permissions in Master DB)
+        seedMasterPermissions();
     }
+
 
     private void registerLoginDirectoryEntry(String email, String userCode, String phone, Organization org, String userType) {
         if (loginDirectoryRepository.findByEmail(email).isEmpty()) {
@@ -218,14 +243,20 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.REPORT_EXPORT,
                 ApplicationConstants.Permissions.DASHBOARD_VIEW,
                 ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW,
-                ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE
+                ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE,
+                ApplicationConstants.Permissions.LOOKUP_BANK_VIEW,
+                ApplicationConstants.Permissions.LOOKUP_BANK_ADD,
+                ApplicationConstants.Permissions.LOOKUP_BANK_ADD_FROM_MASTER,
+                ApplicationConstants.Permissions.LOOKUP_BANK_EDIT,
+                ApplicationConstants.Permissions.LOOKUP_BANK_DELETE,
+                ApplicationConstants.Permissions.LOOKUP_BANK_ACTIVATE,
+                ApplicationConstants.Permissions.LOOKUP_BANK_DEACTIVATE
         );
         seedRolePermissions(orgDbName, superAdminRole, adminPerms);
         seedRolePermissions(orgDbName, adminRole, adminPerms);
 
         seedRolePermissions(orgDbName, makerRole, List.of(
                 ApplicationConstants.Permissions.LOAN_APPLICATION_CREATE,
-
                 ApplicationConstants.Permissions.LOAN_APPLICATION_EDIT,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW,
                 ApplicationConstants.Permissions.LOAN_APPLICATION_SUBMIT,
@@ -234,7 +265,11 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.CUSTOMER_VIEW,
                 ApplicationConstants.Permissions.DOCUMENT_UPLOAD,
                 ApplicationConstants.Permissions.DOCUMENT_VIEW,
-                ApplicationConstants.Permissions.DASHBOARD_VIEW
+                ApplicationConstants.Permissions.DASHBOARD_VIEW,
+                ApplicationConstants.Permissions.LOOKUP_BANK_VIEW,
+                ApplicationConstants.Permissions.LOOKUP_BANK_ADD,
+                ApplicationConstants.Permissions.LOOKUP_BANK_ADD_FROM_MASTER,
+                ApplicationConstants.Permissions.LOOKUP_BANK_EDIT
         ));
 
         seedRolePermissions(orgDbName, checkerRole, List.of(
@@ -246,7 +281,10 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.CUSTOMER_VIEW_ALL,
                 ApplicationConstants.Permissions.DOCUMENT_VERIFY,
                 ApplicationConstants.Permissions.DOCUMENT_VIEW,
-                ApplicationConstants.Permissions.DASHBOARD_VIEW
+                ApplicationConstants.Permissions.DASHBOARD_VIEW,
+                ApplicationConstants.Permissions.LOOKUP_BANK_VIEW,
+                ApplicationConstants.Permissions.LOOKUP_BANK_ACTIVATE,
+                ApplicationConstants.Permissions.LOOKUP_BANK_DEACTIVATE
         ));
 
         seedRolePermissions(orgDbName, viewerRole, List.of(
@@ -257,15 +295,22 @@ public class DatabaseSeeder implements CommandLineRunner {
                 ApplicationConstants.Permissions.REPORT_VIEW,
                 ApplicationConstants.Permissions.REPORT_EXPORT,
                 ApplicationConstants.Permissions.DASHBOARD_VIEW,
-                ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW
+                ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW,
+                ApplicationConstants.Permissions.LOOKUP_BANK_VIEW
         ));
+
+        // ── Seed Designation -> Role Mappings ─────────────────────────────
+        seedDesignationRoleMappings(adminRole, makerRole, checkerRole);
+
+        // ── Seed Bank Customization Permission Overrides ───────────────────
+        seedPermissionOverrides(orgCode);
 
         // ── Staff Users ───────────────────────────────────────────────────
         if ("HDFC01".equals(orgCode)) {
-            createStaffUser("admin@hdfcbank.com", "EMP-HDFC-001", "admin", "Vikram", "Aditya", "Mehta", "+919876500001", "Admin@123", adminRole, mainBranch);
-            createStaffUser("maker@hdfcbank.com", "EMP-HDFC-002", "maker01", "Rohan", "Kumar", "Verma", "+919876500002", "Maker@123", makerRole, mainBranch);
-            createStaffUser("checker@hdfcbank.com", "EMP-HDFC-003", "chk01", "Priyanka", "Devi", "Nair", "+919876500003", "Checker@123", checkerRole, mainBranch);
-            createStaffUser("viewer@hdfcbank.com", "EMP-HDFC-004", "view01", "Sanjay", "Rao", "Kulkarni", "+919876500004", "Viewer@123", viewerRole, mainBranch);
+            createStaffUser("admin@hdfcbank.com", "EMP-HDFC-001", "admin", "Vikram", "Aditya", "Mehta", "+919876500001", "Admin@123", adminRole, mainBranch, "General Manager");
+            createStaffUser("maker@hdfcbank.com", "EMP-HDFC-002", "maker01", "Rohan", "Kumar", "Verma", "+919876500002", "Maker@123", makerRole, mainBranch, "Officer");
+            createStaffUser("checker@hdfcbank.com", "EMP-HDFC-003", "chk01", "Priyanka", "Devi", "Nair", "+919876500003", "Checker@123", checkerRole, mainBranch, "Asst. Manager");
+            createStaffUser("viewer@hdfcbank.com", "EMP-HDFC-004", "view01", "Sanjay", "Rao", "Kulkarni", "+919876500004", "Viewer@123", viewerRole, mainBranch, "Clerk");
 
             // Demo customer
             if (customerRepository.findByEmail("rajesh.kumar@gmail.com").isEmpty()) {
@@ -282,9 +327,13 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .build());
             }
         } else if ("BAJAJ02".equals(orgCode)) {
-            createStaffUser("admin@bajajfinance.com", "EMP-BJ-001", "bj_admin", "Ananya", "R", "Deshmukh", "+919876500010", "Admin@123", adminRole, mainBranch);
+            createStaffUser("admin@bajajfinance.com", "EMP-BJ-001", "bj_admin", "Ananya", "R", "Deshmukh", "+919876500010", "Admin@123", adminRole, mainBranch, "Manager");
         }
+
+        // Seed bank-level lookups
+        seedBankLookups(orgDbName);
     }
+
 
     private OrganizationRole seedRole(String name, String panel, String description) {
         return organizationRoleRepository.findByName(name)
@@ -293,6 +342,63 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .panel(panel)
                         .description(description)
                         .build()));
+    }
+
+    private void seedMasterPermissions() {
+        List<Object[]> masterPerms = List.of(
+                new Object[]{ApplicationConstants.Permissions.ORGANIZATION_CREATE, "Create new organizations", ApplicationConstants.PermissionModules.SYSTEM, true},
+                new Object[]{ApplicationConstants.Permissions.ORGANIZATION_VIEW, "View organizations", ApplicationConstants.PermissionModules.SYSTEM, true},
+                new Object[]{ApplicationConstants.Permissions.ORGANIZATION_UPDATE, "Update organizations", ApplicationConstants.PermissionModules.SYSTEM, true},
+                new Object[]{ApplicationConstants.Permissions.SYSTEM_AUDIT_VIEW, "View system audit logs", ApplicationConstants.PermissionModules.SYSTEM, true},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_MASTER_VIEW, "View master lookups catalogue", ApplicationConstants.PermissionModules.LOOKUP, true},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_VIEW, "View bank lookup types and sub-types", ApplicationConstants.PermissionModules.LOOKUP, false},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ADD, "Add custom bank lookup types and sub-types", ApplicationConstants.PermissionModules.LOOKUP, false},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ADD_FROM_MASTER, "Import lookup sub-types from Master DB catalogue", ApplicationConstants.PermissionModules.LOOKUP, false},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_EDIT, "Edit custom bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP, false},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_DELETE, "Delete custom bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP, false},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ACTIVATE, "Activate bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP, false},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_DEACTIVATE, "Deactivate bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP, false},
+                new Object[]{ApplicationConstants.Permissions.USER_CREATE, "Create new users", ApplicationConstants.PermissionModules.USER, false},
+                new Object[]{ApplicationConstants.Permissions.USER_UPDATE, "Update user details", ApplicationConstants.PermissionModules.USER, false},
+                new Object[]{ApplicationConstants.Permissions.USER_VIEW, "View user details", ApplicationConstants.PermissionModules.USER, false},
+                new Object[]{ApplicationConstants.Permissions.USER_DEACTIVATE, "Deactivate a user", ApplicationConstants.PermissionModules.USER, false},
+                new Object[]{ApplicationConstants.Permissions.USER_VERIFY, "Verify pending user (2nd admin)", ApplicationConstants.PermissionModules.USER, false},
+                new Object[]{ApplicationConstants.Permissions.USER_RESET_PASSWORD, "Reset a user's password", ApplicationConstants.PermissionModules.USER, false},
+                new Object[]{ApplicationConstants.Permissions.BRANCH_CREATE, "Create branches", ApplicationConstants.PermissionModules.BRANCH, false},
+                new Object[]{ApplicationConstants.Permissions.BRANCH_UPDATE, "Update branch details", ApplicationConstants.PermissionModules.BRANCH, false},
+                new Object[]{ApplicationConstants.Permissions.BRANCH_VIEW, "View branches", ApplicationConstants.PermissionModules.BRANCH, false},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_CREATE, "Create loan applications", ApplicationConstants.PermissionModules.LOAN, false},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_EDIT, "Edit loan applications", ApplicationConstants.PermissionModules.LOAN, false},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_VIEW, "View loan applications", ApplicationConstants.PermissionModules.LOAN, false},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_SUBMIT, "Submit loan applications", ApplicationConstants.PermissionModules.LOAN, false},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_VERIFY, "Verify loan applications", ApplicationConstants.PermissionModules.LOAN, false},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_APPROVE, "Approve loan applications", ApplicationConstants.PermissionModules.LOAN, false},
+                new Object[]{ApplicationConstants.Permissions.LOAN_APPLICATION_REJECT, "Reject loan applications", ApplicationConstants.PermissionModules.LOAN, false},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_CREATE, "Create customer records", ApplicationConstants.PermissionModules.CUSTOMER, false},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_EDIT, "Edit customer details", ApplicationConstants.PermissionModules.CUSTOMER, false},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_VIEW, "View own customers", ApplicationConstants.PermissionModules.CUSTOMER, false},
+                new Object[]{ApplicationConstants.Permissions.CUSTOMER_VIEW_ALL, "View all customers in org", ApplicationConstants.PermissionModules.CUSTOMER, false},
+                new Object[]{ApplicationConstants.Permissions.DOCUMENT_UPLOAD, "Upload documents", ApplicationConstants.PermissionModules.DOCUMENT, false},
+                new Object[]{ApplicationConstants.Permissions.DOCUMENT_VERIFY, "Verify documents", ApplicationConstants.PermissionModules.DOCUMENT, false},
+                new Object[]{ApplicationConstants.Permissions.DOCUMENT_VIEW, "View documents", ApplicationConstants.PermissionModules.DOCUMENT, false},
+                new Object[]{ApplicationConstants.Permissions.REPORT_VIEW, "View reports", ApplicationConstants.PermissionModules.REPORT, false},
+                new Object[]{ApplicationConstants.Permissions.REPORT_EXPORT, "Export reports", ApplicationConstants.PermissionModules.REPORT, false},
+                new Object[]{ApplicationConstants.Permissions.DASHBOARD_VIEW, "View dashboard", ApplicationConstants.PermissionModules.DASHBOARD, false},
+                new Object[]{ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW, "View dashboard analytics", ApplicationConstants.PermissionModules.DASHBOARD, false},
+                new Object[]{ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE, "Manage role permissions", ApplicationConstants.PermissionModules.SYSTEM, false}
+        );
+
+        for (Object[] p : masterPerms) {
+            String code = (String) p[0];
+            if (masterPermissionRepository.findByCode(code).isEmpty()) {
+                masterPermissionRepository.save(com.bank.los.administration.master.entity.MasterPermission.builder()
+                        .code(code)
+                        .description((String) p[1])
+                        .module((String) p[2])
+                        .isSystem((Boolean) p[3])
+                        .build());
+            }
+        }
     }
 
     private void seedPermissions() {
@@ -325,7 +431,14 @@ public class DatabaseSeeder implements CommandLineRunner {
                 new Object[]{ApplicationConstants.Permissions.REPORT_EXPORT, "Export reports", ApplicationConstants.PermissionModules.REPORT},
                 new Object[]{ApplicationConstants.Permissions.DASHBOARD_VIEW, "View dashboard", ApplicationConstants.PermissionModules.DASHBOARD},
                 new Object[]{ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW, "View dashboard analytics", ApplicationConstants.PermissionModules.DASHBOARD},
-                new Object[]{ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE, "Manage role permissions", ApplicationConstants.PermissionModules.SYSTEM}
+                new Object[]{ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE, "Manage role permissions", ApplicationConstants.PermissionModules.SYSTEM},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_VIEW, "View bank lookup types and sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ADD, "Add custom bank lookup types and sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ADD_FROM_MASTER, "Import lookup sub-types from Master DB catalogue", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_EDIT, "Edit custom bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_DELETE, "Delete custom bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ACTIVATE, "Activate bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_DEACTIVATE, "Deactivate bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP}
         );
 
         for (Object[] p : perms) {
@@ -340,6 +453,48 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
     }
 
+    private void seedDesignationRoleMappings(OrganizationRole adminRole, OrganizationRole makerRole, OrganizationRole checkerRole) {
+        mapDesignation("Gen. Manager", adminRole);
+        mapDesignation("General Manager", adminRole);
+        mapDesignation("Manager", adminRole);
+        mapDesignation("Dy. Manager", adminRole);
+        mapDesignation("Asst. Manager", checkerRole);
+        mapDesignation("Sr. Officer", makerRole);
+        mapDesignation("Officer", makerRole);
+        mapDesignation("Clerk", makerRole);
+    }
+
+    private void mapDesignation(String designation, OrganizationRole role) {
+        if (designationRoleMappingRepository.findByDesignationIgnoreCase(designation).isEmpty()) {
+            designationRoleMappingRepository.save(com.bank.los.bank.master.entity.DesignationRoleMapping.builder()
+                    .designation(designation)
+                    .role(role)
+                    .isActive(true)
+                    .build());
+        }
+    }
+
+    private void seedPermissionOverrides(String orgCode) {
+        if ("HDFC01".equals(orgCode)) {
+            // General Manager -> LOOKUP_BANK_DELETE -> DENY
+            createOverrideIfNotExists("DESIGNATION", "General Manager", ApplicationConstants.Permissions.LOOKUP_BANK_DELETE, "DENY", "Policy restriction: General Managers cannot delete bank lookups");
+            createOverrideIfNotExists("DESIGNATION", "Gen. Manager", ApplicationConstants.Permissions.LOOKUP_BANK_DELETE, "DENY", "Policy restriction: General Managers cannot delete bank lookups");
+        }
+    }
+
+    private void createOverrideIfNotExists(String targetType, String targetName, String permissionCode, String effect, String reason) {
+        if (!permissionOverrideRepository.existsByTargetTypeAndTargetNameIgnoreCaseAndPermissionCodeIgnoreCase(targetType, targetName, permissionCode)) {
+            permissionOverrideRepository.save(com.bank.los.bank.master.entity.PermissionOverride.builder()
+                    .targetType(targetType)
+                    .targetName(targetName)
+                    .permissionCode(permissionCode)
+                    .effect(effect)
+                    .reason(reason)
+                    .isActive(true)
+                    .build());
+        }
+    }
+
     /**
      * Creates a staff user if they don't already exist.
      * Initial status is OPERATIVE (demo seed — in production new users start as PENDING_VERIFICATION).
@@ -347,7 +502,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void createStaffUser(String email, String empNo, String username,
                                  String firstName, String middleName, String lastName,
                                  String mobile, String rawPassword,
-                                 OrganizationRole role, Branch branch) {
+                                 OrganizationRole role, Branch branch, String designation) {
         if (organizationUserRepository.findByEmail(email).isEmpty()) {
             organizationUserRepository.save(OrganizationUser.builder()
                     .empNo(empNo)
@@ -359,6 +514,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .lastName(lastName)
                     .email(email)
                     .mobile(mobile)
+                    .designation(designation)
                     .passwordHash(passwordEncoder.encode(rawPassword))
                     .isActive(true)
                     .status(ApplicationConstants.UserStatus.OPERATIVE)
@@ -394,4 +550,143 @@ public class DatabaseSeeder implements CommandLineRunner {
             log.debug("Notice opening connection to seed permissions for role {}: {}", role.getName(), e.getMessage());
         }
     }
+
+    // =========================================================================
+    //  LOOKUP CATALOGUE SEEDING (Master & Bank DBs)
+    // =========================================================================
+
+    private void seedMasterLookups() {
+        // 10001: Bank User Status (Fixed)
+        seedMasterLookupType("10001", "Bank User Status", true);
+        seedMasterLookupSubType("10001", "Bank User Status", "1", "Entered", true, 1);
+        seedMasterLookupSubType("10001", "Bank User Status", "2", "Verified", true, 2);
+        seedMasterLookupSubType("10001", "Bank User Status", "3", "In-Operative", true, 3);
+        seedMasterLookupSubType("10001", "Bank User Status", "4", "Operative", true, 4);
+        seedMasterLookupSubType("10001", "Bank User Status", "5", "Suspended", true, 5);
+
+        // 10002: Designation (Not Fixed - Banks can add/delete designations)
+        seedMasterLookupType("10002", "Designation", false);
+        seedMasterLookupSubType("10002", "Designation", "1", "Clerk", false, 1);
+        seedMasterLookupSubType("10002", "Designation", "2", "Officer", false, 2);
+        seedMasterLookupSubType("10002", "Designation", "3", "Sr. Officer", false, 3);
+        seedMasterLookupSubType("10002", "Designation", "4", "Asst. Manager", false, 4);
+        seedMasterLookupSubType("10002", "Designation", "5", "Manager", false, 5);
+        seedMasterLookupSubType("10002", "Designation", "6", "Dy. Manager", false, 6);
+        seedMasterLookupSubType("10002", "Designation", "7", "Gen. Manager", false, 7);
+        seedMasterLookupSubType("10002", "Designation", "8", "CEO", false, 8);
+        seedMasterLookupSubType("10002", "Designation", "9", "Chairman", false, 9);
+
+        // 10003: Role (Fixed)
+        seedMasterLookupType("10003", "Role", true);
+        seedMasterLookupSubType("10003", "Role", "1", "System Admin", true, 1);
+        seedMasterLookupSubType("10003", "Role", "2", "Super Admin", true, 2);
+        seedMasterLookupSubType("10003", "Role", "3", "Admin", true, 3);
+        seedMasterLookupSubType("10003", "Role", "4", "Checker", true, 4);
+        seedMasterLookupSubType("10003", "Role", "5", "Maker", true, 5);
+        seedMasterLookupSubType("10003", "Role", "6", "Viewer", true, 6);
+
+        // 10004: Loan Type (Not Fixed - Banks can add/delete loan types)
+        seedMasterLookupType("10004", "Loan Type", false);
+        seedMasterLookupSubType("10004", "Loan Type", "1", "Personal Loan", false, 1);
+        seedMasterLookupSubType("10004", "Loan Type", "2", "Home Loan", false, 2);
+        seedMasterLookupSubType("10004", "Loan Type", "3", "Vehicle Loan", false, 3);
+        seedMasterLookupSubType("10004", "Loan Type", "4", "Gold Loan", false, 4);
+        seedMasterLookupSubType("10004", "Loan Type", "5", "Business Loan", false, 5);
+        seedMasterLookupSubType("10004", "Loan Type", "6", "Loan Against Property (LAP)", false, 6);
+        seedMasterLookupSubType("10004", "Loan Type", "7", "Working Capital / Cash Credit", false, 7);
+        seedMasterLookupSubType("10004", "Loan Type", "8", "Professional Loan", false, 8);
+        seedMasterLookupSubType("10004", "Loan Type", "9", "Corporate / Commercial Loan", false, 9);
+        seedMasterLookupSubType("10004", "Loan Type", "10", "Educational Loan", false, 10);
+
+        // 10005: Customer Type (Fixed)
+        seedMasterLookupType("10005", "Customer Type", true);
+        seedMasterLookupSubType("10005", "Customer Type", "1", "10006 (Individual)", true, 1);
+        seedMasterLookupSubType("10005", "Customer Type", "2", "10007 (Corporate)", true, 2);
+
+        // 10006: Individual Customer Sub Type (Fixed)
+        seedMasterLookupType("10006", "Individual Customer Sub Type", true);
+        seedMasterLookupSubType("10006", "Individual Customer Sub Type", "1", "Self", true, 1);
+        seedMasterLookupSubType("10006", "Individual Customer Sub Type", "2", "Joint", true, 2);
+
+        // 10007: Corporate Customer Sub Type (Not Fixed)
+        seedMasterLookupType("10007", "Corporate Customer Sub Type", false);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "1", "Proprietorship", false, 1);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "2", "Partnership", false, 2);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "3", "Private Limited", false, 3);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "4", "Public Limited", false, 4);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "5", "Trust", false, 5);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "6", "Association Chairman", false, 6);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "7", "Society", false, 7);
+        seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "8", "Federation", false, 8);
+    }
+
+    private void seedMasterLookupType(String code, String description, boolean isFixed) {
+        if (masterLookupTypeRepository.findByCode(code).isEmpty()) {
+            masterLookupTypeRepository.save(MasterLookupType.builder()
+                    .code(code)
+                    .description(description)
+                    .isFixed(isFixed)
+                    .isActive(true)
+                    .build());
+        }
+    }
+
+    private void seedMasterLookupSubType(String lookupTypeCode, String typeDescription,
+                                         String subTypeCode, String subTypeDescription,
+                                         boolean isFixed, int displayOrder) {
+        if (masterLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode(lookupTypeCode, subTypeCode).isEmpty()) {
+            masterLookupSubTypeRepository.save(MasterLookupSubType.builder()
+                    .lookupTypeCode(lookupTypeCode)
+                    .typeDescription(typeDescription)
+                    .subTypeCode(subTypeCode)
+                    .subTypeDescription(subTypeDescription)
+                    .isFixed(isFixed)
+                    .isActive(true)
+                    .displayOrder(displayOrder)
+                    .build());
+        }
+    }
+
+    private void seedBankLookups(String orgDbName) {
+        try {
+            // Read all from Master DB
+            BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+            List<MasterLookupType> masterTypes = masterLookupTypeRepository.findAll();
+            List<MasterLookupSubType> masterSubTypes = masterLookupSubTypeRepository.findAll();
+
+            // Switch to Tenant DB
+            BankContext.setCurrentBank(orgDbName);
+            OrganizationContext.setCurrentOrganization(orgDbName);
+
+            for (MasterLookupType mt : masterTypes) {
+                if (bankLookupTypeRepository.findByCode(mt.getCode()).isEmpty()) {
+                    bankLookupTypeRepository.save(BankLookupType.builder()
+                            .code(mt.getCode())
+                            .description(mt.getDescription())
+                            .isFixed(mt.getIsFixed())
+                            .isActive(mt.getIsActive())
+                            .build());
+                }
+            }
+
+            for (MasterLookupSubType mst : masterSubTypes) {
+                if (bankLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode(
+                        mst.getLookupTypeCode(), mst.getSubTypeCode()).isEmpty()) {
+                    bankLookupSubTypeRepository.save(BankLookupSubType.builder()
+                            .lookupTypeCode(mst.getLookupTypeCode())
+                            .typeDescription(mst.getTypeDescription())
+                            .subTypeCode(mst.getSubTypeCode())
+                            .subTypeDescription(mst.getSubTypeDescription())
+                            .isFixed(mst.getIsFixed())
+                            .isActive(mst.getIsActive())
+                            .displayOrder(mst.getDisplayOrder())
+                            .build());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Notice seeding bank lookups for {}: {}", orgDbName, e.getMessage());
+        }
+    }
 }
+

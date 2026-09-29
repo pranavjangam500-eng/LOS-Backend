@@ -57,10 +57,47 @@ CREATE TABLE IF NOT EXISTS identity.permissions (
 -- identity.role_permissions  (M2M: role → permissions)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS identity.role_permissions (
-    role_id       INT NOT NULL REFERENCES identity.roles(id),
-    permission_id INT NOT NULL REFERENCES identity.permissions(id),
+    role_id       INT NOT NULL REFERENCES identity.roles(id) ON DELETE CASCADE,
+    permission_id INT NOT NULL REFERENCES identity.permissions(id) ON DELETE CASCADE,
     PRIMARY KEY (role_id, permission_id)
 );
+
+-- -----------------------------------------------------------------------
+-- identity.designation_role_mappings (Designation → Role Inheritance)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.designation_role_mappings (
+    id            BIGSERIAL    PRIMARY KEY,
+    designation   VARCHAR(100) NOT NULL UNIQUE,
+    role_id       INT          NOT NULL REFERENCES identity.roles(id) ON DELETE CASCADE,
+    is_active     BOOLEAN      NOT NULL DEFAULT true,
+    created_by    BIGINT,
+    created_at    TIMESTAMP    NOT NULL DEFAULT now(),
+    modified_by   BIGINT,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_drm_designation ON identity.designation_role_mappings(designation);
+
+-- -----------------------------------------------------------------------
+-- identity.permission_overrides (Explicit ALLOW / DENY overrides)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.permission_overrides (
+    id              BIGSERIAL    PRIMARY KEY,
+    target_type     VARCHAR(30)  NOT NULL CHECK (target_type IN ('ROLE', 'DESIGNATION')),
+    target_name     VARCHAR(100) NOT NULL,
+    permission_code VARCHAR(100) NOT NULL,
+    effect          VARCHAR(10)  NOT NULL CHECK (effect IN ('ALLOW', 'DENY')),
+    reason          VARCHAR(255),
+    is_active       BOOLEAN      NOT NULL DEFAULT true,
+    created_by      BIGINT,
+    created_at      TIMESTAMP    NOT NULL DEFAULT now(),
+    modified_by     BIGINT,
+    updated_at      TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT uk_permission_override UNIQUE (target_type, target_name, permission_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_po_target ON identity.permission_overrides(target_type, target_name);
+
 
 -- -----------------------------------------------------------------------
 -- identity.users  (Bank/NBFC staff — full schema per senior's design)
@@ -252,3 +289,40 @@ CREATE TABLE IF NOT EXISTS customer.customers (
 );
 
 CREATE INDEX IF NOT EXISTS idx_customers_branch_id ON customer.customers(branch_id);
+
+-- -----------------------------------------------------------------------
+-- identity.lookup_types (Table 51001) - Bank Lookup Types
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.lookup_types (
+    id            BIGSERIAL    PRIMARY KEY,
+    code          VARCHAR(50)  NOT NULL UNIQUE,
+    description   VARCHAR(255) NOT NULL,
+    is_fixed      BOOLEAN      NOT NULL DEFAULT false,
+    is_active     BOOLEAN      NOT NULL DEFAULT true,
+    created_by    BIGINT,
+    created_at    TIMESTAMP    NOT NULL DEFAULT now(),
+    modified_by   BIGINT,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT now()
+);
+
+-- -----------------------------------------------------------------------
+-- identity.lookup_sub_types (Table 51101) - Bank Lookup Sub Types
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.lookup_sub_types (
+    id                    BIGSERIAL    PRIMARY KEY,
+    lookup_type_code      VARCHAR(50)  NOT NULL,
+    type_description      VARCHAR(255),
+    sub_type_code         VARCHAR(50)  NOT NULL,
+    sub_type_description  VARCHAR(255) NOT NULL,
+    is_fixed              BOOLEAN      NOT NULL DEFAULT false,
+    is_active             BOOLEAN      NOT NULL DEFAULT true,
+    display_order         INT          NOT NULL DEFAULT 0,
+    created_by            BIGINT,
+    created_at            TIMESTAMP    NOT NULL DEFAULT now(),
+    modified_by           BIGINT,
+    updated_at            TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT uk_bank_lookup_sub_type UNIQUE (lookup_type_code, sub_type_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bank_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
+

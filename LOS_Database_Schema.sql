@@ -108,6 +108,42 @@ CREATE TABLE identity.login_directory (
 
 CREATE INDEX idx_login_directory_org ON identity.login_directory(organization_id);
 
+-- ---------------------------------------------------------------------
+-- identity.lookup_types (Table 51001) - Master Lookup Types
+-- ---------------------------------------------------------------------
+CREATE TABLE identity.lookup_types (
+    id            BIGSERIAL PRIMARY KEY,
+    code          VARCHAR(50) NOT NULL UNIQUE,
+    description   VARCHAR(255) NOT NULL,
+    is_fixed      BOOLEAN NOT NULL DEFAULT false,
+    is_active     BOOLEAN NOT NULL DEFAULT true,
+    created_by    BIGINT,
+    created_at    TIMESTAMP NOT NULL DEFAULT now(),
+    modified_by   BIGINT,
+    updated_at    TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------
+-- identity.lookup_sub_types (Table 51101) - Master Lookup Sub Types
+-- ---------------------------------------------------------------------
+CREATE TABLE identity.lookup_sub_types (
+    id                    BIGSERIAL PRIMARY KEY,
+    lookup_type_code      VARCHAR(50) NOT NULL,
+    type_description      VARCHAR(255),
+    sub_type_code         VARCHAR(50) NOT NULL,
+    sub_type_description  VARCHAR(255) NOT NULL,
+    is_fixed              BOOLEAN NOT NULL DEFAULT false,
+    is_active             BOOLEAN NOT NULL DEFAULT true,
+    display_order         INT NOT NULL DEFAULT 0,
+    created_by            BIGINT,
+    created_at            TIMESTAMP NOT NULL DEFAULT now(),
+    modified_by           BIGINT,
+    updated_at            TIMESTAMP NOT NULL DEFAULT now(),
+    CONSTRAINT uk_master_lookup_sub_type UNIQUE (lookup_type_code, sub_type_code)
+);
+
+CREATE INDEX idx_master_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
+
 -- =====================================================================
 -- END OF PART A
 -- =====================================================================
@@ -204,6 +240,43 @@ CREATE TABLE customer.customers (
 
 CREATE INDEX idx_customers_branch_id ON customer.customers(branch_id);
 
+-- ---------------------------------------------------------------------
+-- identity.lookup_types (Table 51001) - Bank Lookup Types
+-- ---------------------------------------------------------------------
+CREATE TABLE identity.lookup_types (
+    id            BIGSERIAL PRIMARY KEY,
+    code          VARCHAR(50) NOT NULL UNIQUE,
+    description   VARCHAR(255) NOT NULL,
+    is_fixed      BOOLEAN NOT NULL DEFAULT false,
+    is_active     BOOLEAN NOT NULL DEFAULT true,
+    created_by    BIGINT,
+    created_at    TIMESTAMP NOT NULL DEFAULT now(),
+    modified_by   BIGINT,
+    updated_at    TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------
+-- identity.lookup_sub_types (Table 51101) - Bank Lookup Sub Types
+-- ---------------------------------------------------------------------
+CREATE TABLE identity.lookup_sub_types (
+    id                    BIGSERIAL PRIMARY KEY,
+    lookup_type_code      VARCHAR(50) NOT NULL,
+    type_description      VARCHAR(255),
+    sub_type_code         VARCHAR(50) NOT NULL,
+    sub_type_description  VARCHAR(255) NOT NULL,
+    is_fixed              BOOLEAN NOT NULL DEFAULT false,
+    is_active             BOOLEAN NOT NULL DEFAULT true,
+    display_order         INT NOT NULL DEFAULT 0,
+    created_by            BIGINT,
+    created_at            TIMESTAMP NOT NULL DEFAULT now(),
+    modified_by           BIGINT,
+    updated_at            TIMESTAMP NOT NULL DEFAULT now(),
+    CONSTRAINT uk_bank_lookup_sub_type UNIQUE (lookup_type_code, sub_type_code)
+);
+
+CREATE INDEX idx_bank_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
+
 -- =====================================================================
 -- END OF PART B
 -- =====================================================================
+

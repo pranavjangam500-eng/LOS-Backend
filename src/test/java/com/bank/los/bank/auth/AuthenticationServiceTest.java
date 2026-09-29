@@ -177,7 +177,7 @@ class AuthenticationServiceTest {
                 .userType(step2.getUser().getUserType())
                 .role(step2.getUser().getRole())
                 .organizationCode(step2.getUser().getOrganizationCode())
-                .organizationDbName("hdfc_db")
+                .organizationDbName("los_hdfc01_db")
                 .active(true)
                 .build();
 

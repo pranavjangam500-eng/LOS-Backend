@@ -1,5 +1,6 @@
 package com.bank.los.security;
 
+import com.bank.los.common.constant.ApplicationConstants;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +31,9 @@ public class UserPrincipal implements UserDetails {
     private String organizationDbName;
     private Long   branchId;
 
+    private String designation;
+    private java.util.List<String> permissions;
+
     /** JWT ID — used for session activity tracking and auto-logout */
     private String jti;
 
@@ -37,6 +41,15 @@ public class UserPrincipal implements UserDetails {
     private String password;
 
     private boolean active;
+
+    public boolean hasPermission(String permissionCode) {
+        if (permissionCode == null) return false;
+        if (ApplicationConstants.Roles.INTERNAL_ADMIN.equalsIgnoreCase(role) ||
+            ApplicationConstants.Roles.SUPER_ADMIN.equalsIgnoreCase(role)) {
+            return true;
+        }
+        return permissions != null && permissions.contains(permissionCode);
+    }
 
     // Backward-compatible alias for tenantId
     public Long getTenantId() {
@@ -78,8 +91,19 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String roleWithPrefix = (role != null && role.startsWith("ROLE_")) ? role : "ROLE_" + role;
-        return Collections.singletonList(new SimpleGrantedAuthority(roleWithPrefix));
+        java.util.List<GrantedAuthority> authorities = new java.util.ArrayList<>();
+        if (role != null) {
+            String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+            authorities.add(new SimpleGrantedAuthority(roleWithPrefix));
+        }
+        if (permissions != null) {
+            for (String perm : permissions) {
+                if (perm != null && !perm.isBlank()) {
+                    authorities.add(new SimpleGrantedAuthority(perm));
+                }
+            }
+        }
+        return authorities;
     }
 
     @Override
@@ -93,3 +117,4 @@ public class UserPrincipal implements UserDetails {
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled()              { return active; }
 }
+

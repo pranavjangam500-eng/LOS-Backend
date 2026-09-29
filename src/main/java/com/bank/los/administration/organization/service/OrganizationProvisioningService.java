@@ -1,8 +1,17 @@
 package com.bank.los.administration.organization.service;
 
+import com.bank.los.administration.master.entity.MasterLookupSubType;
+import com.bank.los.administration.master.entity.MasterLookupType;
+import com.bank.los.administration.master.repository.MasterLookupSubTypeRepository;
+import com.bank.los.administration.master.repository.MasterLookupTypeRepository;
+import com.bank.los.bank.master.entity.BankLookupSubType;
+import com.bank.los.bank.master.entity.BankLookupType;
 import com.bank.los.bank.master.entity.Branch;
+
 import com.bank.los.bank.master.entity.OrganizationRole;
 import com.bank.los.bank.master.entity.Permission;
+import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
+import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.bank.master.repository.BranchRepository;
 import com.bank.los.bank.master.repository.OrganizationRoleRepository;
 import com.bank.los.bank.master.repository.PermissionRepository;
@@ -21,7 +30,7 @@ import java.util.List;
 
 /**
  * Automates schema creation, role initialization, permissions seeding,
- * and primary branch setup whenever a new Bank/NBFC Organization is onboarded.
+ * primary branch setup, and lookup catalog initialization whenever a new Bank/NBFC Organization is onboarded.
  */
 @Slf4j
 @Service
@@ -32,6 +41,12 @@ public class OrganizationProvisioningService {
     private final OrganizationRoleRepository organizationRoleRepository;
     private final BranchRepository branchRepository;
     private final PermissionRepository permissionRepository;
+    private final MasterLookupTypeRepository masterLookupTypeRepository;
+    private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
+    private final BankLookupTypeRepository bankLookupTypeRepository;
+    private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
+    private final com.bank.los.bank.master.repository.DesignationRoleMappingRepository designationRoleMappingRepository;
+
 
     public void provisionOrganization(String orgDb, String orgCode, String orgName, String host, Integer port) {
         log.info("Provisioning bank database and default entities for orgCode={}, db={}", orgCode, orgDb);
@@ -83,7 +98,14 @@ public class OrganizationProvisioningService {
                     ApplicationConstants.Permissions.REPORT_EXPORT,
                     ApplicationConstants.Permissions.DASHBOARD_VIEW,
                     ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW,
-                    ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE
+                    ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_VIEW,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_ADD,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_ADD_FROM_MASTER,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_EDIT,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_DELETE,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_ACTIVATE,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_DEACTIVATE
             );
             seedRolePermissions(orgDb, superAdminRole, adminPerms);
             seedRolePermissions(orgDb, adminRole, adminPerms);
@@ -99,7 +121,11 @@ public class OrganizationProvisioningService {
                     ApplicationConstants.Permissions.CUSTOMER_VIEW,
                     ApplicationConstants.Permissions.DOCUMENT_UPLOAD,
                     ApplicationConstants.Permissions.DOCUMENT_VIEW,
-                    ApplicationConstants.Permissions.DASHBOARD_VIEW
+                    ApplicationConstants.Permissions.DASHBOARD_VIEW,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_VIEW,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_ADD,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_ADD_FROM_MASTER,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_EDIT
             ));
 
             seedRolePermissions(orgDb, checkerRole, List.of(
@@ -111,7 +137,10 @@ public class OrganizationProvisioningService {
                     ApplicationConstants.Permissions.CUSTOMER_VIEW_ALL,
                     ApplicationConstants.Permissions.DOCUMENT_VERIFY,
                     ApplicationConstants.Permissions.DOCUMENT_VIEW,
-                    ApplicationConstants.Permissions.DASHBOARD_VIEW
+                    ApplicationConstants.Permissions.DASHBOARD_VIEW,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_VIEW,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_ACTIVATE,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_DEACTIVATE
             ));
 
             seedRolePermissions(orgDb, viewerRole, List.of(
@@ -122,13 +151,21 @@ public class OrganizationProvisioningService {
                     ApplicationConstants.Permissions.REPORT_VIEW,
                     ApplicationConstants.Permissions.REPORT_EXPORT,
                     ApplicationConstants.Permissions.DASHBOARD_VIEW,
-                    ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW
+                    ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW,
+                    ApplicationConstants.Permissions.LOOKUP_BANK_VIEW
             ));
+
+            // 6. Seed Designation -> Role Mappings
+            seedDesignationRoleMappings(adminRole, makerRole, checkerRole);
+
+            // 7. Seed lookup catalogue into tenant database
+            seedLookups(orgDb);
 
             log.info("Organization DB provisioning completed successfully for orgCode={}", orgCode);
         } catch (Exception ex) {
             log.warn("Notice during organization provisioning for {}: {}", orgCode, ex.getMessage());
         } finally {
+
             if (previousOrg != null) {
                 OrganizationContext.setCurrentOrganization(previousOrg);
             } else {
@@ -183,7 +220,14 @@ public class OrganizationProvisioningService {
                 new Object[]{ApplicationConstants.Permissions.REPORT_EXPORT, "Export reports", ApplicationConstants.PermissionModules.REPORT},
                 new Object[]{ApplicationConstants.Permissions.DASHBOARD_VIEW, "View dashboard", ApplicationConstants.PermissionModules.DASHBOARD},
                 new Object[]{ApplicationConstants.Permissions.DASHBOARD_ANALYTICS_VIEW, "View dashboard analytics", ApplicationConstants.PermissionModules.DASHBOARD},
-                new Object[]{ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE, "Manage role permissions", ApplicationConstants.PermissionModules.SYSTEM}
+                new Object[]{ApplicationConstants.Permissions.ROLE_PERMISSION_MANAGE, "Manage role permissions", ApplicationConstants.PermissionModules.SYSTEM},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_VIEW, "View bank lookup types and sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ADD, "Add custom bank lookup types and sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ADD_FROM_MASTER, "Import lookup sub-types from Master DB catalogue", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_EDIT, "Edit custom bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_DELETE, "Delete custom bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_ACTIVATE, "Activate bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP},
+                new Object[]{ApplicationConstants.Permissions.LOOKUP_BANK_DEACTIVATE, "Deactivate bank lookup sub-types", ApplicationConstants.PermissionModules.LOOKUP}
         );
 
         for (Object[] p : perms) {
@@ -195,6 +239,27 @@ public class OrganizationProvisioningService {
                         .module((String) p[2])
                         .build());
             }
+        }
+    }
+
+    private void seedDesignationRoleMappings(OrganizationRole adminRole, OrganizationRole makerRole, OrganizationRole checkerRole) {
+        mapDesignation("Gen. Manager", adminRole);
+        mapDesignation("General Manager", adminRole);
+        mapDesignation("Manager", adminRole);
+        mapDesignation("Dy. Manager", adminRole);
+        mapDesignation("Asst. Manager", checkerRole);
+        mapDesignation("Sr. Officer", makerRole);
+        mapDesignation("Officer", makerRole);
+        mapDesignation("Clerk", makerRole);
+    }
+
+    private void mapDesignation(String designation, OrganizationRole role) {
+        if (designationRoleMappingRepository.findByDesignationIgnoreCase(designation).isEmpty()) {
+            designationRoleMappingRepository.save(com.bank.los.bank.master.entity.DesignationRoleMapping.builder()
+                    .designation(designation)
+                    .role(role)
+                    .isActive(true)
+                    .build());
         }
     }
 
@@ -221,4 +286,48 @@ public class OrganizationProvisioningService {
             log.debug("Notice opening connection to seed permissions for role {}: {}", role.getName(), e.getMessage());
         }
     }
+
+    private void seedLookups(String orgDb) {
+        try {
+            // Read from Master DB
+            BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+            List<MasterLookupType> masterTypes = masterLookupTypeRepository.findAll();
+            List<MasterLookupSubType> masterSubTypes = masterLookupSubTypeRepository.findAll();
+
+            // Switch to Tenant DB
+            BankContext.setCurrentBank(orgDb);
+            OrganizationContext.setCurrentOrganization(orgDb);
+
+            for (MasterLookupType mt : masterTypes) {
+                if (bankLookupTypeRepository.findByCode(mt.getCode()).isEmpty()) {
+                    bankLookupTypeRepository.save(BankLookupType.builder()
+                            .code(mt.getCode())
+                            .description(mt.getDescription())
+                            .isFixed(mt.getIsFixed())
+                            .isActive(mt.getIsActive())
+                            .build());
+                }
+            }
+
+            for (MasterLookupSubType mst : masterSubTypes) {
+                if (bankLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode(
+                        mst.getLookupTypeCode(), mst.getSubTypeCode()).isEmpty()) {
+                    bankLookupSubTypeRepository.save(BankLookupSubType.builder()
+                            .lookupTypeCode(mst.getLookupTypeCode())
+                            .typeDescription(mst.getTypeDescription())
+                            .subTypeCode(mst.getSubTypeCode())
+                            .subTypeDescription(mst.getSubTypeDescription())
+                            .isFixed(mst.getIsFixed())
+                            .isActive(mst.getIsActive())
+                            .displayOrder(mst.getDisplayOrder())
+                            .build());
+                }
+            }
+            log.info("Lookups seeded successfully for tenant db={}", orgDb);
+        } catch (Exception e) {
+            log.warn("Notice seeding lookups for db {}: {}", orgDb, e.getMessage());
+        }
+    }
 }
+

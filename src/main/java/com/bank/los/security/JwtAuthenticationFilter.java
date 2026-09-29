@@ -79,11 +79,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     jti = claims.get(SecurityConstants.CLAIM_JTI, String.class);
                 }
 
+                String designation = claims.get(SecurityConstants.CLAIM_DESIGNATION, String.class);
+                @SuppressWarnings("unchecked")
+                java.util.List<String> permissions = claims.get(SecurityConstants.CLAIM_PERMISSIONS, java.util.List.class);
+
                 UserPrincipal userPrincipal = UserPrincipal.builder()
                         .id(userId)
                         .email(username)
                         .userType(userType)
                         .role(role)
+                        .designation(designation)
+                        .permissions(permissions)
                         .organizationId(orgId)
                         .organizationUuid(orgUuid)
                         .organizationCode(orgCode)
@@ -93,6 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .active(true)
                         .jti(jti)
                         .build();
+
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userPrincipal,

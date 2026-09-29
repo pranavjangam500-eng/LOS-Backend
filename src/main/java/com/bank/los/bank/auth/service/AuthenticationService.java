@@ -458,11 +458,25 @@ public class AuthenticationService {
     //  LOGOUT
     // =====================================================================
 
-    @Transactional
     public void logout(UserPrincipal principal, LogoutRequest request, String ipAddress) {
         log.info("Processing logout request. Principal: {}, Request: {}",
                 principal != null ? principal.getUsername() : "anonymous",
                 request != null ? (request.getRefreshToken() != null ? "[provided]" : "[empty]") : "[none]");
+
+        if (principal != null) {
+            String orgDb = principal.getOrganizationDbName();
+            if (orgDb == null) {
+                orgDb = ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(principal.getUserType())
+                        ? OrganizationContext.MASTER_ORG_ID
+                        : OrganizationContext.MASTER_ORG_ID;
+            }
+            OrganizationContext.setCurrentOrganization(orgDb);
+            BankContext.setCurrentBank(orgDb);
+            if (principal.getOrganizationCode() != null) {
+                OrganizationContext.setCurrentOrgCode(principal.getOrganizationCode());
+                BankContext.setCurrentBankCode(principal.getOrganizationCode());
+            }
+        }
 
         // 1. If explicit refresh token was provided in request body, revoke it
         if (request != null && StringUtils.hasText(request.getRefreshToken())) {
@@ -475,14 +489,6 @@ public class AuthenticationService {
 
         // 2. If authenticated principal is available, perform session invalidation, token cleanup, and audit logging
         if (principal != null) {
-            String orgDb = principal.getOrganizationDbName();
-            if (orgDb == null) {
-                orgDb = ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(principal.getUserType())
-                        ? OrganizationContext.MASTER_ORG_ID
-                        : OrganizationContext.MASTER_ORG_ID;
-            }
-            OrganizationContext.setCurrentOrganization(orgDb);
-            BankContext.setCurrentBank(orgDb);
 
             // Invalidate session activity
             if (StringUtils.hasText(principal.getJti())) {
@@ -607,17 +613,23 @@ public class AuthenticationService {
 
     private UserPrincipal buildStaffPrincipal(OrganizationUser user, Organization org) {
         String jti = UUID.randomUUID().toString();
+        String roleName = user.getRole() != null ? user.getRole().getName() : ApplicationConstants.Roles.VIEWER;
+        String orgDb = org != null ? org.getDbName() : null;
+        List<String> perms = permissionService.getEffectivePermissions(orgDb, roleName, user.getDesignation());
+
         return UserPrincipal.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .userCode(user.getEmpNo())
                 .fullName(user.getFullName())
-                .role(user.getRole() != null ? user.getRole().getName() : ApplicationConstants.Roles.VIEWER)
+                .role(roleName)
+                .designation(user.getDesignation())
+                .permissions(perms)
                 .userType(ApplicationConstants.UserTypes.STAFF)
                 .organizationId(org != null ? org.getId() : null)
                 .organizationUuid(org != null ? org.getUuid() : null)
                 .organizationCode(org != null ? org.getCode() : null)
-                .organizationDbName(org != null ? org.getDbName() : null)
+                .organizationDbName(orgDb)
                 .branchId(user.getLoginBranch() != null ? user.getLoginBranch().getId() : null)
                 .active(true)
                 .jti(jti)
@@ -634,8 +646,8 @@ public class AuthenticationService {
                 .userType(ApplicationConstants.UserTypes.CUSTOMER)
                 .organizationId(org != null ? org.getId() : null)
                 .organizationUuid(org != null ? org.getUuid() : null)
-                .organizationCode(org.getCode())
-                .organizationDbName(org.getDbName())
+                .organizationCode(org != null ? org.getCode() : null)
+                .organizationDbName(org != null ? org.getDbName() : null)
                 .branchId(customer.getBranch() != null ? customer.getBranch().getId() : null)
                 .active(true)
                 .jti(UUID.randomUUID().toString())
@@ -645,7 +657,8 @@ public class AuthenticationService {
     private LoginResponse buildFullAuthResponse(UserPrincipal principal, UserProfileResponse profile, int timeoutSecs) {
         String accessToken = jwtTokenProvider.generateAccessToken(principal);
         RefreshToken refreshTokenEntity = tokenService.createRefreshToken(principal);
-        List<String> permissions = permissionService.getPermissionCodes(principal.getRole(), principal.getOrganizationDbName());
+        List<String> permissions = principal.getPermissions() != null ? principal.getPermissions() :
+                permissionService.getEffectivePermissions(principal.getOrganizationDbName(), principal.getRole(), principal.getDesignation());
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
@@ -657,6 +670,7 @@ public class AuthenticationService {
                 .user(profile)
                 .build();
     }
+
 
     private void registerSession(String jti, Long userId, int timeoutSecs, String orgDb) {
         if (jti == null) return;

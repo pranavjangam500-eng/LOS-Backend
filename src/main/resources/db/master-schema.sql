@@ -63,6 +63,28 @@ CREATE TABLE IF NOT EXISTS identity.roles (
 );
 
 -- -----------------------------------------------------------------------
+-- identity.permissions (Master DB)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.permissions (
+    id          SERIAL       PRIMARY KEY,
+    code        VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    module      VARCHAR(60),
+    is_system   BOOLEAN      NOT NULL DEFAULT false,
+    created_at  TIMESTAMP    NOT NULL DEFAULT now()
+);
+
+-- -----------------------------------------------------------------------
+-- identity.role_permissions (Master DB)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.role_permissions (
+    role_id       INT NOT NULL REFERENCES identity.roles(id) ON DELETE CASCADE,
+    permission_id INT NOT NULL REFERENCES identity.permissions(id) ON DELETE CASCADE,
+    PRIMARY KEY (role_id, permission_id)
+);
+
+
+-- -----------------------------------------------------------------------
 -- identity.internal_users
 -- Full extended schema matching the senior's DB design
 -- -----------------------------------------------------------------------
@@ -183,3 +205,40 @@ CREATE TABLE IF NOT EXISTS identity.refresh_tokens (
     revoked             BOOLEAN      NOT NULL DEFAULT false,
     created_at          TIMESTAMP    NOT NULL DEFAULT now()
 );
+
+-- -----------------------------------------------------------------------
+-- identity.lookup_types (Table 51001) - Master Lookup Types
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.lookup_types (
+    id            BIGSERIAL    PRIMARY KEY,
+    code          VARCHAR(50)  NOT NULL UNIQUE,
+    description   VARCHAR(255) NOT NULL,
+    is_fixed      BOOLEAN      NOT NULL DEFAULT false,
+    is_active     BOOLEAN      NOT NULL DEFAULT true,
+    created_by    BIGINT,
+    created_at    TIMESTAMP    NOT NULL DEFAULT now(),
+    modified_by   BIGINT,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT now()
+);
+
+-- -----------------------------------------------------------------------
+-- identity.lookup_sub_types (Table 51101) - Master Lookup Sub Types
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.lookup_sub_types (
+    id                    BIGSERIAL    PRIMARY KEY,
+    lookup_type_code      VARCHAR(50)  NOT NULL,
+    type_description      VARCHAR(255),
+    sub_type_code         VARCHAR(50)  NOT NULL,
+    sub_type_description  VARCHAR(255) NOT NULL,
+    is_fixed              BOOLEAN      NOT NULL DEFAULT false,
+    is_active             BOOLEAN      NOT NULL DEFAULT true,
+    display_order         INT          NOT NULL DEFAULT 0,
+    created_by            BIGINT,
+    created_at            TIMESTAMP    NOT NULL DEFAULT now(),
+    modified_by           BIGINT,
+    updated_at            TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT uk_master_lookup_sub_type UNIQUE (lookup_type_code, sub_type_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_master_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
+
