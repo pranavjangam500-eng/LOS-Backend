@@ -10,7 +10,9 @@ import com.bank.los.bank.lookup.dto.BankCreateLookupSubTypeRequest;
 import com.bank.los.bank.lookup.dto.BankUpdateLookupSubTypeRequest;
 import com.bank.los.bank.master.entity.BankLookupSubType;
 import com.bank.los.bank.master.entity.BankLookupType;
+import com.bank.los.bank.master.entity.BankLookupTypePermission;
 import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
+import com.bank.los.bank.master.repository.BankLookupTypePermissionRepository;
 import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.common.exception.BusinessException;
@@ -24,7 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,15 +39,20 @@ public class BankLookupService {
     private final BankLookupTypeRepository bankLookupTypeRepository;
     private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
     private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
+    private final BankLookupTypePermissionRepository bankLookupTypePermissionRepository;
     private final PermissionService permissionService;
     private final BankAuditService bankAuditService;
+
+    public static final Set<String> DEFAULT_LOOKUP_PERMISSIONS = Set.of(
+            "VIEW", "ADD", "ADD_FROM_MASTER", "EDIT", "DELETE", "ACTIVATE", "DEACTIVATE"
+    );
 
     @Transactional(readOnly = true)
     public List<LookupTypeResponse> getAllLookupTypes(UserPrincipal principal) {
         setTenantContext(principal);
         checkPermission(principal, ApplicationConstants.Permissions.LOOKUP_BANK_VIEW);
         return bankLookupTypeRepository.findAll().stream()
-                .filter(t -> Boolean.TRUE.equals(t.getIsActive()) && !Boolean.FALSE.equals(t.getCanView()))
+                .filter(t -> Boolean.TRUE.equals(t.getIsActive()) && isLookupActionAllowed(t.getCode(), "VIEW"))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -55,7 +64,7 @@ public class BankLookupService {
         BankLookupType type = bankLookupTypeRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup type not found with code: " + code));
 
-        if (Boolean.FALSE.equals(type.getCanView())) {
+        if (!isLookupActionAllowed(code, "VIEW")) {
             throw new BusinessException("Lookup type '" + code + "' (" + type.getDescription() + ") viewing is disabled for this bank.");
         }
 
@@ -69,7 +78,7 @@ public class BankLookupService {
         BankLookupType type = bankLookupTypeRepository.findByCode(lookupTypeCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup type not found with code: " + lookupTypeCode));
 
-        if (Boolean.FALSE.equals(type.getCanView())) {
+        if (!isLookupActionAllowed(lookupTypeCode, "VIEW")) {
             throw new BusinessException("Lookup type '" + lookupTypeCode + "' (" + type.getDescription() + ") viewing is disabled for this bank.");
         }
 
@@ -87,7 +96,7 @@ public class BankLookupService {
         BankLookupType type = bankLookupTypeRepository.findByCode(lookupTypeCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup type not found with code: " + lookupTypeCode));
 
-        if (Boolean.FALSE.equals(type.getCanAdd())) {
+        if (!isLookupActionAllowed(lookupTypeCode, "ADD")) {
             throw new BusinessException("Lookup type '" + lookupTypeCode + "' (" + type.getDescription() + ") does not allow adding custom options for this bank.");
         }
 
@@ -132,7 +141,7 @@ public class BankLookupService {
         BankLookupType type = bankLookupTypeRepository.findByCode(lookupTypeCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup type not found in bank database with code: " + lookupTypeCode));
 
-        if (Boolean.FALSE.equals(type.getCanImportFromMaster())) {
+        if (!isLookupActionAllowed(lookupTypeCode, "ADD_FROM_MASTER")) {
             throw new BusinessException("Lookup type '" + lookupTypeCode + "' (" + type.getDescription() + ") does not allow importing options from master for this bank.");
         }
 
@@ -186,7 +195,7 @@ public class BankLookupService {
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup option not found with id: " + id));
 
         BankLookupType type = bankLookupTypeRepository.findByCode(subType.getLookupTypeCode()).orElse(null);
-        if (type != null && Boolean.FALSE.equals(type.getCanEdit())) {
+        if (type != null && !isLookupActionAllowed(subType.getLookupTypeCode(), "EDIT")) {
             throw new BusinessException("Lookup type '" + subType.getLookupTypeCode() + "' (" + type.getDescription() + ") does not allow editing options for this bank.");
         }
 
@@ -228,7 +237,7 @@ public class BankLookupService {
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup option not found with id: " + id));
 
         BankLookupType type = bankLookupTypeRepository.findByCode(subType.getLookupTypeCode()).orElse(null);
-        if (type != null && Boolean.FALSE.equals(type.getCanDelete())) {
+        if (type != null && !isLookupActionAllowed(subType.getLookupTypeCode(), "DELETE")) {
             throw new BusinessException("Lookup type '" + subType.getLookupTypeCode() + "' (" + type.getDescription() + ") does not allow deleting options for this bank.");
         }
 
@@ -260,7 +269,7 @@ public class BankLookupService {
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup option not found with id: " + id));
 
         BankLookupType type = bankLookupTypeRepository.findByCode(subType.getLookupTypeCode()).orElse(null);
-        if (type != null && Boolean.FALSE.equals(type.getCanActivate())) {
+        if (type != null && !isLookupActionAllowed(subType.getLookupTypeCode(), "ACTIVATE")) {
             throw new BusinessException("Lookup type '" + subType.getLookupTypeCode() + "' (" + type.getDescription() + ") does not allow activating options for this bank.");
         }
 
@@ -287,7 +296,7 @@ public class BankLookupService {
                 .orElseThrow(() -> new ResourceNotFoundException("Lookup option not found with id: " + id));
 
         BankLookupType type = bankLookupTypeRepository.findByCode(subType.getLookupTypeCode()).orElse(null);
-        if (type != null && Boolean.FALSE.equals(type.getCanDeactivate())) {
+        if (type != null && !isLookupActionAllowed(subType.getLookupTypeCode(), "DEACTIVATE")) {
             throw new BusinessException("Lookup type '" + subType.getLookupTypeCode() + "' (" + type.getDescription() + ") does not allow deactivating options for this bank.");
         }
 
@@ -307,6 +316,14 @@ public class BankLookupService {
         }
 
         return mapSubTypeToResponse(saved);
+    }
+
+    public boolean isLookupActionAllowed(String lookupTypeCode, String action) {
+        List<BankLookupTypePermission> perms = bankLookupTypePermissionRepository.findByLookupTypeCode(lookupTypeCode);
+        if (perms.isEmpty()) {
+            return true;
+        }
+        return perms.stream().anyMatch(p -> p.getPermissionCode().equalsIgnoreCase(action));
     }
 
     private void checkPermission(UserPrincipal principal, String requiredPermission) {
@@ -331,19 +348,18 @@ public class BankLookupService {
                 .collect(Collectors.toList())
                 : List.of();
 
+        List<BankLookupTypePermission> perms = bankLookupTypePermissionRepository.findByLookupTypeCode(entity.getCode());
+        Set<String> permCodes = perms.isEmpty()
+                ? new HashSet<>(DEFAULT_LOOKUP_PERMISSIONS)
+                : perms.stream().map(BankLookupTypePermission::getPermissionCode).collect(Collectors.toSet());
+
         return LookupTypeResponse.builder()
                 .id(entity.getId())
                 .code(entity.getCode())
                 .description(entity.getDescription())
                 .isFixed(entity.getIsFixed())
                 .isActive(entity.getIsActive())
-                .canView(entity.getCanView() != null ? entity.getCanView() : true)
-                .canAdd(entity.getCanAdd() != null ? entity.getCanAdd() : true)
-                .canImportFromMaster(entity.getCanImportFromMaster() != null ? entity.getCanImportFromMaster() : true)
-                .canEdit(entity.getCanEdit() != null ? entity.getCanEdit() : true)
-                .canDelete(entity.getCanDelete() != null ? entity.getCanDelete() : true)
-                .canActivate(entity.getCanActivate() != null ? entity.getCanActivate() : true)
-                .canDeactivate(entity.getCanDeactivate() != null ? entity.getCanDeactivate() : true)
+                .permissions(permCodes)
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt())
                 .modifiedBy(entity.getModifiedBy())

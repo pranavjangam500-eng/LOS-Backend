@@ -10,7 +10,9 @@ import com.bank.los.bank.lookup.dto.BankUpdateLookupSubTypeRequest;
 import com.bank.los.bank.lookup.service.BankLookupService;
 import com.bank.los.bank.master.entity.BankLookupSubType;
 import com.bank.los.bank.master.entity.BankLookupType;
+import com.bank.los.bank.master.entity.BankLookupTypePermission;
 import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
+import com.bank.los.bank.master.repository.BankLookupTypePermissionRepository;
 import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.common.exception.BusinessException;
@@ -42,6 +44,9 @@ class BankLookupServiceTest {
 
     @Mock
     private MasterLookupSubTypeRepository masterLookupSubTypeRepository;
+
+    @Mock
+    private BankLookupTypePermissionRepository bankLookupTypePermissionRepository;
 
     @Mock
     private PermissionService permissionService;
@@ -293,7 +298,6 @@ class BankLookupServiceTest {
                 .code("10004")
                 .description("Loan Type")
                 .isFixed(false)
-                .canView(true)
                 .build();
 
         when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
@@ -328,8 +332,8 @@ class BankLookupServiceTest {
     }
 
     @Test
-    @DisplayName("Dual Authorization: User has LOOKUP_BANK_EDIT, but Loan Type canEdit=false -> DENY")
-    void testDualAuthorization_EditPermissionAllowed_CapabilityDisabled_ThrowsBusinessException() {
+    @DisplayName("Dual Authorization: User has LOOKUP_BANK_EDIT, but Loan Type permission does NOT include EDIT -> DENY")
+    void testDualAuthorization_EditPermissionAllowed_LookupPermissionMissing_ThrowsBusinessException() {
         when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_EDIT))).thenReturn(true);
 
         BankLookupType loanType = BankLookupType.builder()
@@ -337,7 +341,6 @@ class BankLookupServiceTest {
                 .code("10004")
                 .description("Loan Type")
                 .isFixed(false)
-                .canEdit(false)
                 .build();
 
         BankLookupSubType subType = BankLookupSubType.builder()
@@ -351,6 +354,12 @@ class BankLookupServiceTest {
         when(bankLookupSubTypeRepository.findById(20L)).thenReturn(Optional.of(subType));
         when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
 
+        // Configured permissions only have VIEW and ADD (EDIT is not allowed)
+        when(bankLookupTypePermissionRepository.findByLookupTypeCode("10004")).thenReturn(List.of(
+                BankLookupTypePermission.builder().lookupTypeCode("10004").permissionCode("VIEW").build(),
+                BankLookupTypePermission.builder().lookupTypeCode("10004").permissionCode("ADD").build()
+        ));
+
         BankUpdateLookupSubTypeRequest req = BankUpdateLookupSubTypeRequest.builder()
                 .subTypeDescription("Updated Home Loan")
                 .build();
@@ -362,8 +371,8 @@ class BankLookupServiceTest {
     }
 
     @Test
-    @DisplayName("Dual Authorization: User has LOOKUP_BANK_ADD, but Loan Type canAdd=false -> DENY")
-    void testDualAuthorization_AddPermissionAllowed_CapabilityDisabled_ThrowsBusinessException() {
+    @DisplayName("Dual Authorization: User has LOOKUP_BANK_ADD, but Loan Type permission does NOT include ADD -> DENY")
+    void testDualAuthorization_AddPermissionAllowed_LookupPermissionMissing_ThrowsBusinessException() {
         when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_ADD))).thenReturn(true);
 
         BankLookupType loanType = BankLookupType.builder()
@@ -371,10 +380,14 @@ class BankLookupServiceTest {
                 .code("10004")
                 .description("Loan Type")
                 .isFixed(false)
-                .canAdd(false)
                 .build();
 
         when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+
+        // Configured permissions only have VIEW
+        when(bankLookupTypePermissionRepository.findByLookupTypeCode("10004")).thenReturn(List.of(
+                BankLookupTypePermission.builder().lookupTypeCode("10004").permissionCode("VIEW").build()
+        ));
 
         BankCreateLookupSubTypeRequest req = BankCreateLookupSubTypeRequest.builder()
                 .subTypeCode("99")
@@ -388,8 +401,8 @@ class BankLookupServiceTest {
     }
 
     @Test
-    @DisplayName("Dual Authorization: User has LOOKUP_BANK_DELETE, but Loan Type canDelete=false -> DENY")
-    void testDualAuthorization_DeletePermissionAllowed_CapabilityDisabled_ThrowsBusinessException() {
+    @DisplayName("Dual Authorization: User has LOOKUP_BANK_DELETE, but Loan Type permission does NOT include DELETE -> DENY")
+    void testDualAuthorization_DeletePermissionAllowed_LookupPermissionMissing_ThrowsBusinessException() {
         when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_DELETE))).thenReturn(true);
 
         BankLookupType loanType = BankLookupType.builder()
@@ -397,7 +410,6 @@ class BankLookupServiceTest {
                 .code("10004")
                 .description("Loan Type")
                 .isFixed(false)
-                .canDelete(false)
                 .build();
 
         BankLookupSubType subType = BankLookupSubType.builder()
@@ -411,6 +423,12 @@ class BankLookupServiceTest {
         when(bankLookupSubTypeRepository.findById(20L)).thenReturn(Optional.of(subType));
         when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
 
+        // Configured permissions only have VIEW and EDIT
+        when(bankLookupTypePermissionRepository.findByLookupTypeCode("10004")).thenReturn(List.of(
+                BankLookupTypePermission.builder().lookupTypeCode("10004").permissionCode("VIEW").build(),
+                BankLookupTypePermission.builder().lookupTypeCode("10004").permissionCode("EDIT").build()
+        ));
+
         BusinessException ex = assertThrows(BusinessException.class, () ->
                 bankLookupService.deleteBankSubType(bankPrincipal, 20L));
 
@@ -418,7 +436,7 @@ class BankLookupServiceTest {
     }
 
     @Test
-    @DisplayName("Dual Authorization: View lookup when canView=false throws BusinessException")
+    @DisplayName("Dual Authorization: View lookup when VIEW permission is disabled for this lookup throws BusinessException")
     void testDualAuthorization_ViewDisabled_ThrowsBusinessException() {
         when(permissionService.hasEffectivePermission(any(), eq(ApplicationConstants.Permissions.LOOKUP_BANK_VIEW))).thenReturn(true);
 
@@ -427,10 +445,14 @@ class BankLookupServiceTest {
                 .code("10004")
                 .description("Loan Type")
                 .isFixed(false)
-                .canView(false)
                 .build();
 
         when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
+
+        // Only ADD is configured, VIEW is excluded
+        when(bankLookupTypePermissionRepository.findByLookupTypeCode("10004")).thenReturn(List.of(
+                BankLookupTypePermission.builder().lookupTypeCode("10004").permissionCode("ADD").build()
+        ));
 
         BusinessException ex = assertThrows(BusinessException.class, () ->
                 bankLookupService.getLookupTypeByCode(bankPrincipal, "10004"));

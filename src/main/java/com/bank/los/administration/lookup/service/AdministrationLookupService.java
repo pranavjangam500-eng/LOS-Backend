@@ -8,9 +8,12 @@ import com.bank.los.administration.master.entity.Organization;
 import com.bank.los.administration.master.repository.MasterLookupSubTypeRepository;
 import com.bank.los.administration.master.repository.MasterLookupTypeRepository;
 import com.bank.los.administration.master.repository.OrganizationRepository;
+import com.bank.los.bank.lookup.service.BankLookupService;
 import com.bank.los.bank.master.entity.BankLookupSubType;
 import com.bank.los.bank.master.entity.BankLookupType;
+import com.bank.los.bank.master.entity.BankLookupTypePermission;
 import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
+import com.bank.los.bank.master.repository.BankLookupTypePermissionRepository;
 import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
@@ -22,7 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,6 +40,7 @@ public class AdministrationLookupService {
     private final OrganizationRepository organizationRepository;
     private final BankLookupTypeRepository bankLookupTypeRepository;
     private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
+    private final BankLookupTypePermissionRepository bankLookupTypePermissionRepository;
     private final AdminAuditService adminAuditService;
 
     @Transactional(readOnly = true)
@@ -232,6 +238,17 @@ public class AdministrationLookupService {
                 bt.setIsFixed(mt.getIsFixed());
                 bt.setIsActive(mt.getIsActive());
                 bankLookupTypeRepository.save(bt);
+
+                // Initialize default lookup permissions if not already configured
+                List<BankLookupTypePermission> existingPerms = bankLookupTypePermissionRepository.findByLookupTypeCode(mt.getCode());
+                if (existingPerms.isEmpty()) {
+                    for (String perm : BankLookupService.DEFAULT_LOOKUP_PERMISSIONS) {
+                        bankLookupTypePermissionRepository.save(BankLookupTypePermission.builder()
+                                .lookupTypeCode(mt.getCode())
+                                .permissionCode(perm)
+                                .build());
+                    }
+                }
             }
 
             for (MasterLookupSubType mst : masterSubTypes) {
@@ -278,10 +295,10 @@ public class AdministrationLookupService {
     }
 
     @Transactional
-    public LookupTypeResponse updateBankLookupCapabilities(
+    public LookupTypeResponse updateBankLookupPermissions(
             String bankCode,
             String lookupTypeCode,
-            UpdateBankLookupCapabilitiesRequest request,
+            UpdateBankLookupPermissionsRequest request,
             UserPrincipal principal) {
         Organization org = organizationRepository.findByCode(bankCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Bank / Organization not found with code: " + bankCode));
@@ -295,27 +312,32 @@ public class AdministrationLookupService {
             BankLookupType bt = bankLookupTypeRepository.findByCode(lookupTypeCode)
                     .orElseThrow(() -> new ResourceNotFoundException("Lookup type not found in bank database with code: " + lookupTypeCode));
 
-            if (request.getCanView() != null) bt.setCanView(request.getCanView());
-            if (request.getCanAdd() != null) bt.setCanAdd(request.getCanAdd());
-            if (request.getCanImportFromMaster() != null) bt.setCanImportFromMaster(request.getCanImportFromMaster());
-            if (request.getCanEdit() != null) bt.setCanEdit(request.getCanEdit());
-            if (request.getCanDelete() != null) bt.setCanDelete(request.getCanDelete());
-            if (request.getCanActivate() != null) bt.setCanActivate(request.getCanActivate());
-            if (request.getCanDeactivate() != null) bt.setCanDeactivate(request.getCanDeactivate());
+            bankLookupTypePermissionRepository.deleteByLookupTypeCode(lookupTypeCode);
+
+            if (request.getPermissions() != null) {
+                for (String perm : request.getPermissions()) {
+                    if (perm != null && !perm.trim().isEmpty()) {
+                        bankLookupTypePermissionRepository.save(BankLookupTypePermission.builder()
+                                .lookupTypeCode(lookupTypeCode)
+                                .permissionCode(perm.trim().toUpperCase())
+                                .build());
+                    }
+                }
+            }
 
             bt.setModifiedBy(principal != null ? principal.getId() : null);
             BankLookupType saved = bankLookupTypeRepository.save(bt);
 
             if (principal != null) {
                 adminAuditService.logAdminAction(
-                        principal.getId(), principal.getEmail(), "UPDATE_BANK_LOOKUP_CAPABILITIES",
+                        principal.getId(), principal.getEmail(), "UPDATE_BANK_LOOKUP_PERMISSIONS",
                         "LOOKUP", bankCode,
-                        "Updated capabilities for lookup " + lookupTypeCode + " in bank " + bankCode,
+                        "Updated permissions for lookup " + lookupTypeCode + " in bank " + bankCode + ": " + request.getPermissions(),
                         null
                 );
             }
 
-            log.info("Admin updated capabilities for lookup {} in bank {}", lookupTypeCode, bankCode);
+            log.info("Admin updated permissions for lookup {} in bank {}", lookupTypeCode, bankCode);
             return mapBankTypeToResponse(saved);
         } finally {
             BankContext.setCurrentBank(previousBank != null ? previousBank : BankContext.MASTER_DB_NAME);
@@ -338,6 +360,7 @@ public class AdministrationLookupService {
                 .description(entity.getDescription())
                 .isFixed(entity.getIsFixed())
                 .isActive(entity.getIsActive())
+                .permissions(new HashSet<>(BankLookupService.DEFAULT_LOOKUP_PERMISSIONS))
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt())
                 .modifiedBy(entity.getModifiedBy())
@@ -368,19 +391,18 @@ public class AdministrationLookupService {
                 ? entity.getSubTypes().stream().map(this::mapBankSubTypeToResponse).collect(Collectors.toList())
                 : List.of();
 
+        List<BankLookupTypePermission> perms = bankLookupTypePermissionRepository.findByLookupTypeCode(entity.getCode());
+        Set<String> permCodes = perms.isEmpty()
+                ? new HashSet<>(BankLookupService.DEFAULT_LOOKUP_PERMISSIONS)
+                : perms.stream().map(BankLookupTypePermission::getPermissionCode).collect(Collectors.toSet());
+
         return LookupTypeResponse.builder()
                 .id(entity.getId())
                 .code(entity.getCode())
                 .description(entity.getDescription())
                 .isFixed(entity.getIsFixed())
                 .isActive(entity.getIsActive())
-                .canView(entity.getCanView() != null ? entity.getCanView() : true)
-                .canAdd(entity.getCanAdd() != null ? entity.getCanAdd() : true)
-                .canImportFromMaster(entity.getCanImportFromMaster() != null ? entity.getCanImportFromMaster() : true)
-                .canEdit(entity.getCanEdit() != null ? entity.getCanEdit() : true)
-                .canDelete(entity.getCanDelete() != null ? entity.getCanDelete() : true)
-                .canActivate(entity.getCanActivate() != null ? entity.getCanActivate() : true)
-                .canDeactivate(entity.getCanDeactivate() != null ? entity.getCanDeactivate() : true)
+                .permissions(permCodes)
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt())
                 .modifiedBy(entity.getModifiedBy())

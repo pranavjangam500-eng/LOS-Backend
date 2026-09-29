@@ -244,22 +244,15 @@ CREATE INDEX idx_customers_branch_id ON customer.customers(branch_id);
 -- identity.lookup_types (Table 51001) - Bank Lookup Types
 -- ---------------------------------------------------------------------
 CREATE TABLE identity.lookup_types (
-    id                      BIGSERIAL PRIMARY KEY,
-    code                    VARCHAR(50) NOT NULL UNIQUE,
-    description             VARCHAR(255) NOT NULL,
-    is_fixed                BOOLEAN NOT NULL DEFAULT false,
-    is_active               BOOLEAN NOT NULL DEFAULT true,
-    can_view                BOOLEAN NOT NULL DEFAULT true,
-    can_add                 BOOLEAN NOT NULL DEFAULT true,
-    can_import_from_master  BOOLEAN NOT NULL DEFAULT true,
-    can_edit                BOOLEAN NOT NULL DEFAULT true,
-    can_delete              BOOLEAN NOT NULL DEFAULT true,
-    can_activate            BOOLEAN NOT NULL DEFAULT true,
-    can_deactivate          BOOLEAN NOT NULL DEFAULT true,
-    created_by              BIGINT,
-    created_at              TIMESTAMP NOT NULL DEFAULT now(),
-    modified_by             BIGINT,
-    updated_at              TIMESTAMP NOT NULL DEFAULT now()
+    id            BIGSERIAL PRIMARY KEY,
+    code          VARCHAR(50) NOT NULL UNIQUE,
+    description   VARCHAR(255) NOT NULL,
+    is_fixed      BOOLEAN NOT NULL DEFAULT false,
+    is_active     BOOLEAN NOT NULL DEFAULT true,
+    created_by    BIGINT,
+    created_at    TIMESTAMP NOT NULL DEFAULT now(),
+    modified_by   BIGINT,
+    updated_at    TIMESTAMP NOT NULL DEFAULT now()
 );
 
 -- ---------------------------------------------------------------------
@@ -280,6 +273,21 @@ CREATE TABLE identity.lookup_sub_types (
     updated_at            TIMESTAMP NOT NULL DEFAULT now(),
     CONSTRAINT uk_bank_lookup_sub_type UNIQUE (lookup_type_code, sub_type_code)
 );
+
+CREATE INDEX idx_bank_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
+
+-- ---------------------------------------------------------------------
+-- identity.bank_lookup_type_permissions - Dynamic Bank Lookup Permissions
+-- ---------------------------------------------------------------------
+CREATE TABLE identity.bank_lookup_type_permissions (
+    id                BIGSERIAL PRIMARY KEY,
+    lookup_type_code  VARCHAR(50) NOT NULL,
+    permission_code   VARCHAR(50) NOT NULL,
+    created_at        TIMESTAMP NOT NULL DEFAULT now(),
+    CONSTRAINT uk_bank_lt_permission UNIQUE (lookup_type_code, permission_code)
+);
+
+CREATE INDEX idx_bank_lt_perm_code ON identity.bank_lookup_type_permissions(lookup_type_code);
 
 CREATE INDEX idx_bank_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
 

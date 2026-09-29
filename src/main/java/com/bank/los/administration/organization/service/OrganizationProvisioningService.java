@@ -45,6 +45,7 @@ public class OrganizationProvisioningService {
     private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
     private final BankLookupTypeRepository bankLookupTypeRepository;
     private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
+    private final com.bank.los.bank.master.repository.BankLookupTypePermissionRepository bankLookupTypePermissionRepository;
     private final com.bank.los.bank.master.repository.DesignationRoleMappingRepository designationRoleMappingRepository;
 
 
@@ -307,6 +308,15 @@ public class OrganizationProvisioningService {
                             .isFixed(mt.getIsFixed())
                             .isActive(mt.getIsActive())
                             .build());
+                }
+
+                if (bankLookupTypePermissionRepository.findByLookupTypeCode(mt.getCode()).isEmpty()) {
+                    for (String perm : com.bank.los.bank.lookup.service.BankLookupService.DEFAULT_LOOKUP_PERMISSIONS) {
+                        bankLookupTypePermissionRepository.save(com.bank.los.bank.master.entity.BankLookupTypePermission.builder()
+                                .lookupTypeCode(mt.getCode())
+                                .permissionCode(perm)
+                                .build());
+                    }
                 }
             }
 

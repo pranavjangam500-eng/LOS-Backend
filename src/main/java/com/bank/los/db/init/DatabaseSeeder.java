@@ -62,6 +62,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final BankLookupTypeRepository bankLookupTypeRepository;
     private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
+    private final com.bank.los.bank.master.repository.BankLookupTypePermissionRepository bankLookupTypePermissionRepository;
     private final com.bank.los.bank.master.repository.DesignationRoleMappingRepository designationRoleMappingRepository;
     private final com.bank.los.bank.master.repository.PermissionOverrideRepository permissionOverrideRepository;
     private final PasswordEncoder passwordEncoder;
@@ -618,6 +619,16 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "6", "Association Chairman", false, 6);
         seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "7", "Society", false, 7);
         seedMasterLookupSubType("10007", "Corporate Customer Sub Type", "8", "Federation", false, 8);
+
+        // 10008: Lookup Permissions (Fixed - System Permissions Catalogue for Lookups)
+        seedMasterLookupType("10008", "Lookup Permissions", true);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "VIEW", "View Lookup & Options", true, 1);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "ADD", "Add Custom Option", true, 2);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "ADD_FROM_MASTER", "Import Option from Master DB", true, 3);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "EDIT", "Edit Option", true, 4);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "DELETE", "Delete Option", true, 5);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "ACTIVATE", "Activate Option", true, 6);
+        seedMasterLookupSubType("10008", "Lookup Permissions", "DEACTIVATE", "Deactivate Option", true, 7);
     }
 
     private void seedMasterLookupType(String code, String description, boolean isFixed) {
@@ -667,6 +678,15 @@ public class DatabaseSeeder implements CommandLineRunner {
                             .isFixed(mt.getIsFixed())
                             .isActive(mt.getIsActive())
                             .build());
+                }
+
+                if (bankLookupTypePermissionRepository.findByLookupTypeCode(mt.getCode()).isEmpty()) {
+                    for (String perm : com.bank.los.bank.lookup.service.BankLookupService.DEFAULT_LOOKUP_PERMISSIONS) {
+                        bankLookupTypePermissionRepository.save(com.bank.los.bank.master.entity.BankLookupTypePermission.builder()
+                                .lookupTypeCode(mt.getCode())
+                                .permissionCode(perm)
+                                .build());
+                    }
                 }
             }
 

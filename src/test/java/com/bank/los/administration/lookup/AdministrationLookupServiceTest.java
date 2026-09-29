@@ -12,6 +12,7 @@ import com.bank.los.administration.master.repository.OrganizationRepository;
 import com.bank.los.bank.master.entity.BankLookupSubType;
 import com.bank.los.bank.master.entity.BankLookupType;
 import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
+import com.bank.los.bank.master.repository.BankLookupTypePermissionRepository;
 import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.security.UserPrincipal;
@@ -26,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +50,9 @@ class AdministrationLookupServiceTest {
 
     @Mock
     private BankLookupSubTypeRepository bankLookupSubTypeRepository;
+
+    @Mock
+    private BankLookupTypePermissionRepository bankLookupTypePermissionRepository;
 
     @Mock
     private AdminAuditService adminAuditService;
@@ -181,8 +186,8 @@ class AdministrationLookupServiceTest {
     }
 
     @Test
-    @DisplayName("Admin can update bank lookup capabilities")
-    void testUpdateBankLookupCapabilities() {
+    @DisplayName("Admin can update bank lookup permissions")
+    void testUpdateBankLookupPermissions() {
         Organization org = Organization.builder()
                 .id(1L)
                 .institutionCode("HDFC01")
@@ -196,24 +201,19 @@ class AdministrationLookupServiceTest {
                 .code("10004")
                 .description("Loan Type")
                 .isFixed(false)
-                .canEdit(true)
-                .canDelete(true)
                 .build();
 
         when(bankLookupTypeRepository.findByCode("10004")).thenReturn(Optional.of(loanType));
         when(bankLookupTypeRepository.save(any(BankLookupType.class))).thenAnswer(i -> i.getArgument(0));
 
-        UpdateBankLookupCapabilitiesRequest req = UpdateBankLookupCapabilitiesRequest.builder()
-                .canEdit(false)
-                .canDelete(false)
+        UpdateBankLookupPermissionsRequest req = UpdateBankLookupPermissionsRequest.builder()
+                .permissions(Set.of("VIEW", "ADD", "ACTIVATE"))
                 .build();
 
-        LookupTypeResponse response = lookupService.updateBankLookupCapabilities("HDFC01", "10004", req, adminPrincipal);
+        LookupTypeResponse response = lookupService.updateBankLookupPermissions("HDFC01", "10004", req, adminPrincipal);
 
         assertNotNull(response);
-        assertFalse(response.getCanEdit());
-        assertFalse(response.getCanDelete());
-        assertTrue(response.getCanView());
-        verify(adminAuditService, times(1)).logAdminAction(any(), any(), eq("UPDATE_BANK_LOOKUP_CAPABILITIES"), any(), eq("HDFC01"), any(), any());
+        verify(bankLookupTypePermissionRepository, times(1)).deleteByLookupTypeCode("10004");
+        verify(adminAuditService, times(1)).logAdminAction(any(), any(), eq("UPDATE_BANK_LOOKUP_PERMISSIONS"), any(), eq("HDFC01"), any(), any());
     }
 }

@@ -21,25 +21,7 @@ public class LookupTypeResponse {
     private Boolean isActive;
 
     @Builder.Default
-    private Boolean canView = true;
-
-    @Builder.Default
-    private Boolean canAdd = true;
-
-    @Builder.Default
-    private Boolean canImportFromMaster = true;
-
-    @Builder.Default
-    private Boolean canEdit = true;
-
-    @Builder.Default
-    private Boolean canDelete = true;
-
-    @Builder.Default
-    private Boolean canActivate = true;
-
-    @Builder.Default
-    private Boolean canDeactivate = true;
+    private java.util.Set<String> permissions = new java.util.HashSet<>();
 
     private Long createdBy;
 

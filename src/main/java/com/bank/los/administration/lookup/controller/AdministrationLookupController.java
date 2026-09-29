@@ -108,16 +108,16 @@ public class AdministrationLookupController {
         return ResponseEntity.ok(ApiResponse.ok(bankLookups));
     }
 
-    @PutMapping("/banks/{bankCode}/types/{code}/capabilities")
+    @PutMapping("/banks/{bankCode}/types/{code}/permissions")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Configure bank capabilities (canView, canAdd, canImportFromMaster, canEdit, canDelete, canActivate, canDeactivate) for a specific lookup type")
-    public ResponseEntity<ApiResponse<LookupTypeResponse>> updateBankLookupCapabilities(
+    @Operation(summary = "Configure allowed permissions (e.g. VIEW, ADD, EDIT, DELETE, ADD_FROM_MASTER, ACTIVATE, DEACTIVATE) for a specific lookup type in a bank")
+    public ResponseEntity<ApiResponse<LookupTypeResponse>> updateBankLookupPermissions(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable String bankCode,
             @PathVariable String code,
-            @Valid @RequestBody UpdateBankLookupCapabilitiesRequest request) {
-        LookupTypeResponse updated = administrationLookupService.updateBankLookupCapabilities(bankCode, code, request, principal);
-        return ResponseEntity.ok(ApiResponse.ok("Lookup capabilities for bank " + bankCode + " updated successfully", updated));
+            @Valid @RequestBody UpdateBankLookupPermissionsRequest request) {
+        LookupTypeResponse updated = administrationLookupService.updateBankLookupPermissions(bankCode, code, request, principal);
+        return ResponseEntity.ok(ApiResponse.ok("Lookup permissions for bank " + bankCode + " updated successfully", updated));
     }
 
     @PostMapping("/sync/{bankCode}")
