@@ -1,7 +1,5 @@
 package com.bank.los.administration.master.entity;
 
-import java.util.UUID;
-
 import com.bank.los.common.audit.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -188,6 +186,22 @@ public class Organization extends AuditableEntity {
         this.bankType = institutionType;
     }
 
+    public String getRegistrationNumber() {
+        return licenseNumber;
+    }
+
+    public void setRegistrationNumber(String registrationNumber) {
+        this.licenseNumber = registrationNumber;
+    }
+
+    public String getCin() {
+        return gstNo;
+    }
+
+    public void setCin(String cin) {
+        this.gstNo = cin;
+    }
+
     public static class OrganizationBuilder {
         public OrganizationBuilder code(String code) {
             this.bankCode = code;
@@ -216,6 +230,26 @@ public class Organization extends AuditableEntity {
 
         public OrganizationBuilder institutionType(String type) {
             this.bankType = type;
+            return this;
+        }
+
+        public OrganizationBuilder registrationNumber(String registrationNumber) {
+            this.licenseNumber = registrationNumber;
+            return this;
+        }
+
+        public OrganizationBuilder cin(String cin) {
+            this.gstNo = cin;
+            return this;
+        }
+
+        public OrganizationBuilder licenseNumber(String licenseNumber) {
+            this.licenseNumber = licenseNumber;
+            return this;
+        }
+
+        public OrganizationBuilder gstNo(String gstNo) {
+            this.gstNo = gstNo;
             return this;
         }
     }
