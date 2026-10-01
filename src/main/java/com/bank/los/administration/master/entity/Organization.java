@@ -1,5 +1,7 @@
 package com.bank.los.administration.master.entity;
 
+import java.util.UUID;
+
 import com.bank.los.common.audit.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,11 +29,11 @@ public class Organization extends AuditableEntity {
     @Builder.Default
     private UUID uuid = UUID.randomUUID();
 
-    @Column(name = "institution_code", nullable = false, unique = true, length = 50)
-    private String institutionCode;
+    @Column(name = "bank_code", nullable = false, unique = true, length = 50)
+    private String bankCode;
 
-    @Column(name = "institution_name", nullable = false, length = 150)
-    private String institutionName;
+    @Column(name = "bank_name", nullable = false, length = 150)
+    private String bankName;
 
     @Column(name = "legal_name", length = 200)
     private String legalName;
@@ -39,17 +41,17 @@ public class Organization extends AuditableEntity {
     @Column(name = "short_name", length = 50)
     private String shortName;
 
-    @Column(name = "institution_type", nullable = false, length = 50)
-    private String institutionType; // 'BANK', 'NBFC', 'COMMERCIAL_BANK', etc.
+    @Column(name = "bank_type", nullable = false, length = 50)
+    private String bankType;
 
-    @Column(name = "registration_number", length = 100)
-    private String registrationNumber;
+    @Column(name = "license_number", length = 100)
+    private String licenseNumber;
 
     @Column(name = "pan", length = 20)
     private String pan;
 
-    @Column(name = "cin", length = 50)
-    private String cin;
+    @Column(name = "gst_no", length = 15)
+    private String gstNo;
 
     @Column(name = "website", length = 255)
     private String website;
@@ -68,7 +70,27 @@ public class Organization extends AuditableEntity {
     @Builder.Default
     private String country = "India";
 
-    // Regulatory details
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private String status = "ACTIVE"; // 'ACTIVE', 'INACTIVE', 'SUSPENDED'
+
+    @Column(name = "contact_email", length = 150)
+    private String contactEmail;
+
+    @Column(name = "contact_phone", length = 20)
+    private String contactPhone;
+
+    @Column(name = "db_name", nullable = false, unique = true, length = 100)
+    private String dbName;
+
+    @Column(name = "db_host", nullable = false, length = 150)
+    @Builder.Default
+    private String dbHost = "localhost";
+
+    @Column(name = "db_port", nullable = false)
+    @Builder.Default
+    private Integer dbPort = 5432;
+
     @Column(name = "direct_clearing_member")
     private Boolean directClearingMember;
 
@@ -96,7 +118,6 @@ public class Organization extends AuditableEntity {
     @Column(name = "sponsor_bank_for_iftas", length = 150)
     private String sponsorBankForIftas;
 
-    // Address details
     @Column(name = "address_type", length = 50)
     private String addressType;
 
@@ -118,68 +139,84 @@ public class Organization extends AuditableEntity {
     @Column(name = "pincode", length = 6)
     private String pincode;
 
-    @Column(nullable = false, length = 20)
-    @Builder.Default
-    private String status = "ACTIVE"; // 'ACTIVE', 'INACTIVE', 'SUSPENDED'
-
-    @Column(name = "contact_email", length = 150)
-    private String contactEmail;
-
-    @Column(name = "contact_phone", length = 20)
-    private String contactPhone;
-
-    @Column(name = "db_name", nullable = false, unique = true, length = 100)
-    private String dbName;
-
-    @Column(name = "db_host", nullable = false, length = 150)
-    @Builder.Default
-    private String dbHost = "localhost";
-
-    @Column(name = "db_port", nullable = false)
-    @Builder.Default
-    private Integer dbPort = 5432;
-
     // Helper compatibility getters / setters
     public String getCode() {
-        return institutionCode != null ? institutionCode : "";
+        return bankCode != null ? bankCode : "";
     }
 
     public void setCode(String code) {
-        this.institutionCode = code;
+        this.bankCode = code;
     }
 
     public String getName() {
-        return institutionName != null ? institutionName : (legalName != null ? legalName : "");
+        return bankName != null ? bankName : (legalName != null ? legalName : "");
     }
 
     public void setName(String name) {
-        this.institutionName = name;
+        this.bankName = name;
     }
 
     public String getType() {
-        return institutionType != null ? institutionType : "BANK";
+        return bankType != null ? bankType : "BANK";
     }
 
     public void setType(String type) {
-        this.institutionType = type;
+        this.bankType = type;
+    }
+
+    public String getInstitutionCode() {
+        return bankCode;
+    }
+
+    public void setInstitutionCode(String institutionCode) {
+        this.bankCode = institutionCode;
+    }
+
+    public String getInstitutionName() {
+        return bankName;
+    }
+
+    public void setInstitutionName(String institutionName) {
+        this.bankName = institutionName;
+    }
+
+    public String getInstitutionType() {
+        return bankType;
+    }
+
+    public void setInstitutionType(String institutionType) {
+        this.bankType = institutionType;
     }
 
     public static class OrganizationBuilder {
         public OrganizationBuilder code(String code) {
-            this.institutionCode = code;
+            this.bankCode = code;
             return this;
         }
 
         public OrganizationBuilder name(String name) {
-            this.institutionName = name;
+            this.bankName = name;
             return this;
         }
 
         public OrganizationBuilder type(String type) {
-            this.institutionType = type;
+            this.bankType = type;
+            return this;
+        }
+
+        public OrganizationBuilder institutionCode(String code) {
+            this.bankCode = code;
+            return this;
+        }
+
+        public OrganizationBuilder institutionName(String name) {
+            this.bankName = name;
+            return this;
+        }
+
+        public OrganizationBuilder institutionType(String type) {
+            this.bankType = type;
             return this;
         }
     }
 }
-
-

@@ -9,21 +9,31 @@ CREATE SCHEMA IF NOT EXISTS customer;
 -- organization.organizations
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS organization.organizations (
-    id                      BIGSERIAL PRIMARY KEY,
-    uuid                    UUID UNIQUE DEFAULT gen_random_uuid(),
-    institution_code        VARCHAR(50)  NOT NULL UNIQUE,
-    institution_name        VARCHAR(150) NOT NULL,
-    legal_name              VARCHAR(200),
-    short_name              VARCHAR(50),
-    institution_type        VARCHAR(50)  NOT NULL,
-    registration_number     VARCHAR(100),
-    pan                     VARCHAR(20),
-    cin                     VARCHAR(50),
-    website                 VARCHAR(255),
-    logo                    TEXT,
-    regulatory_authority_id UUID,
-    regulatory_status       VARCHAR(50)  NOT NULL DEFAULT 'ACTIVE',
-    country                 VARCHAR(100) NOT NULL DEFAULT 'India',
+    id                          BIGSERIAL PRIMARY KEY,
+    uuid                        UUID UNIQUE DEFAULT gen_random_uuid(),
+    bank_code                   VARCHAR(50)  NOT NULL UNIQUE,
+    bank_name                   VARCHAR(150) NOT NULL,
+    legal_name                  VARCHAR(200),
+    short_name                  VARCHAR(50),
+    bank_type                   VARCHAR(50)  NOT NULL,
+    license_number              VARCHAR(100),
+    pan                         VARCHAR(20),
+    gst_no                      VARCHAR(15),
+    website                     VARCHAR(255),
+    logo                        TEXT,
+    regulatory_authority_id     UUID,
+    regulatory_status           VARCHAR(50)  NOT NULL DEFAULT 'ACTIVE',
+    country                     VARCHAR(100) NOT NULL DEFAULT 'India',
+    status                      VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    contact_email               VARCHAR(150),
+    contact_phone               VARCHAR(20),
+    db_name                     VARCHAR(100) NOT NULL UNIQUE,
+    db_host                     VARCHAR(150) NOT NULL DEFAULT 'localhost',
+    db_port                     INT          NOT NULL DEFAULT 5432,
+    created_by                  BIGINT,
+    created_at                  TIMESTAMP    NOT NULL DEFAULT now(),
+    updated_at                  TIMESTAMP    NOT NULL DEFAULT now(),
+
     -- Regulatory details
     direct_clearing_member       BOOLEAN,
     direct_member_iftas          BOOLEAN,
@@ -34,6 +44,7 @@ CREATE TABLE IF NOT EXISTS organization.organizations (
     number_of_branches          INTEGER,
     sponsor_bank_for_clearing   VARCHAR(150),
     sponsor_bank_for_iftas      VARCHAR(150),
+
     -- Address details
     address_type                VARCHAR(50),
     unit_gala_name_number        VARCHAR(200),
@@ -41,49 +52,72 @@ CREATE TABLE IF NOT EXISTS organization.organizations (
     landmark                    VARCHAR(150),
     city                        VARCHAR(100),
     state                       VARCHAR(100),
-    pincode                     VARCHAR(6),
-    status                  VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
-    contact_email           VARCHAR(150),
-    contact_phone           VARCHAR(20),
-    db_name                 VARCHAR(100) NOT NULL UNIQUE,
-    db_host                 VARCHAR(150) NOT NULL DEFAULT 'localhost',
-    db_port                 INT          NOT NULL DEFAULT 5432,
-    created_by              BIGINT,
-    created_at              TIMESTAMP    NOT NULL DEFAULT now(),
-    updated_at              TIMESTAMP    NOT NULL DEFAULT now()
+    pincode                     VARCHAR(6)
 );
 
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS uuid UUID DEFAULT gen_random_uuid();
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS institution_code VARCHAR(50);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS institution_name VARCHAR(150);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS short_name VARCHAR(50);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS institution_type VARCHAR(50);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS registration_number VARCHAR(100);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS pan VARCHAR(20);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS cin VARCHAR(50);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS website VARCHAR(255);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS logo TEXT;
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS regulatory_authority_id UUID;
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS regulatory_status VARCHAR(50) DEFAULT 'ACTIVE';
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'India';
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS direct_clearing_member BOOLEAN;
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS direct_member_iftas BOOLEAN;
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS micr_city_code VARCHAR(3);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS micr_bank_code VARCHAR(3);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS micr_branch_code VARCHAR(3);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS ifsc_code VARCHAR(11);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS number_of_branches INTEGER;
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS sponsor_bank_for_clearing VARCHAR(150);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS sponsor_bank_for_iftas VARCHAR(150);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS address_type VARCHAR(50);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS unit_gala_name_number VARCHAR(200);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS street_road VARCHAR(200);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS landmark VARCHAR(150);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS city VARCHAR(100);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS state VARCHAR(100);
-ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS pincode VARCHAR(6);
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS uuid UUID DEFAULT gen_random_uuid();
 
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS bank_code VARCHAR(50);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS bank_name VARCHAR(150);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS legal_name VARCHAR(200);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS short_name VARCHAR(50);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS bank_type VARCHAR(50);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS pan VARCHAR(20);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS gst_no VARCHAR(15);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS website VARCHAR(255);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS logo TEXT;
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS regulatory_authority_id UUID;
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS regulatory_status VARCHAR(50) DEFAULT 'ACTIVE';
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'India';
+
+-- Regulatory details
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS direct_clearing_member BOOLEAN,
+    ADD COLUMN IF NOT EXISTS direct_member_iftas BOOLEAN,
+    ADD COLUMN IF NOT EXISTS micr_city_code VARCHAR(3),
+    ADD COLUMN IF NOT EXISTS micr_bank_code VARCHAR(3),
+    ADD COLUMN IF NOT EXISTS micr_branch_code VARCHAR(3),
+    ADD COLUMN IF NOT EXISTS ifsc_code VARCHAR(11),
+    ADD COLUMN IF NOT EXISTS number_of_branches INTEGER,
+    ADD COLUMN IF NOT EXISTS sponsor_bank_for_clearing VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS sponsor_bank_for_iftas VARCHAR(150);
+
+-- Address details
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS address_type VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS unit_gala_name_number VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS street_road VARCHAR(200),
+    ADD COLUMN IF NOT EXISTS landmark VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS city VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS state VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS pincode VARCHAR(6);
 
 -- -----------------------------------------------------------------------
 -- identity.roles  (master — INTERNAL_ADMIN / SUPER_ADMIN)
