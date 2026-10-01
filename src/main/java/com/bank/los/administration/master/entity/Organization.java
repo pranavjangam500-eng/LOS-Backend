@@ -68,6 +68,56 @@ public class Organization extends AuditableEntity {
     @Builder.Default
     private String country = "India";
 
+    // Regulatory details
+    @Column(name = "direct_clearing_member")
+    private Boolean directClearingMember;
+
+    @Column(name = "direct_member_iftas")
+    private Boolean directMemberIftas;
+
+    @Column(name = "micr_city_code", length = 3)
+    private String micrCityCode;
+
+    @Column(name = "micr_bank_code", length = 3)
+    private String micrBankCode;
+
+    @Column(name = "micr_branch_code", length = 3)
+    private String micrBranchCode;
+
+    @Column(name = "ifsc_code", length = 11)
+    private String ifscCode;
+
+    @Column(name = "number_of_branches")
+    private Integer numberOfBranches;
+
+    @Column(name = "sponsor_bank_for_clearing", length = 150)
+    private String sponsorBankForClearing;
+
+    @Column(name = "sponsor_bank_for_iftas", length = 150)
+    private String sponsorBankForIftas;
+
+    // Address details
+    @Column(name = "address_type", length = 50)
+    private String addressType;
+
+    @Column(name = "unit_gala_name_number", length = 200)
+    private String unitGalaNameNumber;
+
+    @Column(name = "street_road", length = 200)
+    private String streetRoad;
+
+    @Column(name = "landmark", length = 150)
+    private String landmark;
+
+    @Column(name = "city", length = 100)
+    private String city;
+
+    @Column(name = "state", length = 100)
+    private String state;
+
+    @Column(name = "pincode", length = 6)
+    private String pincode;
+
     @Column(nullable = false, length = 20)
     @Builder.Default
     private String status = "ACTIVE"; // 'ACTIVE', 'INACTIVE', 'SUSPENDED'

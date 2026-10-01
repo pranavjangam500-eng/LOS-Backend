@@ -24,6 +24,24 @@ CREATE TABLE IF NOT EXISTS organization.organizations (
     regulatory_authority_id UUID,
     regulatory_status       VARCHAR(50)  NOT NULL DEFAULT 'ACTIVE',
     country                 VARCHAR(100) NOT NULL DEFAULT 'India',
+    -- Regulatory details
+    direct_clearing_member       BOOLEAN,
+    direct_member_iftas          BOOLEAN,
+    micr_city_code              VARCHAR(3),
+    micr_bank_code              VARCHAR(3),
+    micr_branch_code            VARCHAR(3),
+    ifsc_code                   VARCHAR(11),
+    number_of_branches          INTEGER,
+    sponsor_bank_for_clearing   VARCHAR(150),
+    sponsor_bank_for_iftas      VARCHAR(150),
+    -- Address details
+    address_type                VARCHAR(50),
+    unit_gala_name_number        VARCHAR(200),
+    street_road                 VARCHAR(200),
+    landmark                    VARCHAR(150),
+    city                        VARCHAR(100),
+    state                       VARCHAR(100),
+    pincode                     VARCHAR(6),
     status                  VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
     contact_email           VARCHAR(150),
     contact_phone           VARCHAR(20),
@@ -49,6 +67,22 @@ ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS logo TEXT;
 ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS regulatory_authority_id UUID;
 ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS regulatory_status VARCHAR(50) DEFAULT 'ACTIVE';
 ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'India';
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS direct_clearing_member BOOLEAN;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS direct_member_iftas BOOLEAN;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS micr_city_code VARCHAR(3);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS micr_bank_code VARCHAR(3);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS micr_branch_code VARCHAR(3);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS ifsc_code VARCHAR(11);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS number_of_branches INTEGER;
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS sponsor_bank_for_clearing VARCHAR(150);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS sponsor_bank_for_iftas VARCHAR(150);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS address_type VARCHAR(50);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS unit_gala_name_number VARCHAR(200);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS street_road VARCHAR(200);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS landmark VARCHAR(150);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS city VARCHAR(100);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS state VARCHAR(100);
+ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS pincode VARCHAR(6);
 
 
 -- -----------------------------------------------------------------------
