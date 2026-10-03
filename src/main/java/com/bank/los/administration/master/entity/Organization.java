@@ -48,7 +48,7 @@ public class Organization extends AuditableEntity {
     @Column(name = "pan", length = 20)
     private String pan;
 
-    @Column(name = "gst_no", length = 15)
+    @Column(name = "gst_no", length = 50)
     private String gstNo;
 
     @Column(name = "website", length = 255)

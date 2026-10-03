@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS organization.organizations (
     bank_type                   VARCHAR(50)  NOT NULL,
     license_number              VARCHAR(100),
     pan                         VARCHAR(20),
-    gst_no                      VARCHAR(15),
+    gst_no                      VARCHAR(50),
     website                     VARCHAR(255),
     logo                        TEXT,
     regulatory_authority_id     UUID,

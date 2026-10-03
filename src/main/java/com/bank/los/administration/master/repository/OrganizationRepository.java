@@ -12,19 +12,25 @@ import java.util.UUID;
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
     
-    @Query("SELECT o FROM Organization o WHERE o.institutionCode = :code")
+    @Query("SELECT o FROM Organization o WHERE o.bankCode = :code")
     Optional<Organization> findByCode(@Param("code") String code);
 
-    Optional<Organization> findByInstitutionCode(String institutionCode);
+    Optional<Organization> findByBankCode(String bankCode);
+
+    @Query("SELECT o FROM Organization o WHERE o.bankCode = :institutionCode")
+    Optional<Organization> findByInstitutionCode(@Param("institutionCode") String institutionCode);
 
     Optional<Organization> findByUuid(UUID uuid);
 
     Optional<Organization> findByDbName(String dbName);
 
-    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM Organization o WHERE o.institutionCode = :code")
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM Organization o WHERE o.bankCode = :code")
     boolean existsByCode(@Param("code") String code);
 
-    boolean existsByInstitutionCode(String institutionCode);
+    boolean existsByBankCode(String bankCode);
+
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM Organization o WHERE o.bankCode = :institutionCode")
+    boolean existsByInstitutionCode(@Param("institutionCode") String institutionCode);
 
     boolean existsByDbName(String dbName);
 }
