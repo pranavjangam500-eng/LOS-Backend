@@ -109,6 +109,19 @@ BEGIN
             ALTER TABLE organization.organizations DROP COLUMN institution_type;
         END IF;
     END IF;
+
+    -- Drop obsolete trigger and function referencing legacy institution_code
+    BEGIN
+        DROP FUNCTION IF EXISTS organization.sync_org_columns() CASCADE;
+    EXCEPTION WHEN OTHERS THEN
+        NULL;
+    END;
+
+    -- If legacy 'code' column exists, ensure it is nullable and backfilled
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'organization' AND table_name = 'organizations' AND column_name = 'code') THEN
+        ALTER TABLE organization.organizations ALTER COLUMN code DROP NOT NULL;
+        UPDATE organization.organizations SET code = bank_code WHERE code IS NULL;
+    END IF;
 END $$;
 
 ALTER TABLE organization.organizations

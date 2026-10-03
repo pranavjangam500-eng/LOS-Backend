@@ -187,7 +187,22 @@ public class PersistenceConfig {
 
     private void migrateLegacyInstitutionColumns(java.sql.Connection conn) {
         try (java.sql.Statement stmt = conn.createStatement()) {
+            // Drop obsolete trigger/function that referenced legacy institution_code
+            try {
+                stmt.execute("DROP FUNCTION IF EXISTS organization.sync_org_columns() CASCADE");
+            } catch (Exception e) {
+                log.debug("Note: Trigger sync_org_columns drop: {}", e.getMessage());
+            }
+
             java.sql.DatabaseMetaData meta = conn.getMetaData();
+
+            // If legacy 'code' column exists on PostgreSQL/H2, ensure it does not block inserts
+            if (columnExists(meta, "organizations", "code")) {
+                try {
+                    stmt.execute("ALTER TABLE organization.organizations ALTER COLUMN code DROP NOT NULL");
+                } catch (Exception ignored) {}
+            }
+
             boolean hasInstCode = columnExists(meta, "organizations", "institution_code");
             boolean hasBankCode = columnExists(meta, "organizations", "bank_code");
             if (hasInstCode && !hasBankCode) {
