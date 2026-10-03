@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS organization.organizations (
     bank_type                   VARCHAR(50)  NOT NULL,
     license_number              VARCHAR(100),
     pan                         VARCHAR(20),
-    gst_no                      VARCHAR(15),
+    gst_no                      VARCHAR(50),
+    cin                         VARCHAR(50),
     website                     VARCHAR(255),
     logo                        TEXT,
     regulatory_authority_id     UUID,
@@ -55,10 +56,12 @@ CREATE TABLE IF NOT EXISTS organization.organizations (
 
     -- Regulatory details
     direct_clearing_member       BOOLEAN,
+    direct_clearing_number       VARCHAR(50),
     direct_member_iftas          BOOLEAN,
     micr_city_code              VARCHAR(3),
     micr_bank_code              VARCHAR(3),
     micr_branch_code            VARCHAR(3),
+    micr_code                   VARCHAR(9),
     ifsc_code                   VARCHAR(11),
     number_of_branches          INTEGER,
     sponsor_bank_for_clearing   VARCHAR(150),
@@ -149,7 +152,13 @@ ALTER TABLE organization.organizations
     ADD COLUMN IF NOT EXISTS pan VARCHAR(20);
 
 ALTER TABLE organization.organizations
-    ADD COLUMN IF NOT EXISTS gst_no VARCHAR(15);
+    ADD COLUMN IF NOT EXISTS gst_no VARCHAR(50);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS cin VARCHAR(50);
+
+ALTER TABLE organization.organizations
+    ADD COLUMN IF NOT EXISTS cin_number VARCHAR(50);
 
 ALTER TABLE organization.organizations
     ADD COLUMN IF NOT EXISTS website VARCHAR(255);
@@ -169,10 +178,12 @@ ALTER TABLE organization.organizations
 -- Regulatory details
 ALTER TABLE organization.organizations
     ADD COLUMN IF NOT EXISTS direct_clearing_member BOOLEAN,
+    ADD COLUMN IF NOT EXISTS direct_clearing_number VARCHAR(50),
     ADD COLUMN IF NOT EXISTS direct_member_iftas BOOLEAN,
     ADD COLUMN IF NOT EXISTS micr_city_code VARCHAR(3),
     ADD COLUMN IF NOT EXISTS micr_bank_code VARCHAR(3),
     ADD COLUMN IF NOT EXISTS micr_branch_code VARCHAR(3),
+    ADD COLUMN IF NOT EXISTS micr_code VARCHAR(9),
     ADD COLUMN IF NOT EXISTS ifsc_code VARCHAR(11),
     ADD COLUMN IF NOT EXISTS number_of_branches INTEGER,
     ADD COLUMN IF NOT EXISTS sponsor_bank_for_clearing VARCHAR(150),

@@ -229,6 +229,24 @@ public class PersistenceConfig {
                 stmt.execute("UPDATE organization.organizations SET bank_type = COALESCE(bank_type, institution_type) WHERE bank_type IS NULL");
                 stmt.execute("ALTER TABLE organization.organizations DROP COLUMN institution_type");
             }
+
+            // Ensure cin, direct_clearing_number, micr_code, gst_no, license_number exist and don't conflict
+            try {
+                boolean hasCin = columnExists(meta, "organizations", "cin");
+                boolean hasCinNumber = columnExists(meta, "organizations", "cin_number");
+                if (hasCinNumber && !hasCin) {
+                    stmt.execute("ALTER TABLE organization.organizations RENAME COLUMN cin_number TO cin");
+                } else if (!hasCin) {
+                    stmt.execute("ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS cin VARCHAR(50)");
+                }
+                stmt.execute("ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS cin_number VARCHAR(50)");
+                stmt.execute("ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS direct_clearing_number VARCHAR(50)");
+                stmt.execute("ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS micr_code VARCHAR(9)");
+                stmt.execute("ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS gst_no VARCHAR(50)");
+                stmt.execute("ALTER TABLE organization.organizations ADD COLUMN IF NOT EXISTS license_number VARCHAR(100)");
+            } catch (Exception e) {
+                log.debug("Additional organization columns migration note: {}", e.getMessage());
+            }
         } catch (Exception e) {
             log.debug("Institution to bank column migration note: {}", e.getMessage());
         }

@@ -93,6 +93,25 @@ public class OrganizationService {
 
         UUID orgUuid = request.getId() != null ? request.getId() : UUID.randomUUID();
 
+        // Parse MICR codes if full MICR code or details provided
+        String micrCode = request.getMicrCode();
+        String micrCityCode = request.getMicrCityCode();
+        String micrBankCode = request.getMicrBankCode();
+        String micrBranchCode = request.getMicrBranchCode();
+        if (micrCode != null) {
+            String cleanMicr = micrCode.replaceAll("[^0-9]", "");
+            if (cleanMicr.length() == 9) {
+                if (micrCityCode == null) micrCityCode = cleanMicr.substring(0, 3);
+                if (micrBankCode == null) micrBankCode = cleanMicr.substring(3, 6);
+                if (micrBranchCode == null) micrBranchCode = cleanMicr.substring(6, 9);
+            }
+        }
+
+        Boolean directClearingMember = request.getDirectClearingMember();
+        if (directClearingMember == null && request.getDirectClearingNumber() != null) {
+            directClearingMember = !request.getDirectClearingNumber().trim().equalsIgnoreCase("false");
+        }
+
         Organization org = Organization.builder()
                 .uuid(orgUuid)
                 .bankCode(code)
@@ -100,8 +119,9 @@ public class OrganizationService {
                 .legalName(request.getLegalName())
                 .shortName(shortName)
                 .bankType(request.getBankType() != null ? request.getBankType().toUpperCase() : "BANK")
-                .registrationNumber(request.getRegistrationNumber())
+                .licenseNumber(request.getLicenseNumber() != null ? request.getLicenseNumber() : request.getRegistrationNumber())
                 .pan(request.getPan() != null ? request.getPan().toUpperCase() : null)
+                .gstNo(request.getGstNumber() != null ? request.getGstNumber().toUpperCase() : (request.getGstNo() != null ? request.getGstNo().toUpperCase() : null))
                 .cin(request.getCin() != null ? request.getCin().toUpperCase() : null)
                 .website(request.getWebsite())
                 .logo(request.getLogo())
@@ -114,6 +134,24 @@ public class OrganizationService {
                 .dbName(dbName)
                 .dbHost(request.getDbHost() != null ? request.getDbHost() : "localhost")
                 .dbPort(request.getDbPort() != null ? request.getDbPort() : 5432)
+                .directClearingNumber(request.getDirectClearingNumber())
+                .directClearingMember(directClearingMember)
+                .directMemberIftas(request.getDirectMemberIftas())
+                .micrCode(micrCode)
+                .micrCityCode(micrCityCode)
+                .micrBankCode(micrBankCode)
+                .micrBranchCode(micrBranchCode)
+                .ifscCode(request.getIfscCode())
+                .numberOfBranches(request.getNumberOfBranches())
+                .sponsorBankForClearing(request.getSponsorBankForClearing())
+                .sponsorBankForIftas(request.getSponsorBankForIftas())
+                .addressType(request.getAddressType())
+                .unitGalaNameNumber(request.getUnitGalaNameNumber())
+                .streetRoad(request.getStreetRoad())
+                .landmark(request.getLandmark())
+                .city(request.getCity())
+                .state(request.getState())
+                .pincode(request.getPincode())
                 .build();
 
         Organization saved = organizationRepository.save(org);
@@ -163,6 +201,11 @@ public class OrganizationService {
     }
 
     public OrganizationResponse mapToResponse(Organization org) {
+        String micr = org.getMicrCode();
+        if (micr == null && org.getMicrCityCode() != null && org.getMicrBankCode() != null && org.getMicrBranchCode() != null) {
+            micr = org.getMicrCityCode() + org.getMicrBankCode() + org.getMicrBranchCode();
+        }
+
         return OrganizationResponse.builder()
                 .id(org.getUuid() != null ? org.getUuid() : UUID.nameUUIDFromBytes(String.valueOf(org.getId()).getBytes()))
                 .pkid(org.getId())
@@ -170,9 +213,30 @@ public class OrganizationService {
                 .bankName(org.getBankName() != null ? org.getBankName() : org.getName())
                 .legalName(org.getLegalName())
                 .bankType(org.getBankType() != null ? org.getBankType() : org.getType())
-                .registrationNumber(org.getRegistrationNumber())
+                .licenseNumber(org.getLicenseNumber())
+                .registrationNumber(org.getLicenseNumber())
                 .pan(org.getPan())
+                .gstNumber(org.getGstNumber())
+                .gstNo(org.getGstNumber())
                 .cin(org.getCin())
+                .directClearingNumber(org.getDirectClearingNumber())
+                .directClearingMember(org.getDirectClearingMember())
+                .directMemberIftas(org.getDirectMemberIftas())
+                .micrCode(micr)
+                .micrCityCode(org.getMicrCityCode())
+                .micrBankCode(org.getMicrBankCode())
+                .micrBranchCode(org.getMicrBranchCode())
+                .ifscCode(org.getIfscCode())
+                .numberOfBranches(org.getNumberOfBranches())
+                .sponsorBankForClearing(org.getSponsorBankForClearing())
+                .sponsorBankForIftas(org.getSponsorBankForIftas())
+                .addressType(org.getAddressType())
+                .unitGalaNameNumber(org.getUnitGalaNameNumber())
+                .streetRoad(org.getStreetRoad())
+                .landmark(org.getLandmark())
+                .city(org.getCity())
+                .state(org.getState())
+                .pincode(org.getPincode())
                 .website(org.getWebsite())
                 .logo(org.getLogo())
                 .regulatoryAuthorityId(org.getRegulatoryAuthorityId())
