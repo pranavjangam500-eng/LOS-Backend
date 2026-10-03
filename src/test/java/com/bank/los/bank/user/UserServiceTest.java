@@ -43,9 +43,10 @@ class UserServiceTest {
         String dbName = "los_icici99_db";
 
         CreateOrganizationRequest orgRequest = CreateOrganizationRequest.builder()
-                .institutionName("ICICI Bank Ltd")
+                .bankCode(orgCode)
+                .bankName("ICICI Bank Ltd")
                 .legalName("ICICI Bank Limited")
-                .institutionType("BANK")
+                .bankType("BANK")
                 .registrationNumber("REG-MH-2024-9900")
                 .pan("AAACI1234F")
                 .cin("L65191PN1994PLC076333")
@@ -63,6 +64,9 @@ class UserServiceTest {
         assertNotNull(orgResponse);
         assertNotNull(orgResponse.getId());
         assertEquals("contact@icicibank.com", orgResponse.getContactEmail());
+        assertEquals("ICICI Bank Ltd", orgResponse.getBankName());
+        assertEquals("BANK", orgResponse.getBankType());
+        assertEquals("ICICI99", orgResponse.getBankCode());
 
         // 2. Super Admin creates a Bank Admin user for this new Bank
         UserPrincipal superAdminPrincipal = UserPrincipal.builder()

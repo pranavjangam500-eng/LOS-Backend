@@ -162,28 +162,28 @@ public class Organization extends AuditableEntity {
         this.bankType = type;
     }
 
-    public String getInstitutionCode() {
+    public String getBankCode() {
         return bankCode;
     }
 
-    public void setInstitutionCode(String institutionCode) {
-        this.bankCode = institutionCode;
+    public void setBankCode(String bankCode) {
+        this.bankCode = bankCode;
     }
 
-    public String getInstitutionName() {
+    public String getBankName() {
         return bankName;
     }
 
-    public void setInstitutionName(String institutionName) {
-        this.bankName = institutionName;
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
     }
 
-    public String getInstitutionType() {
+    public String getBankType() {
         return bankType;
     }
 
-    public void setInstitutionType(String institutionType) {
-        this.bankType = institutionType;
+    public void setBankType(String bankType) {
+        this.bankType = bankType;
     }
 
     public String getRegistrationNumber() {
@@ -203,6 +203,21 @@ public class Organization extends AuditableEntity {
     }
 
     public static class OrganizationBuilder {
+        public OrganizationBuilder bankCode(String bankCode) {
+            this.bankCode = bankCode;
+            return this;
+        }
+
+        public OrganizationBuilder bankName(String bankName) {
+            this.bankName = bankName;
+            return this;
+        }
+
+        public OrganizationBuilder bankType(String bankType) {
+            this.bankType = bankType;
+            return this;
+        }
+
         public OrganizationBuilder code(String code) {
             this.bankCode = code;
             return this;
@@ -214,21 +229,6 @@ public class Organization extends AuditableEntity {
         }
 
         public OrganizationBuilder type(String type) {
-            this.bankType = type;
-            return this;
-        }
-
-        public OrganizationBuilder institutionCode(String code) {
-            this.bankCode = code;
-            return this;
-        }
-
-        public OrganizationBuilder institutionName(String name) {
-            this.bankName = name;
-            return this;
-        }
-
-        public OrganizationBuilder institutionType(String type) {
             this.bankType = type;
             return this;
         }

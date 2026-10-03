@@ -74,6 +74,43 @@ CREATE TABLE IF NOT EXISTS organization.organizations (
     pincode                     VARCHAR(6)
 );
 
+-- ---------------------------------------------------------------------
+-- Migration: Safely migrate legacy institution columns to bank columns
+-- Preserves existing data and avoids duplicate columns
+-- ---------------------------------------------------------------------
+DO $$
+BEGIN
+    -- institution_code -> bank_code
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'organization' AND table_name = 'organizations' AND column_name = 'institution_code') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'organization' AND table_name = 'organizations' AND column_name = 'bank_code') THEN
+            ALTER TABLE organization.organizations RENAME COLUMN institution_code TO bank_code;
+        ELSE
+            UPDATE organization.organizations SET bank_code = institution_code WHERE bank_code IS NULL;
+            ALTER TABLE organization.organizations DROP COLUMN institution_code;
+        END IF;
+    END IF;
+
+    -- institution_name -> bank_name
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'organization' AND table_name = 'organizations' AND column_name = 'institution_name') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'organization' AND table_name = 'organizations' AND column_name = 'bank_name') THEN
+            ALTER TABLE organization.organizations RENAME COLUMN institution_name TO bank_name;
+        ELSE
+            UPDATE organization.organizations SET bank_name = institution_name WHERE bank_name IS NULL;
+            ALTER TABLE organization.organizations DROP COLUMN institution_name;
+        END IF;
+    END IF;
+
+    -- institution_type -> bank_type
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'organization' AND table_name = 'organizations' AND column_name = 'institution_type') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'organization' AND table_name = 'organizations' AND column_name = 'bank_type') THEN
+            ALTER TABLE organization.organizations RENAME COLUMN institution_type TO bank_type;
+        ELSE
+            UPDATE organization.organizations SET bank_type = institution_type WHERE bank_type IS NULL;
+            ALTER TABLE organization.organizations DROP COLUMN institution_type;
+        END IF;
+    END IF;
+END $$;
+
 ALTER TABLE organization.organizations
     ADD COLUMN IF NOT EXISTS uuid UUID DEFAULT gen_random_uuid();
 

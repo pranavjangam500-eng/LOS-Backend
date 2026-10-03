@@ -190,7 +190,7 @@ class AdministrationLookupServiceTest {
     void testSyncMasterLookupsToBank() {
         Organization org = Organization.builder()
                 .id(1L)
-                .institutionCode("HDFC01")
+                .bankCode("HDFC01")
                 .dbName("los_hdfc01_db")
                 .build();
 
@@ -218,7 +218,7 @@ class AdministrationLookupServiceTest {
     void testUpdateBankLookupPermissions() {
         Organization org = Organization.builder()
                 .id(1L)
-                .institutionCode("HDFC01")
+                .bankCode("HDFC01")
                 .dbName("los_hdfc01_db")
                 .build();
 

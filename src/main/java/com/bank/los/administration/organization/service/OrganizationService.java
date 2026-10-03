@@ -55,23 +55,31 @@ public class OrganizationService {
     public OrganizationResponse createOrganization(CreateOrganizationRequest request) {
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
-        String baseName = request.getInstitutionName() != null ? request.getInstitutionName() : 
-                (request.getLegalName() != null ? request.getLegalName() : "BANK");
-        String clean = baseName.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
-        if (clean.length() > 6) {
-            clean = clean.substring(0, 6);
-        }
-        if (clean.isBlank()) {
-            clean = "BANK";
-        }
-        int seq = 1;
-        String code = clean + String.format("%02d", seq);
-        while (organizationRepository.existsByCode(code) || organizationRepository.existsByInstitutionCode(code)) {
-            seq++;
+        String code = request.getBankCode();
+        if (code == null || code.isBlank()) {
+            String baseName = request.getBankName() != null ? request.getBankName() : 
+                    (request.getLegalName() != null ? request.getLegalName() : "BANK");
+            String clean = baseName.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+            if (clean.length() > 6) {
+                clean = clean.substring(0, 6);
+            }
+            if (clean.isBlank()) {
+                clean = "BANK";
+            }
+            int seq = 1;
             code = clean + String.format("%02d", seq);
+            while (organizationRepository.existsByCode(code) || organizationRepository.existsByBankCode(code)) {
+                seq++;
+                code = clean + String.format("%02d", seq);
+            }
+        } else {
+            code = code.trim().toUpperCase();
+            if (organizationRepository.existsByCode(code) || organizationRepository.existsByBankCode(code)) {
+                throw new BusinessException("BANK_CODE_IN_USE", "Bank code " + code + " is already assigned");
+            }
         }
 
-        String name = request.getInstitutionName() != null ? request.getInstitutionName() : request.getLegalName();
+        String name = request.getBankName() != null ? request.getBankName() : request.getLegalName();
         String shortName = name != null ? name.split("\\s+")[0] : code;
 
         String dbName = request.getDbName();
@@ -87,11 +95,11 @@ public class OrganizationService {
 
         Organization org = Organization.builder()
                 .uuid(orgUuid)
-                .institutionCode(code)
-                .institutionName(request.getInstitutionName())
+                .bankCode(code)
+                .bankName(request.getBankName())
                 .legalName(request.getLegalName())
                 .shortName(shortName)
-                .institutionType(request.getInstitutionType() != null ? request.getInstitutionType().toUpperCase() : "BANK")
+                .bankType(request.getBankType() != null ? request.getBankType().toUpperCase() : "BANK")
                 .registrationNumber(request.getRegistrationNumber())
                 .pan(request.getPan() != null ? request.getPan().toUpperCase() : null)
                 .cin(request.getCin() != null ? request.getCin().toUpperCase() : null)
@@ -158,9 +166,10 @@ public class OrganizationService {
         return OrganizationResponse.builder()
                 .id(org.getUuid() != null ? org.getUuid() : UUID.nameUUIDFromBytes(String.valueOf(org.getId()).getBytes()))
                 .pkid(org.getId())
-                .institutionName(org.getInstitutionName() != null ? org.getInstitutionName() : org.getName())
+                .bankCode(org.getBankCode())
+                .bankName(org.getBankName() != null ? org.getBankName() : org.getName())
                 .legalName(org.getLegalName())
-                .institutionType(org.getInstitutionType() != null ? org.getInstitutionType() : org.getType())
+                .bankType(org.getBankType() != null ? org.getBankType() : org.getType())
                 .registrationNumber(org.getRegistrationNumber())
                 .pan(org.getPan())
                 .cin(org.getCin())

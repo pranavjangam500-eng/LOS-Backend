@@ -25,17 +25,21 @@ public class OrganizationResponse {
     @Schema(description = "Internal sequential ID", example = "1")
     private Long pkid;
 
-    @JsonProperty("institution_name")
-    @Schema(description = "Institution Name", example = "HDFC Bank")
-    private String institutionName;
+    @JsonProperty("bank_code")
+    @Schema(description = "Bank Code", example = "HDFC01")
+    private String bankCode;
+
+    @JsonProperty("bank_name")
+    @Schema(description = "Bank Name", example = "HDFC Bank")
+    private String bankName;
 
     @JsonProperty("legal_name")
     @Schema(description = "Legal Business Name", example = "HDFC Bank Limited")
     private String legalName;
 
-    @JsonProperty("institution_type")
-    @Schema(description = "Institution Type", example = "COMMERCIAL_BANK")
-    private String institutionType;
+    @JsonProperty("bank_type")
+    @Schema(description = "Bank Type", example = "COMMERCIAL_BANK")
+    private String bankType;
 
     @JsonProperty("registration_number")
     @Schema(description = "Registration Number", example = "REG-MH-2024-8899")
@@ -101,13 +105,37 @@ public class OrganizationResponse {
     @Schema(description = "Last Updated Timestamp")
     private LocalDateTime updatedAt;
 
+    public String getBankCode() {
+        return bankCode;
+    }
+
+    public void setBankCode(String bankCode) {
+        this.bankCode = bankCode;
+    }
+
+    public String getBankName() {
+        return bankName;
+    }
+
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
+    }
+
+    public String getBankType() {
+        return bankType;
+    }
+
+    public void setBankType(String bankType) {
+        this.bankType = bankType;
+    }
+
     // Helper getters
     public String getName() {
-        return institutionName != null ? institutionName : legalName;
+        return bankName != null ? bankName : legalName;
     }
 
     public String getType() {
-        return institutionType;
+        return bankType;
     }
 }
 

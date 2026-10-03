@@ -24,12 +24,17 @@ public class CreateOrganizationRequest {
     @Schema(description = "Optional custom UUID (auto-generated if omitted)", example = "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d")
     private UUID id;
 
-    @NotBlank(message = "institution_name is required")
-    @Size(max = 150, message = "institution_name must not exceed 150 characters")
-    @JsonProperty("institution_name")
-    @JsonAlias({"institutionName", "name"})
-    @Schema(description = "Display name of the institution", example = "HDFC Bank")
-    private String institutionName;
+    @JsonProperty("bank_code")
+    @JsonAlias({"bankCode", "code"})
+    @Schema(description = "Optional bank code (auto-generated if omitted)", example = "HDFC01")
+    private String bankCode;
+
+    @NotBlank(message = "bank_name is required")
+    @Size(max = 150, message = "bank_name must not exceed 150 characters")
+    @JsonProperty("bank_name")
+    @JsonAlias({"bankName", "name"})
+    @Schema(description = "Display name of the bank", example = "HDFC Bank")
+    private String bankName;
 
     @NotBlank(message = "legal_name is required")
     @Size(max = 200, message = "legal_name must not exceed 200 characters")
@@ -38,11 +43,11 @@ public class CreateOrganizationRequest {
     @Schema(description = "Registered legal entity name", example = "HDFC Bank Limited")
     private String legalName;
 
-    @NotBlank(message = "institution_type is required")
-    @JsonProperty("institution_type")
-    @JsonAlias({"institutionType", "type"})
-    @Schema(description = "Type of financial institution", example = "COMMERCIAL_BANK", allowableValues = {"BANK", "NBFC", "COMMERCIAL_BANK", "SMALL_FINANCE_BANK", "PAYMENT_BANK", "COOPERATIVE_BANK", "HOUSING_FINANCE"})
-    private String institutionType;
+    @NotBlank(message = "bank_type is required")
+    @JsonProperty("bank_type")
+    @JsonAlias({"bankType", "type"})
+    @Schema(description = "Type of financial institution / bank", example = "COMMERCIAL_BANK", allowableValues = {"BANK", "NBFC", "COMMERCIAL_BANK", "SMALL_FINANCE_BANK", "PAYMENT_BANK", "COOPERATIVE_BANK", "HOUSING_FINANCE"})
+    private String bankType;
 
     @NotBlank(message = "registration_number is required")
     @JsonProperty("registration_number")
@@ -116,13 +121,37 @@ public class CreateOrganizationRequest {
     @Builder.Default
     private Integer dbPort = 5432;
 
+    public String getBankCode() {
+        return bankCode;
+    }
+
+    public void setBankCode(String bankCode) {
+        this.bankCode = bankCode;
+    }
+
+    public String getBankName() {
+        return bankName;
+    }
+
+    public void setBankName(String bankName) {
+        this.bankName = bankName;
+    }
+
+    public String getBankType() {
+        return bankType;
+    }
+
+    public void setBankType(String bankType) {
+        this.bankType = bankType;
+    }
+
     // Helper getters
     public String getName() {
-        return institutionName != null ? institutionName : legalName;
+        return bankName != null ? bankName : legalName;
     }
 
     public String getType() {
-        return institutionType;
+        return bankType;
     }
 }
 
