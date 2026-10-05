@@ -4,6 +4,7 @@ import com.bank.los.administration.master.entity.Organization;
 import com.bank.los.administration.master.repository.OrganizationRepository;
 import com.bank.los.administration.organization.dto.CreateOrganizationRequest;
 import com.bank.los.administration.organization.dto.OrganizationResponse;
+import com.bank.los.administration.organization.dto.UpdateOrganizationRequest;
 import com.bank.los.bank.branch.dto.BranchResponse;
 import com.bank.los.bank.master.entity.Branch;
 import com.bank.los.bank.master.entity.OrganizationRole;
@@ -16,8 +17,10 @@ import com.bank.los.config.OrganizationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -50,6 +53,136 @@ public class OrganizationService {
         Organization org = organizationRepository.findByUuid(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization", "uuid", uuid));
         return mapToResponse(org);
+    }
+
+    public Organization findOrganizationByIdOrIdentifier(String identifier) {
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        try {
+            Long numericId = Long.parseLong(identifier);
+            Optional<Organization> byId = organizationRepository.findById(numericId);
+            if (byId.isPresent()) return byId.get();
+        } catch (NumberFormatException ignored) {}
+
+        try {
+            UUID uuid = UUID.fromString(identifier);
+            Optional<Organization> byUuid = organizationRepository.findByUuid(uuid);
+            if (byUuid.isPresent()) return byUuid.get();
+        } catch (IllegalArgumentException ignored) {}
+
+        return organizationRepository.findByBankCode(identifier.toUpperCase())
+                .or(() -> organizationRepository.findByCode(identifier.toUpperCase()))
+                .orElseThrow(() -> new ResourceNotFoundException("Organization", "identifier", identifier));
+    }
+
+    @Transactional
+    public OrganizationResponse updateOrganization(String identifier, UpdateOrganizationRequest request) {
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        Organization org = findOrganizationByIdOrIdentifier(identifier);
+
+        if (request.getBankName() != null && !request.getBankName().isBlank()) {
+            org.setBankName(request.getBankName().trim());
+        }
+        if (request.getLegalName() != null && !request.getLegalName().isBlank()) {
+            org.setLegalName(request.getLegalName().trim());
+        }
+        if (request.getBankType() != null && !request.getBankType().isBlank()) {
+            org.setBankType(request.getBankType().trim().toUpperCase());
+        }
+        if (request.getLicenseNumber() != null && !request.getLicenseNumber().isBlank()) {
+            org.setLicenseNumber(request.getLicenseNumber().trim());
+        } else if (request.getRegistrationNumber() != null && !request.getRegistrationNumber().isBlank()) {
+            org.setLicenseNumber(request.getRegistrationNumber().trim());
+        }
+        if (request.getPan() != null && !request.getPan().isBlank()) {
+            org.setPan(request.getPan().trim().toUpperCase());
+        }
+        if (request.getGstNumber() != null && !request.getGstNumber().isBlank()) {
+            org.setGstNo(request.getGstNumber().trim().toUpperCase());
+        } else if (request.getGstNo() != null && !request.getGstNo().isBlank()) {
+            org.setGstNo(request.getGstNo().trim().toUpperCase());
+        }
+        if (request.getCin() != null && !request.getCin().isBlank()) {
+            org.setCin(request.getCin().trim().toUpperCase());
+        }
+        if (request.getDirectClearingNumber() != null) {
+            org.setDirectClearingNumber(request.getDirectClearingNumber().trim());
+        }
+        if (request.getDirectClearingMember() != null) {
+            org.setDirectClearingMember(request.getDirectClearingMember());
+        } else if (request.getDirectClearingNumber() != null) {
+            org.setDirectClearingMember(!request.getDirectClearingNumber().trim().equalsIgnoreCase("false"));
+        }
+        if (request.getDirectMemberIftas() != null) {
+            org.setDirectMemberIftas(request.getDirectMemberIftas());
+        }
+
+        // MICR details
+        String micrCode = request.getMicrCode();
+        String micrCityCode = request.getMicrCityCode();
+        String micrBankCode = request.getMicrBankCode();
+        String micrBranchCode = request.getMicrBranchCode();
+        if (micrCode != null) {
+            String cleanMicr = micrCode.replaceAll("[^0-9]", "");
+            if (cleanMicr.length() == 9) {
+                if (micrCityCode == null) micrCityCode = cleanMicr.substring(0, 3);
+                if (micrBankCode == null) micrBankCode = cleanMicr.substring(3, 6);
+                if (micrBranchCode == null) micrBranchCode = cleanMicr.substring(6, 9);
+            }
+            org.setMicrCode(micrCode);
+        }
+        if (micrCityCode != null) org.setMicrCityCode(micrCityCode);
+        if (micrBankCode != null) org.setMicrBankCode(micrBankCode);
+        if (micrBranchCode != null) org.setMicrBranchCode(micrBranchCode);
+
+        if (request.getIfscCode() != null) {
+            org.setIfscCode(request.getIfscCode().trim().toUpperCase());
+        }
+        if (request.getNumberOfBranches() != null) {
+            org.setNumberOfBranches(request.getNumberOfBranches());
+        }
+        if (request.getSponsorBankForClearing() != null) {
+            org.setSponsorBankForClearing(request.getSponsorBankForClearing().trim());
+        }
+        if (request.getSponsorBankForIftas() != null) {
+            org.setSponsorBankForIftas(request.getSponsorBankForIftas().trim());
+        }
+
+        // Address details
+        if (request.getAddressType() != null) org.setAddressType(request.getAddressType().trim());
+        if (request.getUnitGalaNameNumber() != null) org.setUnitGalaNameNumber(request.getUnitGalaNameNumber().trim());
+        if (request.getStreetRoad() != null) org.setStreetRoad(request.getStreetRoad().trim());
+        if (request.getLandmark() != null) org.setLandmark(request.getLandmark().trim());
+        if (request.getCity() != null) org.setCity(request.getCity().trim());
+        if (request.getState() != null) org.setState(request.getState().trim());
+        if (request.getPincode() != null) org.setPincode(request.getPincode().trim());
+
+        if (request.getWebsite() != null) org.setWebsite(request.getWebsite().trim());
+        if (request.getLogo() != null) org.setLogo(request.getLogo().trim());
+        if (request.getRegulatoryAuthorityId() != null) org.setRegulatoryAuthorityId(request.getRegulatoryAuthorityId());
+        if (request.getRegulatoryStatus() != null) org.setRegulatoryStatus(request.getRegulatoryStatus().trim().toUpperCase());
+        if (request.getCountry() != null) org.setCountry(request.getCountry().trim());
+        if (request.getStatus() != null) org.setStatus(request.getStatus().trim().toUpperCase());
+        if (request.getContactEmail() != null) org.setContactEmail(request.getContactEmail().trim());
+        if (request.getContactPhone() != null) org.setContactPhone(request.getContactPhone().trim());
+
+        Organization updated = organizationRepository.save(org);
+        log.info("Bank/Organization updated successfully: id={}, bankCode={}", updated.getId(), updated.getBankCode());
+        return mapToResponse(updated);
+    }
+
+    @Transactional
+    public void deleteOrganization(String identifier, boolean hardDelete) {
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        Organization org = findOrganizationByIdOrIdentifier(identifier);
+
+        if (hardDelete) {
+            organizationRepository.delete(org);
+            log.warn("Bank/Organization HARD DELETED: id={}, bankCode={}", org.getId(), org.getBankCode());
+        } else {
+            org.setStatus("DELETED");
+            organizationRepository.save(org);
+            log.info("Bank/Organization SOFT DELETED (status=DELETED): id={}, bankCode={}", org.getId(), org.getBankCode());
+        }
     }
 
     public OrganizationResponse createOrganization(CreateOrganizationRequest request) {
