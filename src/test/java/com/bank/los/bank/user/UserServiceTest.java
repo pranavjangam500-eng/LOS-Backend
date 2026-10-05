@@ -39,7 +39,6 @@ class UserServiceTest {
     @DisplayName("Should register bank with organizational info and allow Super Admin to create Bank Admin who logs in")
     void testBankOnboardingAndAdminAssignmentFlow() {
         // 1. Super Admin registers a new Bank (only organization info)
-        String orgCode = "ICICI99";
         String dbName = "los_icici99_db";
 
         CreateOrganizationRequest orgRequest = CreateOrganizationRequest.builder()

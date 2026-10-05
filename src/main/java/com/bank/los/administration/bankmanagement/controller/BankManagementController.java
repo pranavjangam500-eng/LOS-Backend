@@ -53,5 +53,36 @@ public class BankManagementController {
         OrganizationResponse response = bankManagementService.updateBankStatus(organizationId, request);
         return ResponseEntity.ok(ApiResponse.ok("Organization status updated successfully", response));
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Update an existing bank/NBFC institution by ID, UUID, or Bank Code")
+    public ResponseEntity<ApiResponse<OrganizationResponse>> updateBank(
+            @PathVariable String id,
+            @RequestBody com.bank.los.administration.organization.dto.UpdateOrganizationRequest request) {
+        OrganizationResponse updated = organizationService.updateOrganization(id, request);
+        return ResponseEntity.ok(ApiResponse.ok("Bank updated successfully", updated));
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Partially update an existing bank/NBFC institution by ID, UUID, or Bank Code")
+    public ResponseEntity<ApiResponse<OrganizationResponse>> patchBank(
+            @PathVariable String id,
+            @RequestBody com.bank.los.administration.organization.dto.UpdateOrganizationRequest request) {
+        OrganizationResponse updated = organizationService.updateOrganization(id, request);
+        return ResponseEntity.ok(ApiResponse.ok("Bank updated successfully", updated));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Delete a bank/NBFC institution (soft-delete by default, or hard delete with ?hardDelete=true)")
+    public ResponseEntity<ApiResponse<Void>> deleteBank(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "false") boolean hardDelete) {
+        organizationService.deleteOrganization(id, hardDelete);
+        String msg = hardDelete ? "Bank permanently deleted successfully" : "Bank deactivated/deleted successfully";
+        return ResponseEntity.ok(ApiResponse.ok(msg, null));
+    }
 }
 

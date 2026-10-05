@@ -2,6 +2,7 @@ package com.bank.los.administration.organization.controller;
 
 import com.bank.los.administration.organization.dto.CreateOrganizationRequest;
 import com.bank.los.administration.organization.dto.OrganizationResponse;
+import com.bank.los.administration.organization.dto.UpdateOrganizationRequest;
 import com.bank.los.administration.organization.service.OrganizationService;
 import com.bank.los.bank.branch.dto.BranchResponse;
 import com.bank.los.bank.user.dto.RoleResponse;
@@ -49,6 +50,37 @@ public class OrganizationController {
             @Valid @RequestBody CreateOrganizationRequest request) {
         OrganizationResponse org = organizationService.createOrganization(request);
         return ResponseEntity.ok(ApiResponse.ok("Organization onboarded and database provisioned successfully", org));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Update an existing Bank/NBFC organization by ID, UUID, or Bank Code")
+    public ResponseEntity<ApiResponse<OrganizationResponse>> updateOrganization(
+            @PathVariable String id,
+            @RequestBody UpdateOrganizationRequest request) {
+        OrganizationResponse updated = organizationService.updateOrganization(id, request);
+        return ResponseEntity.ok(ApiResponse.ok("Organization updated successfully", updated));
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Partially update an existing Bank/NBFC organization by ID, UUID, or Bank Code")
+    public ResponseEntity<ApiResponse<OrganizationResponse>> patchOrganization(
+            @PathVariable String id,
+            @RequestBody UpdateOrganizationRequest request) {
+        OrganizationResponse updated = organizationService.updateOrganization(id, request);
+        return ResponseEntity.ok(ApiResponse.ok("Organization updated successfully", updated));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Delete a Bank/NBFC organization (soft-delete by default, or hard delete with ?hardDelete=true)")
+    public ResponseEntity<ApiResponse<Void>> deleteOrganization(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "false") boolean hardDelete) {
+        organizationService.deleteOrganization(id, hardDelete);
+        String msg = hardDelete ? "Organization permanently deleted successfully" : "Organization deactivated/deleted successfully";
+        return ResponseEntity.ok(ApiResponse.ok(msg, null));
     }
 
     @GetMapping("/{id}/roles")
