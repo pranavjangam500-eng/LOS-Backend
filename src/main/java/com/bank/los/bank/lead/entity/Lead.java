@@ -1,54 +1,51 @@
 package com.bank.los.bank.lead.entity;
 
-import com.bank.los.common.audit.AuditableEntity;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import com.bank.los.bank.lead.dto.LeadRequest;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
-@Data
+/**
+ * Lead entity model stored in the database (table: customer.leads).
+ * Extends LeadRequest to inherit all 4-section multi-step form fields, annotations,
+ * and getters/setters without duplicating field declarations:
+ * 1. Personal Details
+ * 2. Loan Details
+ * 3. Income Profile
+ * 4. Referral Details
+ */
 @Entity
 @Table(name = "leads", schema = "customer")
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class Lead extends AuditableEntity {
+public class Lead extends LeadRequest {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Lead() {
+        super();
+    }
 
-    @Column(name = "lead_number", unique = true, length = 40)
-    private String leadNumber;
+    public Lead(String leadId, String sourcingChannel, String lspPartnerCode, String userCategory,
+                String firstNameBusinessName, String lastName, String emailAddress) {
+        super(leadId, sourcingChannel, lspPartnerCode, userCategory, firstNameBusinessName, lastName, emailAddress);
+    }
 
-    @Column(name = "customer_name", nullable = false, length = 120)
-    private String customerName;
+    public Lead(LeadRequest request) {
+        super(request);
+    }
 
-    @Column(length = 150)
-    private String email;
-
-    @Column(nullable = false, length = 20)
-    private String phone;
-
-    @Column(name = "loan_product_type", length = 50)
-    private String loanProductType;
-
-    @Column(name = "requested_amount")
-    private Double requestedAmount;
-
-    @Column(name = "assigned_to_user_id")
-    private Long assignedToUserId;
-
-    @Column(name = "branch_id")
-    private Long branchId;
-
-    @Column(nullable = false, length = 30)
-    @Builder.Default
-    private String status = "NEW"; // NEW, CONTACTED, QUALIFIED, CONVERTED, DROPPED
-
-    @Column(length = 500)
-    private String remarks;
+    @Override
+    public String toString() {
+        return "Lead{" +
+                "leadId='" + getLeadId() + '\'' +
+                ", customerName='" + getFirstNameBusinessName() + '\'' +
+                ", panNumber='" + getPanNumber() + '\'' +
+                ", loanProductType='" + getLoanProductType() + '\'' +
+                ", loanAmount=" + getLoanAmount() +
+                ", leadAcquisitionChannel='" + getLeadAcquisitionChannel() + '\'' +
+                ", date='" + getDate() + '\'' +
+                ", sourcingAgentPartnerId='" + getSourcingAgentPartnerId() + '\'' +
+                ", agentPartnerName='" + getAgentPartnerName() + '\'' +
+                ", employeeId='" + getEmployeeId() + '\'' +
+                ", employeeName='" + getEmployeeName() + '\'' +
+                ", leadStatus='" + getLeadStatus() + '\'' +
+                ", assignedEmployeeId='" + getAssignedEmployeeId() + '\'' +
+                '}';
+    }
 }

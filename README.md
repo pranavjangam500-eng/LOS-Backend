@@ -17,12 +17,45 @@ An enterprise-grade, multi-tenant Spring Boot backend for Loan Origination Syste
 
 ---
 
+## 📋 Lead Management Module
+
+The Lead Management Module handles end-to-end loan application intake, verification, CSV bulk imports, and reporting.
+
+### Updated Lead Fields Structure
+
+#### Step 1 – Personal Details
+- **Added**: `passportExpiryDate` (Date in `YYYY-MM-DD` format).
+- **Removed**: `mobileNumber`.
+- **Removed**: All OTP-related fields (`otp`) from Lead form/model/entity.
+- **Retained**: `customerName` (or `firstNameBusinessName`), `dateOfBirth`, `age`, `customerType`, `panNumber`, `panValidationStatus`, `aadhaarNumber`, `aadhaarValidationStatus`, `residentialStatus`, `gender`, `maritalStatus`, `passportNumber`, `dedupeStatus`, `blacklistStatus`, `email`, `pinCode`, `numberOfDependents`.
+
+#### Step 2 – Loan Details
+- **Added**: `interestRate` (Annual interest rate percentage, e.g., `11.5`).
+- **Replaced**: `propertyValue` with `totalInterest` (Total estimated interest payable over the loan tenure).
+- **Removed**: `propertyValue` completely from the Lead entity, DTOs, database schema, CSV import/export, and APIs.
+- **Retained**: `loanProductType`, `loanAmount`, `purposeOfLoan`, `tenure`, `numberOfInstalments`, `emi`, `securityAmount`, `downPaymentOrCollateral`.
+
+### Lead APIs
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/leads` | Create a new lead (atomic payload with Step 1–4 details) |
+| `GET` | `/api/leads/{id}` | Get lead details by Lead ID |
+| `GET` | `/api/leads` | Search and list leads with pagination/filtering |
+| `PUT` | `/api/leads/{id}` | Update existing lead details |
+| `POST` | `/api/leads/import` | Bulk import leads from CSV (multipart file upload) |
+| `GET` | `/api/leads/export` | Export filtered or all leads to CSV |
+| `GET` | `/api/leads/sample-csv` | Download sample CSV template matching current schema |
+
+---
+
 ## 📬 Postman API Testing Guide & Collection
 
 A ready-to-use Postman Collection and comprehensive guide are included:
 
-- 📄 **Postman Guide**: [docs/POSTMAN_API_TESTING_GUIDE.md](file:///c:/Users/Khushmeet%20Patil/Documents/Webiste/New%20folder/LOS-Backend/docs/POSTMAN_API_TESTING_GUIDE.md)
-- 📦 **Postman Collection**: [docs/LOS_Backend_Postman_Collection.json](file:///c:/Users/Khushmeet%20Patil/Documents/Webiste/New%20folder/LOS-Backend/docs/LOS_Backend_Postman_Collection.json)
+- 📦 **Lead Management Postman Collection**: [LOS_Lead_Management_Postman_Collection.json](file:///c:/Users/Gourav%20Patil/Documents/LOS-Backend-main/LOS_Lead_Management_Postman_Collection.json)
+- 📄 **Postman Guide**: `docs/POSTMAN_API_TESTING_GUIDE.md`
+- 📦 **General Backend Postman Collection**: `docs/LOS_Backend_Postman_Collection.json`
 
 ---
 
@@ -35,7 +68,13 @@ A ready-to-use Postman Collection and comprehensive guide are included:
 
 ### Running Locally
 ```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+or
+```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-Access Swagger UI documentation at: `http://localhost:8080/swagger-ui.html`
+Access Swagger UI documentation at: `http://localhost:8080/swagger-ui.html`  
+Access UI Dashboard at: `http://localhost:8080/index.html`
+

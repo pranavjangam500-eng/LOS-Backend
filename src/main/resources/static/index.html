@@ -1,0 +1,3382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOS Lead Management Portal | Multi-Step Lead Origination</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: rgba(79, 70, 229, 0.15);
+      --accent: #0ea5e9;
+      --accent-hover: #0284c7;
+      --success: #10b981;
+      --success-light: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --warning-light: rgba(245, 158, 11, 0.15);
+      --danger: #ef4444;
+      --danger-light: rgba(239, 68, 68, 0.15);
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-card: rgba(15, 23, 42, 0.90);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-border-active: rgba(99, 102, 241, 0.5);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow-card: 0 20px 35px -10px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(255, 255, 255, 0.05);
+      --glow-primary: 0 0 25px rgba(99, 102, 241, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(79, 70, 229, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(14, 165, 233, 0.15) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.6) 0%, transparent 100%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem 3rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--surface-border);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 1.35rem;
+      box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4);
+      letter-spacing: -0.03em;
+    }
+
+    .brand-text h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-text h1 span.tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-text p {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 1140px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card styling */
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(16px);
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Multi-step progress stepper: 4 Sections in exact required order */
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 2rem;
+      padding: 0 0.5rem;
+    }
+
+    .stepper::before {
+      content: "";
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      right: 40px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+
+    .stepper-progress {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, #4f46e5, #0ea5e9);
+      z-index: 2;
+      transition: width 0.35s ease;
+      width: 0%;
+    }
+
+    .step-item {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .step-bubble {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-item.active .step-bubble {
+      background: var(--primary);
+      border-color: #818cf8;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+      transform: scale(1.08);
+    }
+
+    .step-item.completed .step-bubble {
+      background: var(--success);
+      border-color: #34d399;
+      color: #fff;
+    }
+
+    .step-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      transition: color 0.3s ease;
+      max-width: 110px;
+    }
+
+    .step-item.active .step-label {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .step-item.completed .step-label {
+      color: #a7f3d0;
+    }
+
+    /* Step Panes */
+    .step-pane {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .step-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .section-header h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .section-header .section-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 1.15rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-row-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .form-row, .form-row-3, .form-row-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .field-hint {
+      font-size: 0.72rem;
+      color: var(--text-subtle);
+      margin-top: 0.3rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #172136;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.85rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: #fff;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+      background: #1b2640;
+    }
+
+    input[readonly] {
+      background: rgba(30, 41, 59, 0.7);
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      cursor: default;
+    }
+
+    input::placeholder {
+      color: #475569;
+    }
+
+    .input-with-button {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .badge-mandatory {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .badge-optional {
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(14, 165, 233, 0.4);
+      color: #38bdf8;
+    }
+
+    .badge-success, .badge-verified {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      color: #34d399;
+    }
+
+    .badge-warning {
+      background: rgba(245, 158, 11, 0.18);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+    }
+
+    .badge-new {
+      background: rgba(14, 165, 233, 0.18);
+      border: 1px solid rgba(14, 165, 233, 0.45);
+      color: #38bdf8;
+    }
+
+    .badge-assigned {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: #34d399;
+    }
+
+    /* Action Groups (Validation / Duplicate / Blacklist / CIBIL) */
+    .check-card {
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .check-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .check-card-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .check-card-desc {
+      font-size: 0.72rem;
+      color: var(--text-subtle);
+    }
+
+    .check-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
+      box-shadow: 0 6px 18px rgba(79, 70, 229, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1.15rem;
+      font-size: 0.825rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #334155;
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-action-small {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #1e293b;
+      color: #e2e8f0;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-small:hover {
+      background: #334155;
+      color: #fff;
+    }
+
+    .preset-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+
+    .btn-preset {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.55rem;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-preset:hover {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: #6366f1;
+      color: #fff;
+    }
+
+    /* Wizard Navigation Bar */
+    .wizard-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--surface-border);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    /* Calculation Display Widget */
+    .calc-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      margin-top: 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .calc-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .calc-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .calc-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+    }
+
+    /* Financial Ratios Grid (DTI, LTV, DSCR, NDI) */
+    .ratios-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .ratios-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .ratio-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+    }
+
+    .ratio-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(30, 41, 59, 0.7);
+    }
+
+    .ratio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ratio-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .ratio-value {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+    }
+
+    .ratio-desc {
+      font-size: 0.68rem;
+      color: var(--text-subtle);
+    }
+
+    /* 4-Panel Review Summary */
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .review-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .review-section {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 1.15rem;
+    }
+
+    .review-section-title {
+      font-size: 0.825rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #a5b4fc;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .review-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .review-key {
+      color: var(--text-muted);
+    }
+
+    .review-val {
+      font-weight: 600;
+      color: #f1f5f9;
+      text-align: right;
+      max-width: 60%;
+      word-break: break-word;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 0.9rem 1.15rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.25rem;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    .alert-danger ul {
+      margin-top: 0.35rem;
+      padding-left: 1.25rem;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    .success-lead-box {
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .success-lead-id {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    /* Table styling */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    .leads-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.825rem;
+      text-align: left;
+    }
+
+    .leads-table th {
+      padding: 0.75rem 0.85rem;
+      background: rgba(30, 41, 59, 0.6);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--surface-border);
+      white-space: nowrap;
+    }
+
+    .leads-table td {
+      padding: 0.85rem 0.85rem;
+      border-bottom: 1px solid var(--surface-border);
+      color: #cbd5e1;
+      vertical-align: middle;
+    }
+
+    .leads-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .lead-id-code {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .assigned-emp-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.15rem 0.4rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 4px;
+      color: #a5b4fc;
+    }
+
+    .btn-action {
+      padding: 0.35rem 0.65rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-edit {
+      background: rgba(14, 165, 233, 0.15);
+      color: #38bdf8;
+      border-color: rgba(14, 165, 233, 0.3);
+    }
+
+    .btn-action-edit:hover {
+      background: rgba(14, 165, 233, 0.3);
+      color: #fff;
+    }
+
+    .btn-action-assign {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-action-assign:hover {
+      background: rgba(16, 185, 129, 0.3);
+      color: #fff;
+    }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid var(--surface-border-active);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 960px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--surface-border);
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .search-bar {
+      margin-bottom: 1rem;
+    }
+
+    .btn-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn-export {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      padding: 0.5rem 0.95rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-export:hover {
+      background: rgba(16, 185, 129, 0.25);
+      color: #fff;
+    }
+
+    .file-dropzone {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(30, 41, 59, 0.3);
+      margin-bottom: 1rem;
+    }
+
+    .file-dropzone:hover, .file-dropzone.dragover {
+      border-color: #6366f1;
+      background: rgba(99, 102, 241, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">LOS</div>
+        <div class="brand-text">
+          <h1>Loan Origination System <span class="tag">Production Ready</span></h1>
+          <p>Multi-Step Lead Origination &bull; 4-Section Unified Workflow</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span>POST /api/leads Unified</span>
+        </div>
+        <div class="status-badge" style="background: rgba(14, 165, 233, 0.12); border-color: rgba(14, 165, 233, 0.3); color: #38bdf8;">
+          <span class="status-dot" style="background-color: #38bdf8; box-shadow: 0 0 8px #38bdf8;"></span>
+          <span>los.db Connected</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- Left Column: Multi-Step Lead Creation Wizard (4 Sections) -->
+      <section>
+        <div class="card">
+          <div class="card-title">
+            <span>New Lead Origination</span>
+            <span class="badge badge-mandatory" id="stepCounterBadge">Step 1 of 4: Personal Details</span>
+          </div>
+          <p class="card-subtitle">
+            Navigate through <strong>Personal Details &rarr; Loan Details &rarr; Income Profile &rarr; Referral Details</strong>.
+            The complete lead is saved via <code>POST /api/leads</code> only when <strong>Submit</strong> is clicked.
+          </p>
+
+          <!-- Stepper: Exactly the 4 requested sections in exact order -->
+          <div class="stepper" id="stepperIndicator">
+            <div class="stepper-progress" id="stepperProgressBar"></div>
+            
+            <div class="step-item active" onclick="jumpToStep(1)">
+              <div class="step-bubble" id="stepBubble1">1</div>
+              <div class="step-label">Personal Details</div>
+            </div>
+
+            <div class="step-item" onclick="jumpToStep(2)">
+              <div class="step-bubble" id="stepBubble2">2</div>
+              <div class="step-label">Loan Details</div>
+            </div>
+
+            <div class="step-item" onclick="jumpToStep(3)">
+              <div class="step-bubble" id="stepBubble3">3</div>
+              <div class="step-label">Income Profile</div>
+            </div>
+
+            <div class="step-item" onclick="jumpToStep(4)">
+              <div class="step-bubble" id="stepBubble4">4</div>
+              <div class="step-label">Referral Details</div>
+            </div>
+          </div>
+
+          <!-- Validation Error Alert -->
+          <div id="errorAlert" class="alert alert-danger">
+            <strong>Please resolve the following:</strong>
+            <ul id="errorList"></ul>
+          </div>
+
+          <!-- Success Alert -->
+          <div id="successAlert" class="alert alert-success">
+            <strong>Lead Created Successfully!</strong>
+            <div id="successDetails" style="margin-top: 0.35rem; font-size: 0.85rem;"></div>
+            <div class="success-lead-box">
+              <div>
+                <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase;">Generated Lead ID</div>
+                <div class="success-lead-id" id="successLeadIdDisplay">-</div>
+              </div>
+              <div style="display:flex; gap: 0.5rem;">
+                <button type="button" class="btn-secondary" onclick="copyLeadId()">Copy ID</button>
+                <button type="button" class="btn-primary" onclick="resetFormToStart()">Create Another Lead</button>
+              </div>
+            </div>
+          </div>
+
+          <form id="leadForm" onsubmit="handleFormSubmit(event)">
+            
+            <!-- ============================================== -->
+            <!-- SECTION 1: Personal Details -->
+            <!-- ============================================== -->
+            <div class="step-pane active" id="stepPane1">
+              <div class="section-header">
+                <h3>1. Personal Details</h3>
+                <span class="section-tag">Identity &amp; KYC Verification</span>
+              </div>
+
+              <!-- Name of Customer, Date of Birth, Age, Customer Type -->
+              <div class="form-row-4">
+                <div class="form-group" style="grid-column: span 2;">
+                  <label for="customerName">
+                    <span>Name of Customer *</span>
+                    <span class="badge badge-mandatory">Mandatory</span>
+                  </label>
+                  <input type="text" id="customerName" name="customerName" required placeholder="e.g. Rajesh Sharma" />
+                  <p class="field-hint">Primary applicant full legal name</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="dob">
+                    <span>Date of Birth *</span>
+                    <span class="badge badge-mandatory">Age &ge; 18</span>
+                  </label>
+                  <input type="date" id="dob" name="dob" required onchange="validateDobAndCalculateAge(this)" />
+                  <p class="field-hint" id="dobHint">Format: YYYY-MM-DD</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="age">
+                    <span>Age</span>
+                    <span class="badge badge-optional" id="ageBadge">Auto-calculated</span>
+                  </label>
+                  <input type="number" id="age" name="age" min="18" max="100" placeholder="e.g. 34" />
+                  <p class="field-hint">Applicant age in years</p>
+                </div>
+              </div>
+
+              <!-- Customer Type -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="customerType">
+                    <span>Customer Type *</span>
+                  </label>
+                  <select id="customerType" name="customerType" required>
+                    <option value="Individual">Individual</option>
+                    <option value="Non-Individual">Non-Individual</option>
+                    <option value="Sole Proprietorship">Sole Proprietorship</option>
+                    <option value="Partnership">Partnership</option>
+                    <option value="Private Limited">Private Limited</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- PAN Card & Validate, Aadhaar Card & Validate -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="panNumber">
+                    <span>PAN Card *</span>
+                    <span class="badge badge-optional" id="panBadge">Govt ID</span>
+                  </label>
+                  <div class="input-with-button">
+                    <input type="text" id="panNumber" name="panNumber" required maxlength="10" placeholder="e.g. ABCDE1234F" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase(); resetPanValidation();" />
+                    <button type="button" class="btn-secondary" onclick="validatePanCard()">PAN Validate</button>
+                  </div>
+                  <input type="hidden" id="panValidationStatus" name="panValidationStatus" value="PENDING" />
+                  <p class="field-hint" id="panHint">10-character alphanumeric PAN format</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="aadhaarNumber">
+                    <span>Aadhaar Card *</span>
+                    <span class="badge badge-optional" id="aadhaarBadge">12 Digits</span>
+                  </label>
+                  <div class="input-with-button">
+                    <input type="text" id="aadhaarNumber" name="aadhaarNumber" required maxlength="12" placeholder="e.g. 123456789012" oninput="this.value = this.value.replace(/[^0-9]/g, ''); resetAadhaarValidation();" />
+                    <button type="button" class="btn-secondary" onclick="validateAadhaarCard()">Aadhaar Validate</button>
+                  </div>
+                  <input type="hidden" id="aadhaarValidationStatus" name="aadhaarValidationStatus" value="PENDING" />
+                  <p class="field-hint" id="aadhaarHint">12-digit Unique Identification Number</p>
+                </div>
+              </div>
+
+              <!-- Residential Status, Gender, Marital Status, Passport No. -->
+              <div class="form-row-4">
+                <div class="form-group">
+                  <label for="residentialStatus">
+                    <span>Residential Status *</span>
+                  </label>
+                  <select id="residentialStatus" name="residentialStatus" required>
+                    <option value="Resident Indian">Resident Indian</option>
+                    <option value="Non-Resident Indian (NRI)">Non-Resident Indian (NRI)</option>
+                    <option value="Person of Indian Origin (PIO)">Person of Indian Origin (PIO)</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="gender">
+                    <span>Gender *</span>
+                  </label>
+                  <select id="gender" name="gender" required>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="maritalStatus">
+                    <span>Marital Status *</span>
+                  </label>
+                  <select id="maritalStatus" name="maritalStatus" required>
+                    <option value="Single">Single</option>
+                    <option value="Married">Married</option>
+                    <option value="Divorced">Divorced</option>
+                    <option value="Widowed">Widowed</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="passportNumber">
+                    <span>Passport No.</span>
+                    <span class="badge badge-optional">Optional</span>
+                  </label>
+                  <input type="text" id="passportNumber" name="passportNumber" maxlength="15" placeholder="e.g. Z1234567" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" />
+                </div>
+
+                <div class="form-group">
+                  <label for="passportExpiryDate">
+                    <span>Passport Expiry Date</span>
+                    <span class="badge badge-optional">Optional</span>
+                  </label>
+                  <input type="date" id="passportExpiryDate" name="passportExpiryDate" />
+                </div>
+              </div>
+
+              <!-- Risk Checks: De-Duplicate Check, Blacklist Check -->
+              <div class="form-row" style="margin-top: 0.5rem;">
+                <div class="check-card">
+                  <div class="check-card-info">
+                    <span class="check-card-title">De-Duplicate Check</span>
+                    <span class="check-card-desc" id="dedupeDesc">Verify applicant uniqueness across database</span>
+                  </div>
+                  <div class="check-card-actions">
+                    <span id="dedupeStatusBadge" class="badge badge-optional">Not Checked</span>
+                    <button type="button" class="btn-action-small" onclick="performDedupeCheck()">Run Check</button>
+                    <input type="hidden" id="dedupeStatus" name="dedupeStatus" value="PENDING" />
+                  </div>
+                </div>
+
+                <div class="check-card">
+                  <div class="check-card-info">
+                    <span class="check-card-title">Blacklist Check</span>
+                    <span class="check-card-desc" id="blacklistDesc">Screening against RBI/AML negative databases</span>
+                  </div>
+                  <div class="check-card-actions">
+                    <span id="blacklistStatusBadge" class="badge badge-optional">Not Checked</span>
+                    <button type="button" class="btn-action-small" onclick="performBlacklistCheck()">Run Check</button>
+                    <input type="hidden" id="blacklistStatus" name="blacklistStatus" value="PENDING" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Auxiliary Personal Fields -->
+              <div class="form-row-4" style="margin-top: 0.5rem;">
+                <div class="form-group">
+                  <label for="lastName"><span>Last Name</span><span class="badge badge-optional">Optional</span></label>
+                  <input type="text" id="lastName" name="lastName" placeholder="e.g. Sharma" />
+                </div>
+                <div class="form-group">
+                  <label for="emailAddress"><span>Email Address</span><span class="badge badge-optional">Optional</span></label>
+                  <input type="email" id="emailAddress" name="emailAddress" placeholder="e.g. rajesh@example.com" />
+                </div>
+                <div class="form-group">
+                  <label for="pinCode"><span>Pin Code</span><span class="badge badge-optional">Optional</span></label>
+                  <input type="text" id="pinCode" name="pinCode" maxlength="6" placeholder="e.g. 400001" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                </div>
+                <div class="form-group">
+                  <label for="numberOfDependents"><span>Dependents</span></label>
+                  <select id="numberOfDependents" name="numberOfDependents">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4+</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 2: Loan Details -->
+            <!-- ============================================== -->
+            <div class="step-pane" id="stepPane2">
+              <div class="section-header">
+                <h3>2. Loan Details</h3>
+                <span class="section-tag">Facility Parameters &amp; Structuring</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="loanProductType">
+                    <span>Loan Product Type *</span>
+                    <span class="badge badge-mandatory">Mandatory</span>
+                  </label>
+                  <select id="loanProductType" name="loanProductType" required onchange="calculateLoanMetrics()">
+                    <option value="Personal Loan">Personal Loan (11.5% p.a.)</option>
+                    <option value="Home Loan" selected>Home Loan (8.5% p.a.)</option>
+                    <option value="Auto Loan">Auto Loan (9.0% p.a.)</option>
+                    <option value="Business Loan">Business Loan (13.0% p.a.)</option>
+                    <option value="Education Loan">Education Loan (9.5% p.a.)</option>
+                    <option value="Loan Against Property">Loan Against Property (10.0% p.a.)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="loanAmount">
+                    <span>Loan Amount (₹) *</span>
+                    <span class="badge badge-mandatory">Mandatory</span>
+                  </label>
+                  <input type="number" id="loanAmount" name="loanAmount" required min="10000" step="10000" placeholder="e.g. 5000000" value="5000000" oninput="calculateLoanMetrics()" />
+                  <div class="preset-container">
+                    <button type="button" class="btn-preset" onclick="setLoanAmount(500000)">₹5L</button>
+                    <button type="button" class="btn-preset" onclick="setLoanAmount(1000000)">₹10L</button>
+                    <button type="button" class="btn-preset" onclick="setLoanAmount(2500000)">₹25L</button>
+                    <button type="button" class="btn-preset" onclick="setLoanAmount(5000000)">₹50L</button>
+                    <button type="button" class="btn-preset" onclick="setLoanAmount(10000000)">₹1 Cr</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label for="purposeOfLoan">
+                    <span>Purpose of Loan *</span>
+                  </label>
+                  <select id="purposeOfLoan" name="purposeOfLoan" required>
+                    <option value="Apartment / Home Purchase">Apartment / Home Purchase</option>
+                    <option value="Home Renovation / Extension">Home Renovation / Extension</option>
+                    <option value="Business Expansion & Working Capital">Business Expansion &amp; Working Capital</option>
+                    <option value="Higher Education">Higher Education</option>
+                    <option value="Debt Consolidation">Debt Consolidation</option>
+                    <option value="Medical Emergency">Medical Emergency</option>
+                    <option value="Vehicle Purchase">Vehicle Purchase</option>
+                    <option value="Personal / Family Event">Personal / Family Event</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="tenure">
+                    <span>Tenure (Months) *</span>
+                  </label>
+                  <select id="tenure" name="tenure" required onchange="handleTenureChange()">
+                    <option value="12">12 Months (1 Year)</option>
+                    <option value="24">24 Months (2 Years)</option>
+                    <option value="36">36 Months (3 Years)</option>
+                    <option value="48">48 Months (4 Years)</option>
+                    <option value="60">60 Months (5 Years)</option>
+                    <option value="120">120 Months (10 Years)</option>
+                    <option value="180">180 Months (15 Years)</option>
+                    <option value="240" selected>240 Months (20 Years)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="numberOfInstalments">
+                    <span>No. of Instalments *</span>
+                  </label>
+                  <input type="number" id="numberOfInstalments" name="numberOfInstalments" required min="1" value="240" />
+                  <p class="field-hint">Repayment installments</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="emi">
+                    <span>Calculated EMI (₹)</span>
+                    <span class="badge badge-optional">Auto-calculated</span>
+                  </label>
+                  <input type="number" id="emi" name="emi" readonly placeholder="Calculated Monthly EMI" />
+                  <p class="field-hint" id="emiHint">Monthly instalment</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="interestRate">
+                    <span>Interest Rate (% p.a.) *</span>
+                    <span class="badge badge-mandatory">Mandatory</span>
+                  </label>
+                  <input type="number" id="interestRate" name="interestRate" min="0" step="0.1" placeholder="e.g. 8.5" value="8.5" oninput="calculateLoanMetrics()" />
+                  <p class="field-hint">Annual interest percentage</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="totalInterest">
+                    <span>Total Interest (₹)</span>
+                    <span class="badge badge-optional">Auto-calculated</span>
+                  </label>
+                  <input type="number" id="totalInterest" name="totalInterest" readonly placeholder="Total Interest Payable" />
+                  <p class="field-hint">Interest over tenure</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="securityAmount">
+                    <span>Security Amount (₹)</span>
+                    <span class="badge badge-optional">Optional</span>
+                  </label>
+                  <input type="number" id="securityAmount" name="securityAmount" min="0" step="10000" placeholder="e.g. 500000" oninput="calculateLoanMetrics()" />
+                  <p class="field-hint">Cash margin or FD pledge</p>
+                </div>
+              </div>
+
+              <!-- Real-time facility calculation widget -->
+              <div class="calc-card">
+                <div class="calc-item">
+                  <span class="calc-label">Est. Monthly EMI</span>
+                  <span class="calc-value" id="calcEmiDisplay">₹ 43,391</span>
+                </div>
+                <div class="calc-item">
+                  <span class="calc-label">Total Interest</span>
+                  <span class="calc-value" id="calcInterestDisplay">₹ 54,13,879</span>
+                </div>
+                <div class="calc-item">
+                  <span class="calc-label">Total Repayment</span>
+                  <span class="calc-value" id="calcTotalDisplay">₹ 1,04,13,879</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 3: Income Profile -->
+            <!-- ============================================== -->
+            <div class="step-pane" id="stepPane3">
+              <div class="section-header">
+                <h3>3. Income Profile</h3>
+                <span class="section-tag">Financial Capacity &amp; Underwriting</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="employmentType">
+                    <span>Employment Type *</span>
+                    <span class="badge badge-mandatory">Mandatory</span>
+                  </label>
+                  <select id="employmentType" name="employmentType" required onchange="calculateFinancialRatios()">
+                    <option value="Salaried" selected>Salaried</option>
+                    <option value="Self-Employed Professional">Self-Employed Professional</option>
+                    <option value="Self-Employed Business">Self-Employed Business</option>
+                    <option value="Retired">Retired</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="annualIncome">
+                    <span>Annual Income (₹) *</span>
+                    <span class="badge badge-mandatory">Mandatory</span>
+                  </label>
+                  <input type="number" id="annualIncome" name="annualIncome" required min="0" step="10000" placeholder="e.g. 1200000" value="1200000" oninput="handleAnnualIncomeInput(this)" />
+                  <p class="field-hint" id="incomePreview">₹ 12,00,000 per annum</p>
+                  <div class="preset-container">
+                    <button type="button" class="btn-preset" onclick="setIncome(600000)">₹6L</button>
+                    <button type="button" class="btn-preset" onclick="setIncome(1200000)">₹12L</button>
+                    <button type="button" class="btn-preset" onclick="setIncome(1800000)">₹18L</button>
+                    <button type="button" class="btn-preset" onclick="setIncome(2500000)">₹25L</button>
+                    <button type="button" class="btn-preset" onclick="setIncome(5000000)">₹50L</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="designation">
+                    <span>Designation *</span>
+                  </label>
+                  <input type="text" id="designation" name="designation" required placeholder="e.g. Senior Software Architect" value="Senior Software Architect" />
+                </div>
+
+                <div class="form-group">
+                  <label for="employerBusinessName">
+                    <span>Employer Name *</span>
+                  </label>
+                  <input type="text" id="employerBusinessName" name="employerBusinessName" required placeholder="e.g. Tata Consultancy Services" value="Tata Consultancy Services" />
+                </div>
+              </div>
+
+              <div class="form-row-4">
+                <div class="form-group">
+                  <label for="location">
+                    <span>Location *</span>
+                  </label>
+                  <input type="text" id="location" name="location" required placeholder="e.g. Mumbai" value="Mumbai" />
+                </div>
+
+                <div class="form-group">
+                  <label for="state">
+                    <span>State *</span>
+                  </label>
+                  <select id="state" name="state" required>
+                    <option value="Maharashtra" selected>Maharashtra</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="West Bengal">West Bengal</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="takeHomePay">
+                    <span>Take Home Pay (₹/mo)</span>
+                  </label>
+                  <input type="number" id="takeHomePay" name="takeHomePay" min="0" placeholder="e.g. 85000" value="85000" oninput="calculateFinancialRatios()" />
+                  <p class="field-hint">Monthly net salary</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="deductionsOrEmisPayable">
+                    <span>Deductions / EMIs Payable (₹/mo)</span>
+                  </label>
+                  <input type="number" id="deductionsOrEmisPayable" name="deductionsOrEmisPayable" min="0" placeholder="e.g. 12000" value="12000" oninput="calculateFinancialRatios()" />
+                  <p class="field-hint">Existing monthly liabilities</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bankName">
+                    <span>Bank Name *</span>
+                  </label>
+                  <select id="bankName" name="bankName" required>
+                    <option value="HDFC Bank" selected>HDFC Bank</option>
+                    <option value="State Bank of India">State Bank of India (SBI)</option>
+                    <option value="ICICI Bank">ICICI Bank</option>
+                    <option value="Axis Bank">Axis Bank</option>
+                    <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
+                    <option value="Punjab National Bank">Punjab National Bank</option>
+                    <option value="Bank of Baroda">Bank of Baroda</option>
+                    <option value="Other Bank">Other Bank</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="primaryBankAccount">
+                    <span>Account Number *</span>
+                  </label>
+                  <input type="text" id="primaryBankAccount" name="primaryBankAccount" required minlength="9" maxlength="18" placeholder="e.g. 50100234567890" value="50100234567890" oninput="this.value = this.value.replace(/[^0-9A-Za-z]/g, '')" />
+                  <p class="field-hint">Salary / Primary Operative Account</p>
+                </div>
+              </div>
+
+              <!-- Consent & CIBIL Check -->
+              <div class="form-row" style="margin-top: 0.25rem;">
+                <div class="check-card">
+                  <div class="check-card-info">
+                    <span class="check-card-title">Account Statement Consent</span>
+                    <span class="check-card-desc">Customer consents to fetch digital statement via Account Aggregator</span>
+                  </div>
+                  <div class="check-card-actions">
+                    <label style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                      <input type="checkbox" id="accountStatementConsent" name="accountStatementConsent" checked style="width: 18px; height: 18px; accent-color: #6366f1;" />
+                      <span style="font-size: 0.8rem; color: #a5b4fc;">Consented</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="check-card">
+                  <div class="check-card-info">
+                    <span class="check-card-title">CIBIL Liability Check</span>
+                    <span class="check-card-desc" id="cibilDesc">Inquiry into active liabilities &amp; credit score</span>
+                  </div>
+                  <div class="check-card-actions">
+                    <span id="cibilScoreBadge" class="badge badge-success">780 - Clear</span>
+                    <button type="button" class="btn-action-small" onclick="performCibilCheck()">Inquire</button>
+                    <input type="hidden" id="cibilLiabilityCheck" name="cibilLiabilityCheck" value="780 - Clear" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Institutional Underwriting & Financial Ratios Widget -->
+              <div class="ratios-grid">
+                <div class="ratio-card">
+                  <div class="ratio-header">
+                    <span class="ratio-title">DTI (Debt-to-Income)</span>
+                    <span id="dtiBadge" class="badge badge-success">Healthy</span>
+                  </div>
+                  <span class="ratio-value" id="dtiDisplay">35.5%</span>
+                  <span class="ratio-desc">(Total EMIs / Gross Income)</span>
+                  <input type="hidden" id="debtToIncomeRatio" name="debtToIncomeRatio" value="35.5" />
+                </div>
+
+                <div class="ratio-card">
+                  <div class="ratio-header">
+                    <span class="ratio-title">LTV (Loan-to-Value)</span>
+                    <span id="ltvBadge" class="badge badge-success">71.4%</span>
+                  </div>
+                  <span class="ratio-value" id="ltvDisplay">71.4%</span>
+                  <span class="ratio-desc">(Loan / Property Value)</span>
+                  <input type="hidden" id="loanToValueRatio" name="loanToValueRatio" value="71.4" />
+                </div>
+
+                <div class="ratio-card">
+                  <div class="ratio-header">
+                    <span class="ratio-title">DSCR</span>
+                    <span id="dscrBadge" class="badge badge-success">2.8x</span>
+                  </div>
+                  <span class="ratio-value" id="dscrDisplay">2.8x</span>
+                  <span class="ratio-desc">(Cashflow / Debt Service)</span>
+                  <input type="hidden" id="debtServiceCoverageRatio" name="debtServiceCoverageRatio" value="2.8" />
+                </div>
+
+                <div class="ratio-card">
+                  <div class="ratio-header">
+                    <span class="ratio-title">NDI (Net Disposable)</span>
+                    <span id="ndiBadge" class="badge badge-success">Surplus</span>
+                  </div>
+                  <span class="ratio-value" id="ndiDisplay">₹ 29,609</span>
+                  <span class="ratio-desc">Surplus cash flow per month</span>
+                  <input type="hidden" id="netDisposableIncome" name="netDisposableIncome" value="29609" />
+                </div>
+              </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 4: Referral Details -->
+            <!-- ============================================== -->
+            <div class="step-pane" id="stepPane4">
+              <div class="section-header">
+                <h3>4. Referral Details</h3>
+                <span class="section-tag">Channel, Sourcing &amp; Submit</span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="sourcingChannel">
+                    <span>Lead Acquisition Channel *</span>
+                    <span class="badge badge-mandatory">Mandatory</span>
+                  </label>
+                  <select id="sourcingChannel" name="sourcingChannel" required onchange="handleChannelChange()">
+                    <option value="Website">Website</option>
+                    <option value="Mobile App">Mobile App</option>
+                    <option value="Branch Office" selected>Branch Office</option>
+                    <option value="Partner Network">Partner Network</option>
+                    <option value="Sales Team">Sales Team</option>
+                    <option value="Customer Referral">Customer Referral</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="referralDate">
+                    <span>Date *</span>
+                  </label>
+                  <input type="date" id="referralDate" name="referralDate" required />
+                  <p class="field-hint">Referral or origination date</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="lspPartnerCode">
+                    <span>Sourcing Agent / Partner ID <span id="lspAsterisk" style="color:#f87171;">*</span></span>
+                    <span id="lspBadge" class="badge badge-mandatory">Mandatory for Branch</span>
+                  </label>
+                  <input type="text" id="lspPartnerCode" name="lspPartnerCode" placeholder="e.g. LSP-1001" value="LSP-1001" />
+                  <p id="lspHint" class="field-hint">Mandatory when Channel is 'Branch Office'</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="agentPartnerName">
+                    <span>Agent / Partner Name</span>
+                    <span class="badge badge-optional">Optional</span>
+                  </label>
+                  <input type="text" id="agentPartnerName" name="agentPartnerName" placeholder="e.g. Karan Kapoor" value="Karan Kapoor" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="sourcingEmployeeId">
+                    <span>Employee ID</span>
+                    <span class="badge badge-optional">Referral Staff</span>
+                  </label>
+                  <input type="text" id="sourcingEmployeeId" name="sourcingEmployeeId" placeholder="e.g. EMP102" value="EMP102" />
+                </div>
+
+                <div class="form-group">
+                  <label for="sourcingEmployeeName">
+                    <span>Employee Name</span>
+                    <span class="badge badge-optional">Referral Staff</span>
+                  </label>
+                  <input type="text" id="sourcingEmployeeName" name="sourcingEmployeeName" placeholder="e.g. Rahul Verma" value="Rahul Verma" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="leadId">
+                  <span>Lead ID</span>
+                  <span class="badge badge-mandatory">Auto-generated</span>
+                </label>
+                <div class="input-with-button">
+                  <input type="text" id="leadId" name="leadId" placeholder="Leave blank to auto-generate" />
+                  <button type="button" class="btn-secondary" onclick="fetchNextId()">Preview ID</button>
+                </div>
+                <p class="field-hint">Format: <code>LDYYYYMM####</code> (Auto-generated sequentially if left blank)</p>
+              </div>
+
+              <!-- 4-Section Review Summary -->
+              <div class="review-grid">
+                <!-- Personal Details Summary -->
+                <div class="review-section">
+                  <div class="review-section-title">
+                    <span>1. Personal Details</span>
+                    <span style="cursor:pointer; font-size:0.7rem; color:#38bdf8;" onclick="jumpToStep(1)">Edit &rarr;</span>
+                  </div>
+                  <div class="review-item"><span class="review-key">Customer:</span><span class="review-val" id="revName">-</span></div>
+                  <div class="review-item"><span class="review-key">DOB / Age:</span><span class="review-val" id="revDobAge">-</span></div>
+                  <div class="review-item"><span class="review-key">Customer Type:</span><span class="review-val" id="revCustomerType">-</span></div>
+                  <div class="review-item"><span class="review-key">Passport Expiry:</span><span class="review-val" id="revPassportExpiry">-</span></div>
+                  <div class="review-item"><span class="review-key">PAN / Aadhaar:</span><span class="review-val" id="revKyc">-</span></div>
+                  <div class="review-item"><span class="review-key">Status / Blacklist:</span><span class="review-val" id="revRisk">-</span></div>
+                </div>
+
+                <!-- Loan Details Summary -->
+                <div class="review-section">
+                  <div class="review-section-title">
+                    <span>2. Loan Details</span>
+                    <span style="cursor:pointer; font-size:0.7rem; color:#38bdf8;" onclick="jumpToStep(2)">Edit &rarr;</span>
+                  </div>
+                  <div class="review-item"><span class="review-key">Product:</span><span class="review-val" id="revProduct">-</span></div>
+                  <div class="review-item"><span class="review-key">Loan Amount:</span><span class="review-val" id="revAmount" style="color:#38bdf8;">-</span></div>
+                  <div class="review-item"><span class="review-key">Tenure &amp; EMI:</span><span class="review-val" id="revTenureEmi">-</span></div>
+                  <div class="review-item"><span class="review-key">Rate / Total Int:</span><span class="review-val" id="revInterest">-</span></div>
+                  <div class="review-item"><span class="review-key">Security Amount:</span><span class="review-val" id="revSecurity">-</span></div>
+                </div>
+
+                <!-- Income Profile Summary -->
+                <div class="review-section">
+                  <div class="review-section-title">
+                    <span>3. Income Profile</span>
+                    <span style="cursor:pointer; font-size:0.7rem; color:#38bdf8;" onclick="jumpToStep(3)">Edit &rarr;</span>
+                  </div>
+                  <div class="review-item"><span class="review-key">Employment:</span><span class="review-val" id="revEmp">-</span></div>
+                  <div class="review-item"><span class="review-key">Employer / Loc:</span><span class="review-val" id="revEmployer">-</span></div>
+                  <div class="review-item"><span class="review-key">Income &amp; Pay:</span><span class="review-val" id="revIncomePay">-</span></div>
+                  <div class="review-item"><span class="review-key">Bank &amp; Account:</span><span class="review-val" id="revBank">-</span></div>
+                  <div class="review-item"><span class="review-key">DTI / LTV / DSCR:</span><span class="review-val" id="revRatios">-</span></div>
+                </div>
+
+                <!-- Referral Details Summary -->
+                <div class="review-section">
+                  <div class="review-section-title">
+                    <span>4. Referral Details</span>
+                    <span style="cursor:pointer; font-size:0.7rem; color:#38bdf8;" onclick="jumpToStep(4)">Edit &rarr;</span>
+                  </div>
+                  <div class="review-item"><span class="review-key">Channel:</span><span class="review-val" id="revChannel">-</span></div>
+                  <div class="review-item"><span class="review-key">Date:</span><span class="review-val" id="revDate">-</span></div>
+                  <div class="review-item"><span class="review-key">Agent / Partner:</span><span class="review-val" id="revAgent">-</span></div>
+                  <div class="review-item"><span class="review-key">Employee:</span><span class="review-val" id="revEmpRef">-</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wizard Navigation Bar -->
+            <div class="wizard-nav">
+              <button type="button" class="btn-secondary" id="prevBtn" onclick="navigateStep(-1)" disabled>
+                <span>&larr; Previous</span>
+              </button>
+
+              <div style="font-size: 0.8rem; color: var(--text-subtle);">
+                Single API: <code>POST /api/leads</code>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn-secondary" onclick="resetFormToStart()">
+                  <span>Cancel / Reset</span>
+                </button>
+                <button type="button" class="btn-primary" id="nextBtn" onclick="navigateStep(1)">
+                  <span>Next Step &rarr;</span>
+                </button>
+                <button type="submit" class="btn-primary" id="submitBtn" style="display: none; background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                  <span>Submit Complete Lead Application</span>
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Bulk CSV Import Card -->
+        <div class="card">
+          <div class="card-title">
+            <span>Bulk CSV Import</span>
+            <span class="badge badge-optional">Multi-Lead Batch</span>
+          </div>
+          <p class="card-subtitle">Upload RFC-4180 CSV file matching all 4 sections to batch load leads.</p>
+
+          <div id="csvErrorAlert" class="alert alert-danger">
+            <strong id="csvErrorTitle">CSV Validation Errors:</strong>
+            <ul id="csvErrorList"></ul>
+          </div>
+
+          <div id="csvSuccessAlert" class="alert alert-success">
+            <strong id="csvSuccessTitle">Bulk Import Succeeded!</strong>
+            <div id="csvSuccessDetails" style="margin-top: 0.35rem; font-size: 0.825rem;"></div>
+          </div>
+
+          <form id="csvImportForm" onsubmit="handleCsvUpload(event)">
+            <div class="file-dropzone" id="fileDropzone" onclick="document.getElementById('csvFileInput').click()">
+              <div style="font-size: 2rem; margin-bottom: 0.4rem;">📥</div>
+              <div style="font-weight: 600;">Click to select CSV or drag and drop file here</div>
+              <p class="field-hint">Supports updated 4-section format (Personal, Loan, Income, Referral)</p>
+              <div id="selectedFileName" style="font-family: var(--font-mono); color: #38bdf8; margin-top: 0.5rem;"></div>
+              <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none" onchange="handleFileSelected(this)" />
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+              <a href="/api/leads/sample-csv" download="sample_leads.csv" class="btn-export" style="color: #a5b4fc; border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.15);" title="Download sample template">
+                <span>📄 Sample CSV Template</span>
+              </a>
+
+              <button type="submit" class="btn-primary" id="importBtn" style="padding: 0.65rem 1.25rem;">
+                <span>Upload &amp; Bulk Load</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Right Column: Database Table & Rules -->
+      <section>
+        <!-- Live Leads Overview Table -->
+        <div class="card">
+          <div class="card-title">
+            <span>Persisted Leads</span>
+            <div class="btn-toolbar">
+              <a href="/api/leads/export" download="leads.csv" class="btn-export" title="Export all leads to CSV">
+                <span>Export CSV</span>
+              </a>
+              <button type="button" class="btn-secondary" onclick="loadLeads()">Refresh</button>
+            </div>
+          </div>
+          <p class="card-subtitle">Live leads stored in SQLite database (<code>los.db</code>):</p>
+
+          <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search by Lead ID, Customer Name, Mobile, PAN, Product, Status..." oninput="filterLeads()" />
+          </div>
+
+          <div class="table-container">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Lead ID</th>
+                  <th>Customer (Personal)</th>
+                  <th>Loan Facility</th>
+                  <th>Income Profile</th>
+                  <th>Referral / Sourcing</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTableBody">
+                <tr>
+                  <td colspan="7" style="text-align: center; color: var(--text-subtle);">Loading leads...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Workflow Rules Card -->
+        <div class="card">
+          <div class="card-title">Lead Origination Engine Architecture</div>
+          <p class="card-subtitle">Active business rules and workflow constraints:</p>
+          <div style="font-size: 0.8rem; color: #cbd5e1; display: grid; gap: 0.65rem;">
+            <div style="padding: 0.5rem 0.75rem; background: rgba(30,41,59,0.5); border-radius: 6px; border-left: 3px solid #6366f1;">
+              <strong>Exact 4 Sections:</strong> Personal Details &rarr; Loan Details &rarr; Income Profile &rarr; Referral Details.
+            </div>
+            <div style="padding: 0.5rem 0.75rem; background: rgba(30,41,59,0.5); border-radius: 6px; border-left: 3px solid #10b981;">
+              <strong>Single Add API:</strong> User navigates using Next/Previous; whole lead persists via <code>POST /api/leads</code> only on Submit.
+            </div>
+            <div style="padding: 0.5rem 0.75rem; background: rgba(30,41,59,0.5); border-radius: 6px; border-left: 3px solid #38bdf8;">
+              <strong>Verification &amp; Checks:</strong> Built-in OTP simulation, PAN/Aadhaar validation, De-Duplicate checks, Blacklist checks, and CIBIL checks.
+            </div>
+            <div style="padding: 0.5rem 0.75rem; background: rgba(30,41,59,0.5); border-radius: 6px; border-left: 3px solid #f59e0b;">
+              <strong>Financial Underwriting:</strong> Automatic computation of EMI, DTI (Debt-to-Income), LTV (Loan-to-Value), DSCR, and NDI.
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Edit Lead Modal (Exactly 4 Sections in Order) -->
+  <div id="editModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 style="font-size: 1.2rem; font-weight: 700; display:flex; align-items:center; gap: 0.5rem;">
+          <span>Edit Lead Details</span>
+          <span class="badge badge-mandatory" style="font-size:0.65rem;">4 Sections</span>
+        </h2>
+        <button type="button" class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+
+      <div style="background: rgba(30,41,59,0.6); padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <div>Lead ID: <strong id="editLeadIdDisplay" style="color: #38bdf8; font-family: var(--font-mono);"></strong></div>
+          <div>Status: <span id="editStatusBadge" class="badge"></span></div>
+        </div>
+        <div style="margin-top: 0.35rem; font-size:0.75rem; color: var(--text-subtle);">
+          Assigned Maker: <strong id="editAssignedDisplay" style="font-family: var(--font-mono); color: #cbd5e1;"></strong>
+          &bull; System fields are preserved; all client application fields can be modified.
+        </div>
+      </div>
+
+      <div id="editErrorAlert" class="alert alert-danger" style="display:none;">
+        <strong>Validation Error:</strong>
+        <ul id="editErrorList"></ul>
+      </div>
+
+      <form id="editLeadForm" onsubmit="handleEditSubmit(event)">
+        
+        <!-- SECTION 1: Personal Details -->
+        <div class="section-header" style="margin-top: 0.5rem;">
+          <h3>1. Personal Details</h3>
+          <span class="section-tag">Identity &amp; KYC</span>
+        </div>
+
+        <div class="form-row-4">
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="editCustomerName"><span>Name of Customer *</span></label>
+            <input type="text" id="editCustomerName" required />
+          </div>
+          <div class="form-group">
+            <label for="editDob"><span>Date of Birth *</span></label>
+            <input type="date" id="editDob" required onchange="calculateEditAge(this)" />
+          </div>
+          <div class="form-group">
+            <label for="editAge"><span>Age</span></label>
+            <input type="number" id="editAge" min="18" max="100" />
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="editCustomerType"><span>Customer Type *</span></label>
+            <select id="editCustomerType" required>
+              <option value="Individual">Individual</option>
+              <option value="Non-Individual">Non-Individual</option>
+              <option value="Sole Proprietorship">Sole Proprietorship</option>
+              <option value="Partnership">Partnership</option>
+              <option value="Private Limited">Private Limited</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editPanNumber"><span>PAN Card *</span></label>
+            <input type="text" id="editPanNumber" required maxlength="10" style="text-transform: uppercase;" />
+          </div>
+          <div class="form-group">
+            <label for="editAadhaarNumber"><span>Aadhaar Card *</span></label>
+            <input type="text" id="editAadhaarNumber" required maxlength="12" />
+          </div>
+        </div>
+
+        <div class="form-row-4">
+          <div class="form-group">
+            <label for="editResidentialStatus"><span>Residential Status *</span></label>
+            <select id="editResidentialStatus" required>
+              <option value="Resident Indian">Resident Indian</option>
+              <option value="Non-Resident Indian (NRI)">Non-Resident Indian (NRI)</option>
+              <option value="Person of Indian Origin (PIO)">Person of Indian Origin (PIO)</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editGender"><span>Gender *</span></label>
+            <select id="editGender" required>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editMaritalStatus"><span>Marital Status *</span></label>
+            <select id="editMaritalStatus" required>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Divorced">Divorced</option>
+              <option value="Widowed">Widowed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editPassportNumber"><span>Passport No.</span></label>
+            <input type="text" id="editPassportNumber" style="text-transform: uppercase;" />
+          </div>
+          <div class="form-group">
+            <label for="editPassportExpiryDate"><span>Passport Expiry Date</span></label>
+            <input type="date" id="editPassportExpiryDate" />
+          </div>
+        </div>
+
+        <!-- SECTION 2: Loan Details -->
+        <div class="section-header" style="margin-top: 1.25rem;">
+          <h3>2. Loan Details</h3>
+          <span class="section-tag">Facility Sizing</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editLoanProductType"><span>Loan Product Type *</span></label>
+            <select id="editLoanProductType" required onchange="calculateEditEmi()">
+              <option value="Personal Loan">Personal Loan (11.5% p.a.)</option>
+              <option value="Home Loan">Home Loan (8.5% p.a.)</option>
+              <option value="Auto Loan">Auto Loan (9.0% p.a.)</option>
+              <option value="Business Loan">Business Loan (13.0% p.a.)</option>
+              <option value="Education Loan">Education Loan (9.5% p.a.)</option>
+              <option value="Loan Against Property">Loan Against Property (10.0% p.a.)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editLoanAmount"><span>Loan Amount (₹) *</span></label>
+            <input type="number" id="editLoanAmount" required min="10000" step="10000" oninput="calculateEditEmi()" />
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="editPurposeOfLoan"><span>Purpose of Loan *</span></label>
+            <input type="text" id="editPurposeOfLoan" required />
+          </div>
+          <div class="form-group">
+            <label for="editTenure"><span>Tenure (Months) *</span></label>
+            <input type="number" id="editTenure" required min="1" oninput="calculateEditEmi()" />
+          </div>
+          <div class="form-group">
+            <label for="editNumberOfInstalments"><span>No. of Instalments *</span></label>
+            <input type="number" id="editNumberOfInstalments" required min="1" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editEmi"><span>EMI (₹)</span></label>
+            <input type="number" id="editEmi" />
+          </div>
+          <div class="form-group">
+            <label for="editInterestRate"><span>Interest Rate (% p.a.)</span></label>
+            <input type="number" id="editInterestRate" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label for="editTotalInterest"><span>Total Interest (₹)</span></label>
+            <input type="number" id="editTotalInterest" />
+          </div>
+          <div class="form-group">
+            <label for="editSecurityAmount"><span>Security Amount (₹)</span></label>
+            <input type="number" id="editSecurityAmount" min="0" />
+          </div>
+        </div>
+
+        <!-- SECTION 3: Income Profile -->
+        <div class="section-header" style="margin-top: 1.25rem;">
+          <h3>3. Income Profile</h3>
+          <span class="section-tag">Income &amp; Banking</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editEmploymentType"><span>Employment Type *</span></label>
+            <select id="editEmploymentType" required>
+              <option value="Salaried">Salaried</option>
+              <option value="Self-Employed Professional">Self-Employed Professional</option>
+              <option value="Self-Employed Business">Self-Employed Business</option>
+              <option value="Retired">Retired</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editAnnualIncome"><span>Annual Income (₹) *</span></label>
+            <input type="number" id="editAnnualIncome" required min="0" step="10000" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editDesignation"><span>Designation *</span></label>
+            <input type="text" id="editDesignation" required />
+          </div>
+          <div class="form-group">
+            <label for="editEmployerBusinessName"><span>Employer Name *</span></label>
+            <input type="text" id="editEmployerBusinessName" required />
+          </div>
+        </div>
+
+        <div class="form-row-4">
+          <div class="form-group">
+            <label for="editLocation"><span>Location *</span></label>
+            <input type="text" id="editLocation" required />
+          </div>
+          <div class="form-group">
+            <label for="editState"><span>State *</span></label>
+            <input type="text" id="editState" required />
+          </div>
+          <div class="form-group">
+            <label for="editTakeHomePay"><span>Take Home Pay (₹)</span></label>
+            <input type="number" id="editTakeHomePay" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="editDeductionsOrEmisPayable"><span>Deductions / EMIs (₹)</span></label>
+            <input type="number" id="editDeductionsOrEmisPayable" min="0" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editBankName"><span>Bank Name *</span></label>
+            <input type="text" id="editBankName" required />
+          </div>
+          <div class="form-group">
+            <label for="editPrimaryBankAccount"><span>Account Number *</span></label>
+            <input type="text" id="editPrimaryBankAccount" required minlength="9" maxlength="18" />
+          </div>
+        </div>
+
+        <!-- SECTION 4: Referral Details -->
+        <div class="section-header" style="margin-top: 1.25rem;">
+          <h3>4. Referral Details</h3>
+          <span class="section-tag">Channel &amp; Partner</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editSourcingChannel"><span>Lead Acquisition Channel *</span></label>
+            <select id="editSourcingChannel" required>
+              <option value="Website">Website</option>
+              <option value="Mobile App">Mobile App</option>
+              <option value="Branch Office">Branch Office</option>
+              <option value="Partner Network">Partner Network</option>
+              <option value="Sales Team">Sales Team</option>
+              <option value="Customer Referral">Customer Referral</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editReferralDate"><span>Date</span></label>
+            <input type="date" id="editReferralDate" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editLspPartnerCode"><span>Sourcing Agent / Partner ID</span></label>
+            <input type="text" id="editLspPartnerCode" />
+          </div>
+          <div class="form-group">
+            <label for="editAgentPartnerName"><span>Agent / Partner Name</span></label>
+            <input type="text" id="editAgentPartnerName" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editSourcingEmployeeId"><span>Employee ID</span></label>
+            <input type="text" id="editSourcingEmployeeId" />
+          </div>
+          <div class="form-group">
+            <label for="editSourcingEmployeeName"><span>Employee Name</span></label>
+            <input type="text" id="editSourcingEmployeeName" />
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--surface-border);">
+          <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveEditBtn" style="padding: 0.75rem 1.75rem;">
+            <span>Save All Changes</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assign Modal -->
+  <div id="assignModal" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.15rem; font-weight: 700;">Assign Lead to Maker</h2>
+        <button type="button" class="modal-close" onclick="closeAssignModal()">&times;</button>
+      </div>
+
+      <div style="background: rgba(30,41,59,0.5); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
+        <div>Target Lead: <strong id="assignLeadIdDisplay" style="color: #38bdf8;"></strong></div>
+        <div style="font-size: 0.72rem; color: var(--text-subtle); margin-top: 0.35rem;">
+          Policy constraint: Leads can only be assigned to ACTIVE users with MAKER role.
+        </div>
+      </div>
+
+      <div id="assignErrorAlert" class="alert alert-danger" style="display:none;">
+        <div id="assignErrorMessage"></div>
+      </div>
+
+      <div id="assignSuccessAlert" class="alert alert-success" style="display:none;">
+        <div id="assignSuccessMessage"></div>
+      </div>
+
+      <form id="assignLeadForm" onsubmit="handleAssignSubmit(event)">
+        <div class="form-group">
+          <label for="assignEmployeeSelect">
+            <span>Select Maker Employee *</span>
+            <span class="badge badge-mandatory">Maker Only</span>
+          </label>
+          <select id="assignEmployeeSelect">
+            <option value="EMP102">EMP102 - Rahul Verma (MAKER - ACTIVE) [Recommended]</option>
+            <option value="EMP105">EMP105 - Pooja Mehta (MAKER - ACTIVE)</option>
+            <option value="EMP103">EMP103 - Sita Sharma (MAKER - INACTIVE)</option>
+            <option value="EMP104">EMP104 - Vikram Malhotra (CHECKER - ACTIVE)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+          <label for="assignAdminSelect">
+            <span>Assigned By (Admin) *</span>
+            <span class="badge badge-mandatory">Admin Only</span>
+          </label>
+          <select id="assignAdminSelect">
+            <option value="EMP101">EMP101 - Admin User (ADMIN - ACTIVE) [Default]</option>
+            <option value="EMP104">EMP104 - Vikram Malhotra (CHECKER - ACTIVE)</option>
+          </select>
+        </div>
+
+        <div style="display:flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" class="btn-secondary" onclick="closeAssignModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="confirmAssignBtn" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+            Confirm Assignment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    let currentStep = 1;
+    const totalSteps = 4;
+    let allLeads = [];
+    let lastGeneratedId = "";
+
+    const stepNames = [
+      "Personal Details",
+      "Loan Details",
+      "Income Profile",
+      "Referral Details"
+    ];
+
+    // On DOM load
+    document.addEventListener("DOMContentLoaded", () => {
+      // Set today's date for Referral Date
+      const todayIso = new Date().toISOString().split('T')[0];
+      if (document.getElementById("referralDate")) {
+        document.getElementById("referralDate").value = todayIso;
+      }
+
+      fetchNextId();
+      loadLeads();
+      handleChannelChange();
+      calculateLoanMetrics();
+      calculateFinancialRatios();
+      updateStepperUI();
+    });
+
+    // ==========================================
+    // Multi-Step Navigation & Validation
+    // ==========================================
+    function navigateStep(direction) {
+      if (direction === 1) {
+        if (!validateCurrentStep(currentStep)) {
+          return;
+        }
+      }
+
+      currentStep += direction;
+      if (currentStep < 1) currentStep = 1;
+      if (currentStep > totalSteps) currentStep = totalSteps;
+
+      updateStepperUI();
+
+      if (currentStep === 4) {
+        populateReviewSummary();
+      }
+
+      // Smooth scroll to top of card
+      document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function jumpToStep(stepNumber) {
+      if (stepNumber > currentStep) {
+        for (let i = currentStep; i < stepNumber; i++) {
+          if (!validateCurrentStep(i)) return;
+        }
+      }
+      currentStep = stepNumber;
+      updateStepperUI();
+      if (currentStep === 4) {
+        populateReviewSummary();
+      }
+    }
+
+    function updateStepperUI() {
+      for (let i = 1; i <= totalSteps; i++) {
+        const pane = document.getElementById(`stepPane${i}`);
+        if (pane) pane.classList.toggle('active', i === currentStep);
+
+        const bubble = document.getElementById(`stepBubble${i}`);
+        const item = bubble.parentElement;
+        item.classList.remove('active', 'completed');
+        if (i < currentStep) {
+          item.classList.add('completed');
+          bubble.innerHTML = `&#10003;`;
+        } else if (i === currentStep) {
+          item.classList.add('active');
+          bubble.textContent = i;
+        } else {
+          bubble.textContent = i;
+        }
+      }
+
+      const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+      document.getElementById('stepperProgressBar').style.width = `${progressPercent}%`;
+
+      document.getElementById('stepCounterBadge').textContent = `Step ${currentStep} of ${totalSteps}: ${stepNames[currentStep - 1]}`;
+
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const submitBtn = document.getElementById('submitBtn');
+
+      prevBtn.disabled = currentStep === 1;
+
+      if (currentStep === totalSteps) {
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'inline-flex';
+      } else {
+        nextBtn.style.display = 'inline-flex';
+        submitBtn.style.display = 'none';
+      }
+    }
+
+    function validateCurrentStep(step) {
+      hideAlerts();
+      const errors = [];
+
+      if (step === 1) {
+        // Section 1: Personal Details
+        const name = document.getElementById("customerName").value.trim();
+        if (!name) errors.push("Name of Customer is mandatory");
+
+        const dob = document.getElementById("dob").value;
+        if (!dob) {
+          errors.push("Date of Birth is mandatory");
+        } else {
+          const dobDate = new Date(dob);
+          const eighteenYearsAgo = new Date();
+          eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+          if (dobDate > new Date()) {
+            errors.push("Date of Birth cannot be in the future");
+          } else if (dobDate > eighteenYearsAgo) {
+            errors.push("Applicant must be at least 18 years of age");
+          }
+        }
+
+
+        const pan = document.getElementById("panNumber").value.trim().toUpperCase();
+        if (!pan) {
+          errors.push("PAN Card is mandatory");
+        } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+          errors.push("PAN Card must follow format: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)");
+        }
+
+        const aadhaar = document.getElementById("aadhaarNumber").value.trim().replace(/\s+/g, '');
+        if (!aadhaar) {
+          errors.push("Aadhaar Card is mandatory");
+        } else if (!/^\d{12}$/.test(aadhaar)) {
+          errors.push("Aadhaar Card must be a valid 12-digit number");
+        }
+      } else if (step === 2) {
+        // Section 2: Loan Details
+        const amount = parseFloat(document.getElementById("loanAmount").value);
+        if (isNaN(amount) || amount <= 0) {
+          errors.push("Loan Amount must be greater than zero");
+        }
+
+        const tenure = parseInt(document.getElementById("tenure").value);
+        if (isNaN(tenure) || tenure <= 0) {
+          errors.push("Tenure must be greater than zero");
+        }
+
+        const instalments = parseInt(document.getElementById("numberOfInstalments").value);
+        if (isNaN(instalments) || instalments <= 0) {
+          errors.push("Number of instalments must be greater than zero");
+        }
+      } else if (step === 3) {
+        // Section 3: Income Profile
+        const income = parseFloat(document.getElementById("annualIncome").value);
+        if (isNaN(income) || income < 0) {
+          errors.push("Annual Income must be a valid non-negative amount");
+        }
+
+        const designation = document.getElementById("designation").value.trim();
+        if (!designation) errors.push("Designation is mandatory");
+
+        const employer = document.getElementById("employerBusinessName").value.trim();
+        if (!employer) errors.push("Employer Name is mandatory");
+
+        const location = document.getElementById("location").value.trim();
+        if (!location) errors.push("Location is mandatory");
+
+        const bankAcc = document.getElementById("primaryBankAccount").value.trim();
+        if (!bankAcc || bankAcc.length < 9 || bankAcc.length > 18) {
+          errors.push("Account Number must be between 9 and 18 alphanumeric characters");
+        }
+      }
+
+      if (errors.length > 0) {
+        showErrors(errors);
+        return false;
+      }
+      return true;
+    }
+
+    // ==========================================
+    // Section 1 Helpers: Personal Details
+    // ==========================================
+    function validateDobAndCalculateAge(input) {
+      if (!input.value) return;
+      const dobDate = new Date(input.value);
+      const today = new Date();
+      let age = today.getFullYear() - dobDate.getFullYear();
+      const m = today.getMonth() - dobDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+        age--;
+      }
+
+      const ageInput = document.getElementById("age");
+      const dobHint = document.getElementById("dobHint");
+      if (age >= 0) {
+        ageInput.value = age;
+        if (age >= 18) {
+          dobHint.textContent = `Age: ${age} years (Eligible)`;
+          dobHint.style.color = "#34d399";
+        } else {
+          dobHint.textContent = `Age: ${age} years (Must be at least 18)`;
+          dobHint.style.color = "#f87171";
+        }
+      }
+    }
+
+    function calculateEditAge(input) {
+      if (!input.value) return;
+      const dobDate = new Date(input.value);
+      const today = new Date();
+      let age = today.getFullYear() - dobDate.getFullYear();
+      const m = today.getMonth() - dobDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+        age--;
+      }
+      if (age >= 0) document.getElementById("editAge").value = age;
+    }
+
+
+
+    function validatePanCard() {
+      const pan = document.getElementById("panNumber").value.trim().toUpperCase();
+      const badge = document.getElementById("panBadge");
+      const hint = document.getElementById("panHint");
+      const statusInput = document.getElementById("panValidationStatus");
+
+      if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+        badge.className = "badge badge-verified";
+        badge.textContent = "Validated ✓";
+        hint.textContent = "PAN verified successfully via NSDL / Income Tax Dept database";
+        hint.style.color = "#34d399";
+        statusInput.value = "VALIDATED";
+      } else {
+        badge.className = "badge badge-mandatory";
+        badge.textContent = "Invalid PAN";
+        hint.textContent = "Format must be 5 uppercase letters, 4 digits, 1 letter (e.g. ABCDE1234F)";
+        hint.style.color = "#f87171";
+        statusInput.value = "INVALID";
+      }
+    }
+
+    function resetPanValidation() {
+      const badge = document.getElementById("panBadge");
+      badge.className = "badge badge-optional";
+      badge.textContent = "Govt ID";
+      document.getElementById("panValidationStatus").value = "PENDING";
+    }
+
+    function validateAadhaarCard() {
+      const aadhaar = document.getElementById("aadhaarNumber").value.trim().replace(/\s+/g, '');
+      const badge = document.getElementById("aadhaarBadge");
+      const hint = document.getElementById("aadhaarHint");
+      const statusInput = document.getElementById("aadhaarValidationStatus");
+
+      if (/^\d{12}$/.test(aadhaar)) {
+        badge.className = "badge badge-verified";
+        badge.textContent = "Validated ✓";
+        hint.textContent = "Aadhaar UIDAI checksum verified successfully";
+        hint.style.color = "#34d399";
+        statusInput.value = "VALIDATED";
+      } else {
+        badge.className = "badge badge-mandatory";
+        badge.textContent = "Invalid Aadhaar";
+        hint.textContent = "Must be a valid 12-digit UIDAI number";
+        hint.style.color = "#f87171";
+        statusInput.value = "INVALID";
+      }
+    }
+
+    function resetAadhaarValidation() {
+      const badge = document.getElementById("aadhaarBadge");
+      badge.className = "badge badge-optional";
+      badge.textContent = "12 Digits";
+      document.getElementById("aadhaarValidationStatus").value = "PENDING";
+    }
+
+    function performDedupeCheck() {
+      const pan = document.getElementById("panNumber").value.trim().toUpperCase();
+      const aadhaar = document.getElementById("aadhaarNumber").value.trim();
+
+      const badge = document.getElementById("dedupeStatusBadge");
+      const desc = document.getElementById("dedupeDesc");
+      const statusInput = document.getElementById("dedupeStatus");
+
+      if (!pan && !aadhaar) {
+        alert("Please enter PAN Card or Aadhaar Card before running De-Duplicate Check.");
+        return;
+      }
+
+      // Check against current database leads
+      const duplicate = allLeads.find(l => 
+        (pan && l.panNumber && l.panNumber.toUpperCase() === pan) ||
+        (aadhaar && l.aadhaarNumber === aadhaar)
+      );
+
+      if (duplicate) {
+        badge.className = "badge badge-mandatory";
+        badge.textContent = `Duplicate: ${duplicate.leadId}`;
+        desc.textContent = `Match found with existing Lead ${duplicate.leadId} (${duplicate.firstNameBusinessName || 'Lead'})`;
+        desc.style.color = "#f87171";
+        statusInput.value = "DUPLICATE_FOUND";
+      } else {
+        badge.className = "badge badge-verified";
+        badge.textContent = "Passed ✓";
+        desc.textContent = "No existing records found for PAN or Aadhaar across database";
+        desc.style.color = "#34d399";
+        statusInput.value = "PASSED";
+      }
+    }
+
+    function performBlacklistCheck() {
+      const name = document.getElementById("customerName").value.trim();
+      const pan = document.getElementById("panNumber").value.trim().toUpperCase();
+
+      const badge = document.getElementById("blacklistStatusBadge");
+      const desc = document.getElementById("blacklistDesc");
+      const statusInput = document.getElementById("blacklistStatus");
+
+      // Simulated AML / Negative watchlist check
+      badge.className = "badge badge-verified";
+      badge.textContent = "Clean / Passed ✓";
+      desc.textContent = `Clean record: No adverse RBI, AML, or judicial entries for ${name || 'Applicant'} (${pan || 'ID'})`;
+      desc.style.color = "#34d399";
+      statusInput.value = "CLEARED";
+    }
+
+    // ==========================================
+    // Section 2 Helpers: Loan Details
+    // ==========================================
+    function calculateLoanMetrics() {
+      const amount = parseFloat(document.getElementById("loanAmount").value) || 0;
+      const tenure = parseInt(document.getElementById("tenure").value) || 240;
+      const product = document.getElementById("loanProductType").value;
+
+      let annualRate = 8.5; // Default Home Loan
+      if (product.includes("Personal")) annualRate = 11.5;
+      else if (product.includes("Home")) annualRate = 8.5;
+      else if (product.includes("Auto")) annualRate = 9.0;
+      else if (product.includes("Business")) annualRate = 13.0;
+      else if (product.includes("Education")) annualRate = 9.5;
+      else if (product.includes("Property")) annualRate = 10.0;
+
+      let emi = 0;
+      if (amount > 0 && tenure > 0) {
+        const monthlyRate = annualRate / 12 / 100;
+        emi = (amount * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / (Math.pow(1 + monthlyRate, tenure) - 1);
+      }
+
+      const totalRepay = emi * tenure;
+      const totalInterest = Math.max(0, totalRepay - amount);
+
+      const roundedEmi = Math.round(emi);
+      document.getElementById("emi").value = roundedEmi;
+      if (document.getElementById("interestRate")) document.getElementById("interestRate").value = annualRate;
+      if (document.getElementById("totalInterest")) document.getElementById("totalInterest").value = Math.round(totalInterest);
+      document.getElementById("calcEmiDisplay").textContent = `₹ ${roundedEmi.toLocaleString('en-IN')}`;
+      document.getElementById("calcInterestDisplay").textContent = `₹ ${Math.round(totalInterest).toLocaleString('en-IN')}`;
+      document.getElementById("calcTotalDisplay").textContent = `₹ ${Math.round(totalRepay).toLocaleString('en-IN')}`;
+
+      // Update Section 3 ratios
+      calculateFinancialRatios();
+    }
+
+    function calculateEditEmi() {
+      const amount = parseFloat(document.getElementById("editLoanAmount").value) || 0;
+      const tenure = parseInt(document.getElementById("editTenure").value) || 36;
+      const product = document.getElementById("editLoanProductType").value;
+
+      let annualRate = 10.5;
+      if (product.includes("Personal")) annualRate = 11.5;
+      else if (product.includes("Home")) annualRate = 8.5;
+      else if (product.includes("Auto")) annualRate = 9.0;
+      else if (product.includes("Business")) annualRate = 13.0;
+
+      let emi = 0;
+      if (amount > 0 && tenure > 0) {
+        const monthlyRate = annualRate / 12 / 100;
+        emi = (amount * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / (Math.pow(1 + monthlyRate, tenure) - 1);
+      }
+      const totalRepay = emi * tenure;
+      const totalInterest = Math.max(0, totalRepay - amount);
+      document.getElementById("editEmi").value = Math.round(emi);
+      document.getElementById("editNumberOfInstalments").value = tenure;
+      if (document.getElementById("editInterestRate")) document.getElementById("editInterestRate").value = annualRate;
+      if (document.getElementById("editTotalInterest")) document.getElementById("editTotalInterest").value = Math.round(totalInterest);
+    }
+
+    function handleTenureChange() {
+      const tenure = document.getElementById("tenure").value;
+      document.getElementById("numberOfInstalments").value = tenure;
+      calculateLoanMetrics();
+    }
+
+    function setLoanAmount(val) {
+      document.getElementById("loanAmount").value = val;
+      calculateLoanMetrics();
+    }
+
+    // ==========================================
+    // Section 3 Helpers: Income Profile & Ratios
+    // ==========================================
+    function handleAnnualIncomeInput(input) {
+      const val = parseFloat(input.value) || 0;
+      const preview = document.getElementById("incomePreview");
+      preview.textContent = `₹ ${val.toLocaleString('en-IN')} per annum`;
+
+      // Auto-suggest take home pay if empty or standard ratio (~75%)
+      const monthlyGross = val / 12;
+      const takeHomeInput = document.getElementById("takeHomePay");
+      if (!takeHomeInput.value || parseFloat(takeHomeInput.value) === 0) {
+        takeHomeInput.value = Math.round(monthlyGross * 0.75);
+      }
+      calculateFinancialRatios();
+    }
+
+    function setIncome(val) {
+      document.getElementById("annualIncome").value = val;
+      handleAnnualIncomeInput(document.getElementById("annualIncome"));
+    }
+
+    function calculateFinancialRatios() {
+      const annualIncome = parseFloat(document.getElementById("annualIncome") ? document.getElementById("annualIncome").value : 0) || 1200000;
+      const monthlyGross = annualIncome / 12;
+      const takeHome = parseFloat(document.getElementById("takeHomePay") ? document.getElementById("takeHomePay").value : 0) || (monthlyGross * 0.75);
+      const existingDeductions = parseFloat(document.getElementById("deductionsOrEmisPayable") ? document.getElementById("deductionsOrEmisPayable").value : 0) || 0;
+      const emi = parseFloat(document.getElementById("emi") ? document.getElementById("emi").value : 0) || 0;
+      const loanAmount = parseFloat(document.getElementById("loanAmount") ? document.getElementById("loanAmount").value : 0) || 0;
+
+      // 1. DTI (Debt-to-Income): (Total Monthly Liabilities + New EMI) / Monthly Income
+      const totalMonthlyLiabilities = existingDeductions + emi;
+      const dti = monthlyGross > 0 ? (totalMonthlyLiabilities / monthlyGross) * 100 : 0;
+      const dtiRounded = Math.round(dti * 10) / 10;
+      document.getElementById("dtiDisplay").textContent = `${dtiRounded}%`;
+      document.getElementById("debtToIncomeRatio").value = dtiRounded;
+
+      const dtiBadge = document.getElementById("dtiBadge");
+      if (dtiRounded <= 40) {
+        dtiBadge.className = "badge badge-success";
+        dtiBadge.textContent = "Healthy";
+      } else if (dtiRounded <= 50) {
+        dtiBadge.className = "badge badge-warning";
+        dtiBadge.textContent = "Moderate";
+      } else {
+        dtiBadge.className = "badge badge-mandatory";
+        dtiBadge.textContent = "High Risk";
+      }
+
+      // 2. LTV (Loan-to-Value)
+      document.getElementById("ltvDisplay").textContent = "N/A";
+      document.getElementById("ltvBadge").textContent = "Unsecured";
+      document.getElementById("ltvBadge").className = "badge badge-optional";
+      document.getElementById("loanToValueRatio").value = 0.0;
+
+      // 3. DSCR (Debt Service Coverage Ratio): Net monthly cashflow / Debt Service
+      let dscrRounded = 2.5;
+      if (totalMonthlyLiabilities > 0) {
+        const dscr = monthlyGross / totalMonthlyLiabilities;
+        dscrRounded = Math.round(dscr * 10) / 10;
+      }
+      document.getElementById("dscrDisplay").textContent = `${dscrRounded}x`;
+      document.getElementById("debtServiceCoverageRatio").value = dscrRounded;
+
+      const dscrBadge = document.getElementById("dscrBadge");
+      if (dscrRounded >= 1.7) {
+        dscrBadge.className = "badge badge-success";
+        dscrBadge.textContent = "Strong";
+      } else if (dscrRounded >= 1.2) {
+        dscrBadge.className = "badge badge-warning";
+        dscrBadge.textContent = "Adequate";
+      } else {
+        dscrBadge.className = "badge badge-mandatory";
+        dscrBadge.textContent = "Tight";
+      }
+
+      // 4. NDI (Net Disposable Income): Take Home Pay - Existing Deductions - New EMI
+      const ndi = Math.round(takeHome - totalMonthlyLiabilities);
+      document.getElementById("ndiDisplay").textContent = `₹ ${ndi.toLocaleString('en-IN')}`;
+      document.getElementById("netDisposableIncome").value = ndi;
+
+      const ndiBadge = document.getElementById("ndiBadge");
+      if (ndi > 20000) {
+        ndiBadge.className = "badge badge-success";
+        ndiBadge.textContent = "Surplus";
+      } else if (ndi > 5000) {
+        ndiBadge.className = "badge badge-warning";
+        ndiBadge.textContent = "Moderate";
+      } else {
+        ndiBadge.className = "badge badge-mandatory";
+        ndiBadge.textContent = "Deficit";
+      }
+    }
+
+    function performCibilCheck() {
+      const name = document.getElementById("customerName").value.trim();
+      const pan = document.getElementById("panNumber").value.trim().toUpperCase();
+
+      const badge = document.getElementById("cibilScoreBadge");
+      const desc = document.getElementById("cibilDesc");
+      const input = document.getElementById("cibilLiabilityCheck");
+
+      badge.className = "badge badge-verified";
+      badge.textContent = "785 - Excellent";
+      desc.textContent = `CIBIL Report Verified: Score 785, 0 Delinquencies, 100% on-time repayment history for ${pan || name || 'Applicant'}`;
+      desc.style.color = "#34d399";
+      input.value = "785 - Excellent / 0 Overdue";
+    }
+
+    // ==========================================
+    // Section 4 Helpers: Referral Details
+    // ==========================================
+    function handleChannelChange() {
+      const channel = document.getElementById("sourcingChannel").value;
+      const lspAsterisk = document.getElementById("lspAsterisk");
+      const lspBadge = document.getElementById("lspBadge");
+      const lspHint = document.getElementById("lspHint");
+      const lspInput = document.getElementById("lspPartnerCode");
+
+      if (channel === "Branch" || channel === "Branch Office") {
+        lspAsterisk.style.display = "inline";
+        lspBadge.className = "badge badge-mandatory";
+        lspBadge.textContent = "Mandatory for Branch";
+        lspHint.textContent = "Required when Channel is 'Branch Office'";
+        lspInput.setAttribute("required", "required");
+      } else {
+        lspAsterisk.style.display = "none";
+        lspBadge.className = "badge badge-optional";
+        lspBadge.textContent = "Optional";
+        lspHint.textContent = `Optional when Channel is '${channel}'`;
+        lspInput.removeAttribute("required");
+      }
+    }
+
+    function populateReviewSummary() {
+      // 1. Personal Details
+      document.getElementById("revName").textContent = document.getElementById("customerName").value.trim() || "-";
+      const dobVal = document.getElementById("dob").value || "-";
+      const ageVal = document.getElementById("age").value || "-";
+      document.getElementById("revDobAge").textContent = `${dobVal} (Age: ${ageVal})`;
+      document.getElementById("revCustomerType").textContent = document.getElementById("customerType").value;
+      const expDate = document.getElementById("passportExpiryDate").value || "-";
+      document.getElementById("revPassportExpiry").textContent = expDate;
+      document.getElementById("revKyc").textContent = `${document.getElementById("panNumber").value || '-'} / ${document.getElementById("aadhaarNumber").value || '-'}`;
+      document.getElementById("revRisk").textContent = `Dedupe: ${document.getElementById("dedupeStatus").value} | AML: ${document.getElementById("blacklistStatus").value}`;
+
+      // 2. Loan Details
+      document.getElementById("revProduct").textContent = document.getElementById("loanProductType").value;
+      const loanAmt = parseFloat(document.getElementById("loanAmount").value || 0);
+      document.getElementById("revAmount").textContent = `₹ ${loanAmt.toLocaleString('en-IN')}`;
+      const tenure = document.getElementById("tenure").value;
+      const emiText = document.getElementById("calcEmiDisplay").textContent;
+      document.getElementById("revTenureEmi").textContent = `${tenure} Mos (${emiText}/mo)`;
+      const rateVal = document.getElementById("interestRate").value || "-";
+      const intVal = parseFloat(document.getElementById("totalInterest").value || 0);
+      document.getElementById("revInterest").textContent = `${rateVal}% (₹ ${intVal.toLocaleString('en-IN')})`;
+      const secVal = parseFloat(document.getElementById("securityAmount").value || 0);
+      document.getElementById("revSecurity").textContent = secVal > 0 ? `₹ ${secVal.toLocaleString('en-IN')}` : "None";
+
+      // 3. Income Profile
+      document.getElementById("revEmp").textContent = document.getElementById("employmentType").value;
+      document.getElementById("revEmployer").textContent = `${document.getElementById("employerBusinessName").value || '-'} (${document.getElementById("location").value || '-'})`;
+      const annualInc = parseFloat(document.getElementById("annualIncome").value || 0);
+      const takeHome = parseFloat(document.getElementById("takeHomePay").value || 0);
+      document.getElementById("revIncomePay").textContent = `₹ ${(annualInc/100000).toFixed(1)}L/yr (₹ ${takeHome.toLocaleString('en-IN')}/mo)`;
+      document.getElementById("revBank").textContent = `${document.getElementById("bankName").value} - ${document.getElementById("primaryBankAccount").value || '-'}`;
+      const dti = document.getElementById("dtiDisplay").textContent;
+      const ltv = document.getElementById("ltvDisplay").textContent;
+      const dscr = document.getElementById("dscrDisplay").textContent;
+      document.getElementById("revRatios").textContent = `DTI: ${dti} | LTV: ${ltv} | DSCR: ${dscr}`;
+
+      // 4. Referral Details
+      document.getElementById("revChannel").textContent = document.getElementById("sourcingChannel").value;
+      document.getElementById("revDate").textContent = document.getElementById("referralDate").value || "-";
+      document.getElementById("revAgent").textContent = `${document.getElementById("agentPartnerName").value || '-'} (${document.getElementById("lspPartnerCode").value || 'No Partner'})`;
+      document.getElementById("revEmpRef").textContent = `${document.getElementById("sourcingEmployeeName").value || '-'} (${document.getElementById("sourcingEmployeeId").value || '-'})`;
+    }
+
+    // ==========================================
+    // Unified Lead Submission (POST /api/leads)
+    // ==========================================
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      hideAlerts();
+
+      // Final validation across all steps
+      for (let s = 1; s <= totalSteps; s++) {
+        if (!validateCurrentStep(s)) {
+          jumpToStep(s);
+          return;
+        }
+      }
+
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Saving Complete Lead...</span>`;
+
+      // Build unified 4-section payload
+      const payload = {
+        // Section 1: Personal Details
+        customerName: document.getElementById("customerName").value.trim(),
+        firstNameBusinessName: document.getElementById("customerName").value.trim(),
+        lastName: document.getElementById("lastName") ? document.getElementById("lastName").value.trim() : null,
+        dateOfBirth: document.getElementById("dob").value || null,
+        dob: document.getElementById("dob").value || null,
+        age: parseInt(document.getElementById("age").value) || null,
+        customerType: document.getElementById("customerType").value,
+        userCategory: document.getElementById("customerType").value,
+        panNumber: document.getElementById("panNumber").value.trim().toUpperCase() || null,
+        panValidationStatus: document.getElementById("panValidationStatus").value || "PENDING",
+        aadhaarNumber: document.getElementById("aadhaarNumber").value.trim() || null,
+        aadhaarValidationStatus: document.getElementById("aadhaarValidationStatus").value || "PENDING",
+        residentialStatus: document.getElementById("residentialStatus").value,
+        gender: document.getElementById("gender").value,
+        maritalStatus: document.getElementById("maritalStatus").value,
+        passportNumber: document.getElementById("passportNumber").value.trim().toUpperCase() || null,
+        passportExpiryDate: document.getElementById("passportExpiryDate").value || null,
+        dedupeStatus: document.getElementById("dedupeStatus").value || "PASSED",
+        blacklistStatus: document.getElementById("blacklistStatus").value || "CLEARED",
+        emailAddress: document.getElementById("emailAddress") ? document.getElementById("emailAddress").value.trim() : null,
+        pinCode: document.getElementById("pinCode") ? document.getElementById("pinCode").value.trim() : null,
+        numberOfDependents: parseInt(document.getElementById("numberOfDependents").value) || 0,
+
+        // Section 2: Loan Details
+        loanProductType: document.getElementById("loanProductType").value,
+        loanAmount: parseFloat(document.getElementById("loanAmount").value) || null,
+        purposeOfLoan: document.getElementById("purposeOfLoan").value,
+        tenure: parseInt(document.getElementById("tenure").value) || null,
+        numberOfInstalments: parseInt(document.getElementById("numberOfInstalments").value) || null,
+        emi: parseFloat(document.getElementById("emi").value) || null,
+        interestRate: parseFloat(document.getElementById("interestRate").value) || null,
+        totalInterest: parseFloat(document.getElementById("totalInterest").value) || null,
+        securityAmount: parseFloat(document.getElementById("securityAmount").value) || null,
+
+        // Section 3: Income Profile
+        employmentType: document.getElementById("employmentType").value,
+        annualIncome: parseFloat(document.getElementById("annualIncome").value) || null,
+        designation: document.getElementById("designation").value.trim() || null,
+        employerName: document.getElementById("employerBusinessName").value.trim() || null,
+        employerBusinessName: document.getElementById("employerBusinessName").value.trim() || null,
+        location: document.getElementById("location").value.trim() || null,
+        state: document.getElementById("state").value || null,
+        takeHomePay: parseFloat(document.getElementById("takeHomePay").value) || null,
+        deductionsOrEmisPayable: parseFloat(document.getElementById("deductionsOrEmisPayable").value) || null,
+        bankName: document.getElementById("bankName").value,
+        accountNumber: document.getElementById("primaryBankAccount").value.trim() || null,
+        primaryBankAccount: document.getElementById("primaryBankAccount").value.trim() || null,
+        accountStatementConsent: document.getElementById("accountStatementConsent").checked,
+        cibilLiabilityCheck: document.getElementById("cibilLiabilityCheck").value || "780 - Clear",
+        debtToIncomeRatio: parseFloat(document.getElementById("debtToIncomeRatio").value) || null,
+        loanToValueRatio: parseFloat(document.getElementById("loanToValueRatio").value) || null,
+        debtServiceCoverageRatio: parseFloat(document.getElementById("debtServiceCoverageRatio").value) || null,
+        netDisposableIncome: parseFloat(document.getElementById("netDisposableIncome").value) || null,
+
+        // Section 4: Referral Details
+        leadAcquisitionChannel: document.getElementById("sourcingChannel").value,
+        date: document.getElementById("referralDate").value || null,
+        sourcingAgentPartnerId: document.getElementById("lspPartnerCode").value.trim() || null,
+        agentPartnerName: document.getElementById("agentPartnerName").value.trim() || null,
+        employeeId: document.getElementById("sourcingEmployeeId").value.trim() || null,
+        employeeName: document.getElementById("sourcingEmployeeName").value.trim() || null,
+        // Legacy aliases
+        sourcingChannel: document.getElementById("sourcingChannel").value,
+        referralDate: document.getElementById("referralDate").value || null,
+        lspPartnerCode: document.getElementById("lspPartnerCode").value.trim() || null,
+        sourcingEmployeeId: document.getElementById("sourcingEmployeeId").value.trim() || null,
+        sourcingEmployeeName: document.getElementById("sourcingEmployeeName").value.trim() || null,
+
+        // System identifier (auto-generated if omitted)
+        leadId: document.getElementById("leadId").value.trim() || null
+      };
+
+      try {
+        const response = await fetch("/api/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showErrors(data.errors || [data.message || "Failed to create lead"]);
+        } else {
+          lastGeneratedId = data.leadId;
+          showSuccess(data);
+          loadLeads();
+          fetchNextId();
+        }
+      } catch (err) {
+        showErrors(["Network error or server unavailable: " + err.message]);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Submit Complete Lead Application</span>`;
+      }
+    }
+
+    function showSuccess(lead) {
+      const alertBox = document.getElementById("successAlert");
+      const details = document.getElementById("successDetails");
+      const idDisplay = document.getElementById("successLeadIdDisplay");
+
+      idDisplay.textContent = lead.leadId;
+      details.innerHTML = `
+        <strong>${escapeHtml(lead.firstNameBusinessName || lead.customerName || '')}</strong> &bull;
+        ${escapeHtml(lead.loanProductType || 'Loan')} of <strong>₹${(lead.loanAmount || 0).toLocaleString('en-IN')}</strong> (EMI: ₹${(lead.emi || 0).toLocaleString('en-IN')}) &bull;
+        Channel: ${escapeHtml(lead.sourcingChannel || '')} &bull;
+        Status: <span class="badge badge-new">${escapeHtml(lead.leadStatus || 'NEW')}</span>
+      `;
+      alertBox.style.display = "block";
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function showErrors(errors) {
+      const alertBox = document.getElementById("errorAlert");
+      const list = document.getElementById("errorList");
+      list.innerHTML = errors.map(err => `<li>${escapeHtml(err)}</li>`).join('');
+      alertBox.style.display = "block";
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideAlerts() {
+      document.getElementById("errorAlert").style.display = "none";
+      document.getElementById("successAlert").style.display = "none";
+    }
+
+    function resetFormToStart() {
+      document.getElementById("leadForm").reset();
+      currentStep = 1;
+      updateStepperUI();
+      hideAlerts();
+      calculateLoanMetrics();
+      calculateFinancialRatios();
+      document.getElementById("dobHint").textContent = "Format: YYYY-MM-DD";
+      document.getElementById("dobHint").style.color = "var(--text-subtle)";
+      resetPanValidation();
+      resetAadhaarValidation();
+      document.getElementById("referralDate").value = new Date().toISOString().split('T')[0];
+      fetchNextId();
+    }
+
+    function copyLeadId() {
+      if (lastGeneratedId) {
+        navigator.clipboard.writeText(lastGeneratedId);
+        alert(`Lead ID ${lastGeneratedId} copied to clipboard!`);
+      }
+    }
+
+    // ==========================================
+    // Server Calls & Lead Table Rendering
+    // ==========================================
+    async function fetchNextId() {
+      try {
+        const res = await fetch("/api/leads/next-id");
+        if (res.ok) {
+          const nextId = await res.text();
+          document.getElementById("leadId").placeholder = `Auto: ${nextId}`;
+        }
+      } catch (err) {
+        console.error("Could not fetch next ID", err);
+      }
+    }
+
+    async function loadLeads() {
+      try {
+        const res = await fetch("/api/leads");
+        if (res.ok) {
+          allLeads = await res.json();
+          renderLeads(allLeads);
+        }
+      } catch (err) {
+        console.error("Error loading leads:", err);
+      }
+    }
+
+    function renderLeads(leads) {
+      const tbody = document.getElementById("leadsTableBody");
+      if (!leads || leads.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-subtle); padding: 2rem;">No leads found in database.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = leads.map(l => {
+        const isAssigned = l.leadStatus === 'ASSIGNED';
+        const statusBadgeClass = isAssigned ? 'badge-assigned' : 'badge-new';
+        const assignedTag = l.assignedEmployeeId
+          ? `<div><span class="assigned-emp-tag">${escapeHtml(l.assignedEmployeeId)}</span></div>${l.assignedBy ? `<div style="font-size:0.7rem; color:var(--text-subtle); margin-top:2px;">by <strong style="color:#a5b4fc;">${escapeHtml(l.assignedBy)}</strong></div>` : ''}`
+          : `<span style="color: var(--text-subtle); font-size: 0.75rem;">Unassigned</span>`;
+
+        const loanDisplay = l.loanAmount
+          ? `<strong>₹${l.loanAmount.toLocaleString('en-IN')}</strong><div style="font-size:0.72rem; color:#38bdf8;">${escapeHtml(l.loanProductType || 'Loan')} &bull; EMI: ₹${(l.emi || 0).toLocaleString('en-IN')}</div>`
+          : `<span style="color: var(--text-subtle);">-</span>`;
+
+        const incomeDisplay = l.annualIncome
+          ? `<div>₹${(l.annualIncome / 100000).toFixed(1)}L/yr</div><div style="font-size:0.72rem; color:var(--text-subtle);">${escapeHtml(l.bankName || 'Bank')} &bull; DTI: ${l.debtToIncomeRatio || 0}%</div>`
+          : `<span style="color: var(--text-subtle);">-</span>`;
+
+        const referralDisplay = `
+          <div><strong>${escapeHtml(l.leadAcquisitionChannel || l.sourcingChannel || '')}</strong></div>
+          <div style="font-size:0.72rem; color:var(--text-subtle);">${escapeHtml(l.date || l.referralDate || '')} ${(l.employeeId || l.sourcingEmployeeId) ? `&bull; ${escapeHtml(l.employeeId || l.sourcingEmployeeId)}` : ''}</div>
+        `;
+
+        return `
+        <tr>
+          <td><span class="lead-id-code">${escapeHtml(l.leadId || '')}</span></td>
+          <td>
+            <strong>${escapeHtml(l.firstNameBusinessName || l.customerName || '')}</strong>
+            <div style="font-size: 0.72rem; color: var(--text-subtle);">${escapeHtml(l.customerType || l.userCategory || 'Individual')} &bull; Age: ${l.age || '-'} &bull; PAN: ${escapeHtml(l.panNumber || '-')}</div>
+          </td>
+          <td>${loanDisplay}</td>
+          <td>${incomeDisplay}</td>
+          <td>${referralDisplay}</td>
+          <td>
+            <span class="badge ${statusBadgeClass}">${escapeHtml(l.leadStatus || 'NEW')}</span>
+            <div style="margin-top: 4px;">${assignedTag}</div>
+          </td>
+          <td>
+            <div style="display:flex; gap:0.4rem;">
+              <button type="button" class="btn-action btn-action-edit" onclick="openEditModal('${escapeHtml(l.leadId || '')}')" title="Edit Lead Details">Edit</button>
+              <button type="button" class="btn-action btn-action-assign" onclick="openAssignModal('${escapeHtml(l.leadId || '')}')" title="Assign Lead to Maker">Assign</button>
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+    }
+
+    function filterLeads() {
+      const q = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = allLeads.filter(l => 
+        (l.leadId && l.leadId.toLowerCase().includes(q)) ||
+        (l.firstNameBusinessName && l.firstNameBusinessName.toLowerCase().includes(q)) ||
+        (l.passportNumber && l.passportNumber.toLowerCase().includes(q)) ||
+        (l.panNumber && l.panNumber.toLowerCase().includes(q)) ||
+        (l.loanProductType && l.loanProductType.toLowerCase().includes(q)) ||
+        (l.sourcingChannel && l.sourcingChannel.toLowerCase().includes(q)) ||
+        (l.leadStatus && l.leadStatus.toLowerCase().includes(q)) ||
+        (l.assignedEmployeeId && l.assignedEmployeeId.toLowerCase().includes(q)) ||
+        (l.location && l.location.toLowerCase().includes(q)) ||
+        (l.sourcingEmployeeId && l.sourcingEmployeeId.toLowerCase().includes(q))
+      );
+      renderLeads(filtered);
+    }
+
+    // ==========================================
+    // Edit Modal (PUT /api/leads/{id}) - 4 Sections
+    // ==========================================
+    let currentEditLeadId = null;
+
+    function openEditModal(leadId) {
+      const lead = allLeads.find(l => l.leadId === leadId);
+      if (!lead) return;
+
+      currentEditLeadId = leadId;
+      document.getElementById("editLeadIdDisplay").textContent = lead.leadId;
+      
+      const badge = document.getElementById("editStatusBadge");
+      badge.textContent = lead.leadStatus || "NEW";
+      badge.className = `badge ${lead.leadStatus === 'ASSIGNED' ? 'badge-assigned' : 'badge-new'}`;
+
+      document.getElementById("editAssignedDisplay").textContent = lead.assignedEmployeeId || "Unassigned";
+
+      // 1. Personal Details
+      document.getElementById("editCustomerName").value = lead.firstNameBusinessName || lead.customerName || "";
+      document.getElementById("editDob").value = lead.dob || lead.dateOfBirth || "";
+      document.getElementById("editAge").value = lead.age != null ? lead.age : "";
+      document.getElementById("editCustomerType").value = lead.customerType || lead.userCategory || "Individual";
+      document.getElementById("editPanNumber").value = lead.panNumber || "";
+      document.getElementById("editAadhaarNumber").value = lead.aadhaarNumber || "";
+      document.getElementById("editResidentialStatus").value = lead.residentialStatus || "Resident Indian";
+      document.getElementById("editGender").value = lead.gender || "Male";
+      document.getElementById("editMaritalStatus").value = lead.maritalStatus || "Single";
+      document.getElementById("editPassportNumber").value = lead.passportNumber || "";
+      document.getElementById("editPassportExpiryDate").value = lead.passportExpiryDate || "";
+
+      // 2. Loan Details
+      document.getElementById("editLoanProductType").value = lead.loanProductType || "Home Loan";
+      document.getElementById("editLoanAmount").value = lead.loanAmount != null ? lead.loanAmount : "";
+      document.getElementById("editPurposeOfLoan").value = lead.purposeOfLoan || "";
+      document.getElementById("editTenure").value = lead.tenure != null ? lead.tenure : 240;
+      document.getElementById("editNumberOfInstalments").value = lead.numberOfInstalments != null ? lead.numberOfInstalments : 240;
+      document.getElementById("editEmi").value = lead.emi != null ? lead.emi : "";
+      document.getElementById("editInterestRate").value = lead.interestRate != null ? lead.interestRate : "";
+      document.getElementById("editTotalInterest").value = lead.totalInterest != null ? lead.totalInterest : "";
+      document.getElementById("editSecurityAmount").value = lead.securityAmount != null ? lead.securityAmount : "";
+
+      // 3. Income Profile
+      document.getElementById("editEmploymentType").value = lead.employmentType || "Salaried";
+      document.getElementById("editAnnualIncome").value = lead.annualIncome != null ? lead.annualIncome : "";
+      document.getElementById("editDesignation").value = lead.designation || "";
+      document.getElementById("editEmployerBusinessName").value = lead.employerBusinessName || lead.employerName || "";
+      document.getElementById("editLocation").value = lead.location || "";
+      document.getElementById("editState").value = lead.state || "Maharashtra";
+      document.getElementById("editTakeHomePay").value = lead.takeHomePay != null ? lead.takeHomePay : "";
+      document.getElementById("editDeductionsOrEmisPayable").value = lead.deductionsOrEmisPayable != null ? lead.deductionsOrEmisPayable : "";
+      document.getElementById("editBankName").value = lead.bankName || "HDFC Bank";
+      document.getElementById("editPrimaryBankAccount").value = lead.primaryBankAccount || lead.accountNumber || "";
+
+      // 4. Referral Details
+      document.getElementById("editSourcingChannel").value = lead.leadAcquisitionChannel || lead.sourcingChannel || "Branch Office";
+      document.getElementById("editReferralDate").value = lead.date || lead.referralDate || "";
+      document.getElementById("editLspPartnerCode").value = lead.sourcingAgentPartnerId || lead.lspPartnerCode || "";
+      document.getElementById("editAgentPartnerName").value = lead.agentPartnerName || "";
+      document.getElementById("editSourcingEmployeeId").value = lead.employeeId || lead.sourcingEmployeeId || "";
+      document.getElementById("editSourcingEmployeeName").value = lead.employeeName || lead.sourcingEmployeeName || "";
+
+      document.getElementById("editErrorAlert").style.display = "none";
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function closeEditModal() {
+      document.getElementById("editModal").style.display = "none";
+      currentEditLeadId = null;
+    }
+
+    async function handleEditSubmit(e) {
+      e.preventDefault();
+      if (!currentEditLeadId) return;
+
+      const saveBtn = document.getElementById("saveEditBtn");
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = "<span>Saving All Changes...</span>";
+
+      const payload = {
+        // Section 1: Personal Details
+        customerName: document.getElementById("editCustomerName").value.trim(),
+        firstNameBusinessName: document.getElementById("editCustomerName").value.trim(),
+        dateOfBirth: document.getElementById("editDob").value || null,
+        dob: document.getElementById("editDob").value || null,
+        age: parseInt(document.getElementById("editAge").value) || null,
+        customerType: document.getElementById("editCustomerType").value,
+        userCategory: document.getElementById("editCustomerType").value,
+        panNumber: document.getElementById("editPanNumber").value.trim().toUpperCase() || null,
+        aadhaarNumber: document.getElementById("editAadhaarNumber").value.trim() || null,
+        residentialStatus: document.getElementById("editResidentialStatus").value,
+        gender: document.getElementById("editGender").value,
+        maritalStatus: document.getElementById("editMaritalStatus").value,
+        passportNumber: document.getElementById("editPassportNumber").value.trim().toUpperCase() || null,
+        passportExpiryDate: document.getElementById("editPassportExpiryDate").value || null,
+
+        // Section 2: Loan Details
+        loanProductType: document.getElementById("editLoanProductType").value,
+        loanAmount: parseFloat(document.getElementById("editLoanAmount").value) || null,
+        purposeOfLoan: document.getElementById("editPurposeOfLoan").value,
+        tenure: parseInt(document.getElementById("editTenure").value) || null,
+        numberOfInstalments: parseInt(document.getElementById("editNumberOfInstalments").value) || null,
+        emi: parseFloat(document.getElementById("editEmi").value) || null,
+        interestRate: parseFloat(document.getElementById("editInterestRate").value) || null,
+        totalInterest: parseFloat(document.getElementById("editTotalInterest").value) || null,
+        securityAmount: parseFloat(document.getElementById("editSecurityAmount").value) || null,
+
+        // Section 3: Income Profile
+        employmentType: document.getElementById("editEmploymentType").value,
+        annualIncome: parseFloat(document.getElementById("editAnnualIncome").value) || null,
+        designation: document.getElementById("editDesignation").value.trim() || null,
+        employerName: document.getElementById("editEmployerBusinessName").value.trim() || null,
+        employerBusinessName: document.getElementById("editEmployerBusinessName").value.trim() || null,
+        location: document.getElementById("editLocation").value.trim() || null,
+        state: document.getElementById("editState").value || null,
+        takeHomePay: parseFloat(document.getElementById("editTakeHomePay").value) || null,
+        deductionsOrEmisPayable: parseFloat(document.getElementById("editDeductionsOrEmisPayable").value) || null,
+        bankName: document.getElementById("editBankName").value,
+        accountNumber: document.getElementById("editPrimaryBankAccount").value.trim() || null,
+        primaryBankAccount: document.getElementById("editPrimaryBankAccount").value.trim() || null,
+
+        // Section 4: Referral Details
+        leadAcquisitionChannel: document.getElementById("editSourcingChannel").value,
+        date: document.getElementById("editReferralDate").value || null,
+        sourcingAgentPartnerId: document.getElementById("editLspPartnerCode").value.trim() || null,
+        agentPartnerName: document.getElementById("editAgentPartnerName").value.trim() || null,
+        employeeId: document.getElementById("editSourcingEmployeeId").value.trim() || null,
+        employeeName: document.getElementById("editSourcingEmployeeName").value.trim() || null,
+        // Legacy aliases
+        sourcingChannel: document.getElementById("editSourcingChannel").value,
+        referralDate: document.getElementById("editReferralDate").value || null,
+        lspPartnerCode: document.getElementById("editLspPartnerCode").value.trim() || null,
+        sourcingEmployeeId: document.getElementById("editSourcingEmployeeId").value.trim() || null,
+        sourcingEmployeeName: document.getElementById("editSourcingEmployeeName").value.trim() || null
+      };
+
+      try {
+        const response = await fetch(`/api/leads/${encodeURIComponent(currentEditLeadId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          const errList = document.getElementById("editErrorList");
+          const errors = data.errors || [data.message || "Failed to update lead"];
+          errList.innerHTML = errors.map(err => `<li>${escapeHtml(err)}</li>`).join('');
+          document.getElementById("editErrorAlert").style.display = "block";
+          document.getElementById("editErrorAlert").scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          closeEditModal();
+          showSuccess(data);
+          loadLeads();
+        }
+      } catch (err) {
+        const errList = document.getElementById("editErrorList");
+        errList.innerHTML = `<li>Network error: ${escapeHtml(err.message)}</li>`;
+        document.getElementById("editErrorAlert").style.display = "block";
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = "<span>Save All Changes</span>";
+      }
+    }
+
+    // ==========================================
+    // Assign Modal (PUT /api/leads/{id}/assign)
+    // ==========================================
+    let currentAssignLeadId = null;
+
+    function openAssignModal(leadId) {
+      currentAssignLeadId = leadId;
+      document.getElementById("assignLeadIdDisplay").textContent = leadId;
+      document.getElementById("assignEmployeeSelect").value = "EMP102";
+      document.getElementById("assignAdminSelect").value = "EMP101";
+      document.getElementById("assignErrorAlert").style.display = "none";
+      document.getElementById("assignSuccessAlert").style.display = "none";
+      document.getElementById("assignModal").style.display = "flex";
+    }
+
+    function closeAssignModal() {
+      document.getElementById("assignModal").style.display = "none";
+      currentAssignLeadId = null;
+    }
+
+    async function handleAssignSubmit(e) {
+      e.preventDefault();
+      if (!currentAssignLeadId) return;
+
+      const confirmBtn = document.getElementById("confirmAssignBtn");
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Assigning...";
+
+      const empId = document.getElementById("assignEmployeeSelect").value;
+      const adminId = document.getElementById("assignAdminSelect").value;
+
+      document.getElementById("assignErrorAlert").style.display = "none";
+      document.getElementById("assignSuccessAlert").style.display = "none";
+
+      try {
+        const response = await fetch(`/api/leads/${encodeURIComponent(currentAssignLeadId)}/assign`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ employeeId: empId, assignedBy: adminId })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          const errMsg = data.errors ? data.errors.join("<br/>") : (data.message || "Failed to assign lead");
+          document.getElementById("assignErrorMessage").innerHTML = `<strong>Error (${response.status}):</strong> ${escapeHtml(errMsg)}`;
+          document.getElementById("assignErrorAlert").style.display = "block";
+        } else {
+          document.getElementById("assignSuccessMessage").innerHTML = `
+            <strong>Success!</strong> ${escapeHtml(data.message)}<br/>
+            Lead ID: <strong>${escapeHtml(data.leadId)}</strong> &bull; Maker: <strong>${escapeHtml(data.assignedEmployeeId)}</strong>
+          `;
+          document.getElementById("assignSuccessAlert").style.display = "block";
+          loadLeads();
+          setTimeout(() => {
+            closeAssignModal();
+          }, 1500);
+        }
+      } catch (err) {
+        document.getElementById("assignErrorMessage").textContent = "Network error: " + err.message;
+        document.getElementById("assignErrorAlert").style.display = "block";
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Confirm Assignment";
+      }
+    }
+
+    // ==========================================
+    // Bulk CSV Upload
+    // ==========================================
+    function handleFileSelected(input) {
+      const file = input.files[0];
+      const nameElem = document.getElementById("selectedFileName");
+      if (file) {
+        nameElem.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      } else {
+        nameElem.textContent = "";
+      }
+    }
+
+    const dropzone = document.getElementById("fileDropzone");
+    if (dropzone) {
+      ['dragenter', 'dragover'].forEach(name => {
+        dropzone.addEventListener(name, (e) => {
+          e.preventDefault();
+          dropzone.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        dropzone.addEventListener(name, (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('dragover');
+        });
+      });
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          const input = document.getElementById("csvFileInput");
+          input.files = files;
+          handleFileSelected(input);
+        }
+      });
+    }
+
+    async function handleCsvUpload(e) {
+      e.preventDefault();
+      hideCsvAlerts();
+
+      const fileInput = document.getElementById("csvFileInput");
+      const file = fileInput.files[0];
+      if (!file) {
+        showCsvErrors(["Please select or drag-and-drop a CSV file first."]);
+        return;
+      }
+
+      const importBtn = document.getElementById("importBtn");
+      importBtn.disabled = true;
+      importBtn.innerHTML = `<span>Importing Leads...</span>`;
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/api/leads/import", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showCsvErrors(data.errors || [data.message || "Failed to import CSV"]);
+        } else {
+          showCsvSuccess(data);
+          fileInput.value = "";
+          document.getElementById("selectedFileName").textContent = "";
+          loadLeads();
+          fetchNextId();
+        }
+      } catch (err) {
+        showCsvErrors(["Network error during CSV upload: " + err.message]);
+      } finally {
+        importBtn.disabled = false;
+        importBtn.innerHTML = `<span>Upload &amp; Bulk Load</span>`;
+      }
+    }
+
+    function showCsvErrors(errors) {
+      const alertBox = document.getElementById("csvErrorAlert");
+      const list = document.getElementById("csvErrorList");
+      list.innerHTML = errors.map(err => `<li>${escapeHtml(err)}</li>`).join('');
+      alertBox.style.display = "block";
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function showCsvSuccess(result) {
+      const alertBox = document.getElementById("csvSuccessAlert");
+      const title = document.getElementById("csvSuccessTitle");
+      const details = document.getElementById("csvSuccessDetails");
+
+      if (result.failureCount > 0) {
+        title.textContent = `Partial Bulk Import: ${result.successCount} Loaded, ${result.failureCount} Failed`;
+        let html = `<div>${escapeHtml(result.message)}</div>`;
+        if (result.errors && result.errors.length > 0) {
+          html += `<ul style="margin-top: 0.5rem; padding-left: 1.25rem; color: #fbbf24;">` +
+                  result.errors.map(err => `<li>${escapeHtml(err)}</li>`).join('') +
+                  `</ul>`;
+        }
+        details.innerHTML = html;
+      } else {
+        title.textContent = `Bulk Import Complete!`;
+        details.innerHTML = `Successfully imported <strong>${result.successCount}</strong> lead(s) into database. All rows passed validation rules.`;
+      }
+      alertBox.style.display = "block";
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideCsvAlerts() {
+      document.getElementById("csvErrorAlert").style.display = "none";
+      document.getElementById("csvSuccessAlert").style.display = "none";
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[m]);
+    }
+  </script>
+</body>
+</html>
