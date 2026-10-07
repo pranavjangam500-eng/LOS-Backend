@@ -47,10 +47,12 @@ app:
     issuer: LOS-Platform
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8080,https://system-rimge9vct-pranav-3745.vercel.app}
+  timezone: ${APP_TIMEZONE:Asia/Kolkata}
   security:
     rate-limit:
       auth-per-minute: ${RATE_LIMIT_AUTH_PER_MIN:10}
       api-per-minute: ${RATE_LIMIT_API_PER_MIN:120}
+    enforce-login-window: ${ENFORCE_LOGIN_WINDOW:false}
   # Render / Cloud Free Tier Keep-Alive Heartbeat
   render:
     keep-alive:

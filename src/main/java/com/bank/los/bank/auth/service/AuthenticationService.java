@@ -46,6 +46,7 @@ import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -82,6 +83,12 @@ public class AuthenticationService {
 
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
+
+    @Value("${app.security.enforce-login-window:false}")
+    private boolean enforceLoginWindowConfig;
+
+    @Value("${app.timezone:Asia/Kolkata}")
+    private String appTimezone;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -581,12 +588,43 @@ public class AuthenticationService {
     }
 
     private void enforceLoginWindow(OrganizationUser user) {
+        if (!enforceLoginWindowConfig) return;
+
+        // Admins and Super Admins are exempt from branch teller window restrictions
+        if (user.getRole() != null) {
+            String roleName = user.getRole().getName();
+            if (ApplicationConstants.Roles.SUPER_ADMIN.equalsIgnoreCase(roleName) ||
+                ApplicationConstants.Roles.ADMIN.equalsIgnoreCase(roleName) ||
+                ApplicationConstants.Roles.INTERNAL_ADMIN.equalsIgnoreCase(roleName)) {
+                return;
+            }
+        }
+
         if (user.getLoginTime() == null || user.getLogoutTime() == null) return;
-        LocalTime now = LocalTime.now();
-        if (now.isBefore(user.getLoginTime()) || now.isAfter(user.getLogoutTime())) {
+
+        ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(appTimezone);
+        } catch (Exception e) {
+            zoneId = ZoneId.systemDefault();
+        }
+        LocalTime now = LocalTime.now(zoneId);
+
+        boolean inWindow;
+        if (user.getLoginTime().isBefore(user.getLogoutTime())) {
+            inWindow = !now.isBefore(user.getLoginTime()) && !now.isAfter(user.getLogoutTime());
+        } else if (user.getLoginTime().isAfter(user.getLogoutTime())) {
+            // Overnight window (e.g., 20:00 to 06:00)
+            inWindow = !now.isBefore(user.getLoginTime()) || !now.isAfter(user.getLogoutTime());
+        } else {
+            // Same start and end time represents 24/7 access
+            inWindow = true;
+        }
+
+        if (!inWindow) {
             throw new BusinessException("LOGIN_WINDOW",
-                    String.format("Login allowed only between %s and %s.",
-                            user.getLoginTime(), user.getLogoutTime()));
+                    String.format("Login allowed only between %s and %s (%s). Current time is %s.",
+                            user.getLoginTime(), user.getLogoutTime(), zoneId.getId(), now.withNano(0)));
         }
     }
 

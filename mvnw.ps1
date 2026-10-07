@@ -1,0 +1,1 @@
+& "$PSScriptRoot\mvnw.cmd" @args

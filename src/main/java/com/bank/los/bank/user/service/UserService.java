@@ -42,6 +42,7 @@ public class UserService {
     private final LoginDirectoryRepository loginDirectoryRepository;
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.bank.los.config.BankDataSourceProvider bankDataSourceProvider;
 
     public List<UserResponse> getAllUsers(UserPrincipal principal, Long organizationId) {
         boolean isInternalAdmin = isInternalAdmin(principal);
@@ -51,6 +52,7 @@ public class UserService {
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
                 Organization org = organizationRepository.findById(organizationId)
                         .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
+                bankDataSourceProvider.getOrCreateBankDataSource(org.getDbName(), org.getDbHost(), org.getDbPort());
                 OrganizationContext.setCurrentOrganization(org.getDbName());
                 OrganizationContext.setCurrentOrgCode(org.getCode());
                 return organizationUserRepository.findAll().stream()
@@ -63,6 +65,7 @@ public class UserService {
                 List<UserResponse> allUsers = new ArrayList<>();
                 for (Organization org : orgs) {
                     try {
+                        bankDataSourceProvider.getOrCreateBankDataSource(org.getDbName(), org.getDbHost(), org.getDbPort());
                         OrganizationContext.setCurrentOrganization(org.getDbName());
                         OrganizationContext.setCurrentOrgCode(org.getCode());
                         List<UserResponse> orgUsers = organizationUserRepository.findAll().stream()
@@ -94,6 +97,7 @@ public class UserService {
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
                 targetOrg = organizationRepository.findById(organizationId)
                         .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
+                bankDataSourceProvider.getOrCreateBankDataSource(targetOrg.getDbName(), targetOrg.getDbHost(), targetOrg.getDbPort());
                 OrganizationContext.setCurrentOrganization(targetOrg.getDbName());
                 OrganizationContext.setCurrentOrgCode(targetOrg.getCode());
             } else {
@@ -142,6 +146,9 @@ public class UserService {
         if (loginDirectoryRepository.findByEmail(request.getEmail().trim().toLowerCase()).isPresent()) {
             throw new BusinessException("EMAIL_EXISTS", "User with email '" + request.getEmail() + "' is already registered in the platform");
         }
+
+        // Pre-warm / register Bank DataSource using org's database settings
+        bankDataSourceProvider.getOrCreateBankDataSource(orgDb, org.getDbHost(), org.getDbPort());
 
         // 2. Switch to target Organization DB
         OrganizationContext.setCurrentOrganization(orgDb);

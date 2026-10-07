@@ -16,6 +16,7 @@ import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.config.OrganizationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,10 +30,40 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrganizationService {
 
+    @Value("${bank.datasource.default-host:${organization.datasource.default-host:${tenant.datasource.default-host:localhost}}}")
+    private String defaultDbHost;
+
+    @Value("${bank.datasource.default-port:${organization.datasource.default-port:${tenant.datasource.default-port:5432}}}")
+    private int defaultDbPort;
+
+    @Value("${master.datasource.url:jdbc:postgresql://localhost:5432/los_master_db}")
+    private String masterUrl;
+
     private final OrganizationRepository organizationRepository;
     private final OrganizationProvisioningService organizationProvisioningService;
     private final OrganizationRoleRepository organizationRoleRepository;
     private final BranchRepository branchRepository;
+
+    private String resolveDefaultHost() {
+        if (defaultDbHost != null && !defaultDbHost.isBlank() && !"localhost".equalsIgnoreCase(defaultDbHost.trim())) {
+            return defaultDbHost.trim();
+        }
+        try {
+            com.bank.los.config.PersistenceConfig.ConnectionDetails masterDetails =
+                    com.bank.los.config.PersistenceConfig.parseConnectionDetails(masterUrl, "postgres", "postgres");
+            String jdbc = masterDetails.jdbcUrl();
+            if (jdbc != null && jdbc.startsWith("jdbc:postgresql://")) {
+                String sub = jdbc.substring("jdbc:postgresql://".length());
+                int slash = sub.indexOf('/');
+                String hostPort = slash > 0 ? sub.substring(0, slash) : sub;
+                String host = hostPort.contains(":") ? hostPort.split(":", 2)[0] : hostPort;
+                if (!host.isBlank() && !"localhost".equalsIgnoreCase(host) && !"127.0.0.1".equals(host)) {
+                    return host;
+                }
+            }
+        } catch (Exception ignored) {}
+        return (defaultDbHost != null && !defaultDbHost.isBlank()) ? defaultDbHost : "localhost";
+    }
 
     public List<OrganizationResponse> getAllOrganizations() {
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
@@ -265,8 +296,9 @@ public class OrganizationService {
                 .contactEmail(request.getContactEmail())
                 .contactPhone(request.getContactPhone())
                 .dbName(dbName)
-                .dbHost(request.getDbHost() != null ? request.getDbHost() : "localhost")
-                .dbPort(request.getDbPort() != null ? request.getDbPort() : 5432)
+                .dbHost(request.getDbHost() != null && !request.getDbHost().isBlank() && !"localhost".equalsIgnoreCase(request.getDbHost().trim())
+                        ? request.getDbHost().trim() : resolveDefaultHost())
+                .dbPort(request.getDbPort() != null && request.getDbPort() > 0 ? request.getDbPort() : (defaultDbPort > 0 ? defaultDbPort : 5432))
                 .directClearingNumber(request.getDirectClearingNumber())
                 .directClearingMember(directClearingMember)
                 .directMemberIftas(request.getDirectMemberIftas())

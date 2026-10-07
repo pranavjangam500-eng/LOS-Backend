@@ -1,734 +1,4257 @@
 {
-	"info": {
-		"_postman_id": "8f3b2a11-5d9e-4c12-b123-999888777666",
-		"name": "LOS Backend Multi-Tenant API Collection",
-		"description": "Complete Postman Collection for testing Loan Origination System (LOS) Multi-Tenant Spring Boot Backend APIs including Authentication, Organizations, Users, Customers, and Dashboards.",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://localhost:8080",
-			"type": "string"
-		},
-		{
-			"key": "accessToken",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "refreshToken",
-			"value": "",
-			"type": "string"
-		}
-	],
-	"item": [
-		{
-			"name": "Authentication",
-			"item": [
-				{
-					"name": "1. Login - Master Internal Admin",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.accessToken) {",
-									"        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
-									"        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
-									"        console.log(\"Access token automatically saved to environment!\");",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"admin@losplatform.com\",\n  \"password\": \"Admin@123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"login"
-							]
-						},
-						"description": "Authenticates Platform Master Admin against the master directory."
-					},
-					"response": []
-				},
-				{
-					"name": "2. Login - HDFC Super Admin",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.accessToken) {",
-									"        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
-									"        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
-									"        console.log(\"Access token automatically saved for HDFC Super Admin!\");",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"superadmin@hdfcbank.com\",\n  \"password\": \"Admin@123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"login"
-							]
-						},
-						"description": "Authenticates Tenant Admin for HDFC Bank."
-					},
-					"response": []
-				},
-				{
-					"name": "3. Login - HDFC Maker",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.accessToken) {",
-									"        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
-									"        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"maker@hdfcbank.com\",\n  \"password\": \"Maker@123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "4. Login - HDFC Customer",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.accessToken) {",
-									"        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
-									"        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"password\": \"Customer@123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "5. Get Current User Profile (/me)",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/me",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"me"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "6. Refresh Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.data && jsonData.data.accessToken) {",
-									"        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
-									"        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/refresh-token",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"refresh-token"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "7. Change Password",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"currentPassword\": \"Admin@123\",\n  \"newPassword\": \"Admin@2026Secure!\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/change-password",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"change-password"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "8. Logout (Revoke Token)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/logout",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"logout"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "9. Health Check",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/health",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"auth",
-								"health"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Organizations (Internal Admin)",
-			"item": [
-				{
-					"name": "Create Organization",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"ICICI Bank Limited\",\n  \"code\": \"ICICI03\",\n  \"type\": \"BANK\",\n  \"contactEmail\": \"info@icicibank.com\",\n  \"contactPhone\": \"+912226531414\",\n  \"dbName\": \"los_icici03_db\",\n  \"dbHost\": \"localhost\",\n  \"dbPort\": 5432\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/organizations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"organizations"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Organizations",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/organizations",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"organizations"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Organization By ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/organizations/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"organizations",
-								"1"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "User Management (Tenant Staff)",
-			"item": [
-				{
-					"name": "Create Staff User",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userCode\": \"HDFC-MKR-02\",\n  \"branchId\": 1,\n  \"roleId\": 2,\n  \"firstName\": \"Amit\",\n  \"middleName\": \"Prakash\",\n  \"lastName\": \"Joshi\",\n  \"email\": \"amit.joshi@hdfcbank.com\",\n  \"phone\": \"+919876500099\",\n  \"password\": \"Staff@Pass123\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/users",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"users"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Users",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/users",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"users"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get User By ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/users/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"users",
-								"1"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Customer Management",
-			"item": [
-				{
-					"name": "Create Customer",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"customerCode\": \"CUST-HDFC-1002\",\n  \"branchId\": 1,\n  \"firstName\": \"Suresh\",\n  \"middleName\": \"Ramesh\",\n  \"lastName\": \"Patil\",\n  \"email\": \"suresh.patil@gmail.com\",\n  \"phone\": \"+919812345678\",\n  \"password\": \"Customer@123Pass\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/customers",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"customers"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get All Customers (Paginated)",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/customers?page=0&size=10",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"customers"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "0"
-								},
-								{
-									"key": "size",
-									"value": "10"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Customer By ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/customers/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"customers",
-								"1"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Dashboard",
-			"item": [
-				{
-					"name": "Get Role-Based Dashboard",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/dashboard",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"dashboard"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	]
+  "info": {
+    "_postman_id": "los-backend-complete-api-suite-2026",
+    "name": "LOS Backend Multi-Tenant Complete API Collection",
+    "description": "Comprehensive Postman API Collection for Loan Origination System (LOS) Multi-Tenant Spring Boot Backend. Covers Platform Administration, Multi-Tenant Database Routing, Central & Tenant RBAC, User & Customer Management, Loan Origination & Maker-Checker Workflows, Lookups, and Third-Party Integrations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "preAuthToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "00. System Health & Keep-Alive",
+      "item": [
+        {
+          "name": "1. Health Check (Root)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Public system health check and keep-alive ping"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Health Check (API v1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Public API v1 health check"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01. Authentication & 2FA",
+      "item": [
+        {
+          "name": "1. Login - Master Internal Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates Master Platform Administrator",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@losplatform.com\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.refreshToken) {",
+                  "        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        console.log(\"Saved refreshToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.preAuthToken) {",
+                  "        pm.environment.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        pm.collectionVariables.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        console.log(\"Saved preAuthToken for 2FA OTP\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Login - Bank Super Admin (HDFC)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates HDFC Super Admin into HDFC tenant DB",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@hdfcbank.com\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.refreshToken) {",
+                  "        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        console.log(\"Saved refreshToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.preAuthToken) {",
+                  "        pm.environment.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        pm.collectionVariables.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        console.log(\"Saved preAuthToken for 2FA OTP\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Login - Loan Officer / Maker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates Loan Officer / Maker",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maker@hdfcbank.com\",\n  \"password\": \"Maker@123\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.refreshToken) {",
+                  "        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        console.log(\"Saved refreshToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.preAuthToken) {",
+                  "        pm.environment.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        pm.collectionVariables.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        console.log(\"Saved preAuthToken for 2FA OTP\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Login - Branch Manager / Checker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates Loan Approver / Checker",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"checker@hdfcbank.com\",\n  \"password\": \"Checker@123\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.refreshToken) {",
+                  "        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        console.log(\"Saved refreshToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.preAuthToken) {",
+                  "        pm.environment.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        pm.collectionVariables.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        console.log(\"Saved preAuthToken for 2FA OTP\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Login - Retail Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates Retail Loan Customer",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"password\": \"Customer@123\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.refreshToken) {",
+                  "        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        console.log(\"Saved refreshToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.preAuthToken) {",
+                  "        pm.environment.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        pm.collectionVariables.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        console.log(\"Saved preAuthToken for 2FA OTP\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Verify 2FA OTP (Step 2 of Login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Verifies OTP and issues full access token for 2FA-enabled staff",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preAuthToken\": \"{{preAuthToken}}\",\n  \"otpCode\": \"123456\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.refreshToken) {",
+                  "        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        console.log(\"Saved refreshToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.preAuthToken) {",
+                  "        pm.environment.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        pm.collectionVariables.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        console.log(\"Saved preAuthToken for 2FA OTP\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Get Current User Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns profile, active role, permissions, and organization info of current user",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Requests password reset token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maker@hdfcbank.com\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Resets user password using reset token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"SAMPLE-PASSWORD-RESET-TOKEN\",\n  \"newPassword\": \"NewSecurePassword@123\",\n  \"confirmPassword\": \"NewSecurePassword@123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh-token"
+              ]
+            },
+            "description": "Exchanges valid refresh token for fresh access token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.accessToken) {",
+                  "        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        pm.collectionVariables.set(\"accessToken\", jsonData.data.accessToken);",
+                  "        console.log(\"Saved accessToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.refreshToken) {",
+                  "        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+                  "        console.log(\"Saved refreshToken\");",
+                  "    }",
+                  "    if (jsonData.data && jsonData.data.preAuthToken) {",
+                  "        pm.environment.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        pm.collectionVariables.set(\"preAuthToken\", jsonData.data.preAuthToken);",
+                  "        console.log(\"Saved preAuthToken for 2FA OTP\");",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "11. Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Changes password for authenticated user",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Admin@123\",\n  \"newPassword\": \"Admin@2026Secure!\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12. Logout (Revoke Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes token and terminates session",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13. Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "health"
+              ]
+            },
+            "description": "Checks Auth Service health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02. Administration - Organizations",
+      "item": [
+        {
+          "name": "1. List All Organizations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations"
+              ]
+            },
+            "description": "Lists all onboarded Bank and NBFC institutions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Organization by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations",
+                "1"
+              ]
+            },
+            "description": "Fetches organization details by primary key ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Onboard New Bank / NBFC Organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations"
+              ]
+            },
+            "description": "Onboards a new bank and automatically runs Flyway migrations to provision dedicated database schema",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bank_code\": \"AXIS01\",\n  \"bank_name\": \"Axis Bank\",\n  \"legal_name\": \"Axis Bank Limited\",\n  \"bank_type\": \"COMMERCIAL_BANK\",\n  \"license_number\": \"RBI/LIC/2026/045\",\n  \"pan_number\": \"AAACA1234F\",\n  \"gstin\": \"27AAACA1234F1Z5\",\n  \"cin\": \"L65110GJ1993PLC020769\",\n  \"contact_email\": \"admin@axisbank.com\",\n  \"contact_phone\": \"+919876543210\",\n  \"status\": \"ACTIVE\",\n  \"db_name\": \"los_axis01_db\",\n  \"db_host\": \"localhost\",\n  \"db_port\": 5432,\n  \"db_username\": \"postgres\",\n  \"db_password\": \"password\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update Organization",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations",
+                "1"
+              ]
+            },
+            "description": "Full update of an existing bank organization",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bank_name\": \"Axis Bank Corporate\",\n  \"contact_email\": \"support@axisbank.com\",\n  \"contact_phone\": \"+919876543299\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Patch Organization",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations",
+                "1"
+              ]
+            },
+            "description": "Partial update of organization fields",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contact_email\": \"new.contact@axisbank.com\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Delete Organization (Soft / Hard)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations/1?hardDelete=false",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "hardDelete",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "Soft-deletes or hard-deletes an organization",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Roles for Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations/1/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations",
+                "1",
+                "roles"
+              ]
+            },
+            "description": "Retrieves roles configured within target organization database",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Get Branches for Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/organizations/1/branches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "organizations",
+                "1",
+                "branches"
+              ]
+            },
+            "description": "Retrieves branches configured within target organization database",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03. Administration - Platform Administrators",
+      "item": [
+        {
+          "name": "1. List Platform Administrators",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/administrators",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "administrators"
+              ]
+            },
+            "description": "Lists all platform internal administrators",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Administrator by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/administrators/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "administrators",
+                "1"
+              ]
+            },
+            "description": "Gets administrator profile by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Create Platform Administrator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/administrators",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "administrators"
+              ]
+            },
+            "description": "Creates a new Platform Administrator",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empNo\": \"ADM-002\",\n  \"username\": \"superadmin2\",\n  \"password\": \"Admin@NewPass123\",\n  \"firstName\": \"Sanjay\",\n  \"lastName\": \"Verma\",\n  \"email\": \"sanjay.verma@losplatform.com\",\n  \"mobile\": \"+919812300444\",\n  \"designation\": \"Platform Operations Manager\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04. Administration - Bank Management",
+      "item": [
+        {
+          "name": "1. List All Banks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/banks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "banks"
+              ]
+            },
+            "description": "Lists all onboarded financial institutions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Onboard Bank via Bank Management",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/banks/onboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "banks",
+                "onboard"
+              ]
+            },
+            "description": "Onboard a new bank/NBFC with database provisioning",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bank_code\": \"KOTAK01\",\n  \"bank_name\": \"Kotak Mahindra Bank\",\n  \"legal_name\": \"Kotak Mahindra Bank Ltd\",\n  \"bank_type\": \"COMMERCIAL_BANK\",\n  \"license_number\": \"LIC-RBI-2024-KOTAK\",\n  \"pan_number\": \"KOTAK1234K\",\n  \"gstin\": \"27KOTAK1234K1Z2\",\n  \"cin\": \"L65110MH1985PLC038137\",\n  \"contact_email\": \"ops@kotak.com\",\n  \"contact_phone\": \"+919876541234\",\n  \"status\": \"ACTIVE\",\n  \"db_name\": \"los_kotak01_db\",\n  \"db_host\": \"localhost\",\n  \"db_port\": 5432\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Update Bank Operational Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/banks/1/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "banks",
+                "1",
+                "status"
+              ]
+            },
+            "description": "Toggles bank status (ACTIVE, INACTIVE, SUSPENDED)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\",\n  \"reason\": \"Quarterly regulatory compliance verified\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update Bank Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/banks/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "banks",
+                "1"
+              ]
+            },
+            "description": "Updates bank organization details",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bank_name\": \"HDFC Bank Ltd - Updated\",\n  \"contact_email\": \"admin@hdfcbank.com\",\n  \"contact_phone\": \"+912228569900\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Patch Bank Info",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/banks/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "banks",
+                "1"
+              ]
+            },
+            "description": "Partially updates bank details",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contact_phone\": \"+912228569999\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Delete Bank",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/banks/1?hardDelete=false",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "banks",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "hardDelete",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "Deactivates or permanently removes a bank",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05. Administration - Bank User Management",
+      "item": [
+        {
+          "name": "1. List All Bank Staff Across Orgs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/user-management?organizationId=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "user-management"
+              ],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "List users across all banks or filtered by organizationId",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/user-management/1?organizationId=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "user-management",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get user details by ID for platform administration",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. List Users for Specific Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/user-management/organizations/1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "user-management",
+                "organizations",
+                "1",
+                "users"
+              ]
+            },
+            "description": "List all staff for a specific bank organization",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Provision Bank Super Admin / User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/user-management/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "user-management",
+                "users"
+              ]
+            },
+            "description": "Provisions a Bank Super Admin or User into the bank's tenant database",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organization_id\": 1,\n  \"first_name\": \"Kavita\",\n  \"last_name\": \"Sharma\",\n  \"username\": \"kavita.superadmin\",\n  \"email\": \"kavita.sharma@hdfcbank.com\",\n  \"mobile\": \"+919876543299\",\n  \"password\": \"Password@123\",\n  \"role\": \"SUPER_ADMIN\",\n  \"designation\": \"Vice President - Operations\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06. Administration - Master RBAC",
+      "item": [
+        {
+          "name": "1. List All Master Permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/rbac/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "rbac",
+                "permissions"
+              ]
+            },
+            "description": "Lists all central master permissions defined in Master DB",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Master Permission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/rbac/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "rbac",
+                "permissions"
+              ]
+            },
+            "description": "Creates a new central permission in Master DB",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"AUDIT_EXPORT_CSV\",\n  \"description\": \"Export audit trail reports to CSV format\",\n  \"module\": \"AUDIT\",\n  \"isSystem\": false\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Update Master Permission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/rbac/permissions/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "rbac",
+                "permissions",
+                "1"
+              ]
+            },
+            "description": "Updates an existing master permission",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated master permission description\",\n  \"module\": \"SECURITY\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. View Bank RBAC Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/rbac/banks/HDFC01/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "rbac",
+                "banks",
+                "HDFC01",
+                "summary"
+              ]
+            },
+            "description": "Returns roles, designation mappings, and permission overrides for a bank",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Configure Bank Role Permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/rbac/banks/HDFC01/roles/MAKER/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "rbac",
+                "banks",
+                "HDFC01",
+                "roles",
+                "MAKER",
+                "permissions"
+              ]
+            },
+            "description": "Updates permissions for a bank role as System Admin",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"LEAD_CREATE\",\n    \"LEAD_VIEW\",\n    \"LOAN_APPLICATION_CREATE\",\n    \"LOAN_APPLICATION_VIEW\",\n    \"CUSTOMER_CREATE\",\n    \"CUSTOMER_VIEW\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Sync Master Permissions to Specific Bank",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/rbac/sync/HDFC01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "rbac",
+                "sync",
+                "HDFC01"
+              ]
+            },
+            "description": "Pushes latest master permissions to HDFC bank without overriding tenant customizations",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Sync Master Permissions to ALL Banks",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/rbac/sync-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "rbac",
+                "sync-all"
+              ]
+            },
+            "description": "Pushes latest master permissions to all active bank databases",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07. Administration - Master Lookups",
+      "item": [
+        {
+          "name": "1. List All Master Lookup Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types"
+              ]
+            },
+            "description": "Lists all master lookup dictionaries (Status, Designation, Loan Types, etc.)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Master Lookup Type by Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/10004",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types",
+                "10004"
+              ]
+            },
+            "description": "Retrieves a master lookup type and its sub-types (e.g. 10004 Loan Types)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Create Master Lookup Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types"
+              ]
+            },
+            "description": "Creates a new central lookup dictionary",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"10009\",\n  \"description\": \"Collateral Property Types\",\n  \"isFixed\": false,\n  \"isActive\": true,\n  \"permissions\": [\n    \"VIEW\",\n    \"ADD\",\n    \"EDIT\",\n    \"ACTIVATE\",\n    \"DEACTIVATE\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update Master Lookup Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/10009",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types",
+                "10009"
+              ]
+            },
+            "description": "Updates an existing master lookup dictionary",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Collateral Asset & Property Types\",\n  \"isFixed\": false,\n  \"isActive\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Delete Master Lookup Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/10009",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types",
+                "10009"
+              ]
+            },
+            "description": "Deletes a non-fixed master lookup dictionary",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Add Sub-Type / Option to Master Lookup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/10004/sub-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types",
+                "10004",
+                "sub-types"
+              ]
+            },
+            "description": "Adds an option to a master lookup dictionary",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subTypeCode\": \"GREEN_ENERGY_LOAN\",\n  \"subTypeDescription\": \"Green Energy & Solar Installation Loan\",\n  \"isFixed\": false,\n  \"isActive\": true,\n  \"displayOrder\": 6\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Update Sub-Type in Master Lookup",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "sub-types",
+                "1"
+              ]
+            },
+            "description": "Updates an existing sub-type option",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subTypeDescription\": \"Updated Sub-Type Description\",\n  \"isActive\": true,\n  \"displayOrder\": 1\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Delete Sub-Type from Master Lookup",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "sub-types",
+                "1"
+              ]
+            },
+            "description": "Deletes an option from master lookup",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Inspect Bank Custom Lookups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/banks/HDFC01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "banks",
+                "HDFC01"
+              ]
+            },
+            "description": "Inspects active lookups and customizations inside a specific bank",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Configure Bank Lookup Permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/banks/HDFC01/types/10002/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "banks",
+                "HDFC01",
+                "types",
+                "10002",
+                "permissions"
+              ]
+            },
+            "description": "Controls what modifications bank admins can do to specific lookup types",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"VIEW\",\n    \"ADD\",\n    \"EDIT\",\n    \"ACTIVATE\",\n    \"DEACTIVATE\",\n    \"ADD_FROM_MASTER\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Sync Master Lookups to Bank",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sync/HDFC01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "sync",
+                "HDFC01"
+              ]
+            },
+            "description": "Syncs master lookup options to a bank",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12. Sync Master Lookups to ALL Banks",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sync-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "sync-all"
+              ]
+            },
+            "description": "Syncs master lookup options to all active banks",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08. Administration - Dashboards, Metrics & Audits",
+      "item": [
+        {
+          "name": "1. Platform Master Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "dashboard"
+              ]
+            },
+            "description": "Returns system-wide stats: total banks, active applications, volume, pending audits",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. System Cluster & Routing Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/monitoring/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "monitoring",
+                "metrics"
+              ]
+            },
+            "description": "Returns dynamic multi-tenant connection pools, JVM memory, and uptime",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Platform Administration Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/audit?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Paginated audit logs of all platform administration actions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09. Bank Tenant - Staff User Management",
+      "item": [
+        {
+          "name": "1. List Bank Staff Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users?organizationId=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Lists all staff members in current bank organization",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get User Details by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Fetches bank user profile by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Create Bank Staff User (Maker Action)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "Creates user in PENDING_VERIFICATION state (Dual control Maker-Checker)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emp_no\": \"EMP-HDFC-101\",\n  \"first_name\": \"Rohan\",\n  \"middle_name\": \"K\",\n  \"last_name\": \"Deshmukh\",\n  \"username\": \"rohan.deshmukh\",\n  \"email\": \"rohan.deshmukh@hdfcbank.com\",\n  \"mobile\": \"+919876543111\",\n  \"gender\": \"MALE\",\n  \"dob\": \"1994-06-15\",\n  \"role\": \"CHECKER\",\n  \"designation\": \"Assistant Branch Manager\",\n  \"password\": \"StaffPassword@123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Verify & Approve Staff User (Checker Action)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1",
+                "verify"
+              ]
+            },
+            "description": "Second administrator approves pending user and activates the account",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Admin Password Reset for Staff User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1",
+                "reset-password"
+              ]
+            },
+            "description": "Admin resets password for an existing staff user",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewTempPassword@123\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. Bank Tenant - RBAC & Permissions",
+      "item": [
+        {
+          "name": "1. List Bank Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles"
+              ]
+            },
+            "description": "Lists all roles available in the current bank organization",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. List Bank Permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "permissions"
+              ]
+            },
+            "description": "Lists all permissions provisioned in this bank's database",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. List Roles with Effective Permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "roles"
+              ]
+            },
+            "description": "Lists all roles, assigned permissions, overrides, and effective permissions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update Role Permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/roles/MAKER/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "roles",
+                "MAKER",
+                "permissions"
+              ]
+            },
+            "description": "Assigns or modifies permissions of a bank role",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"LEAD_CREATE\",\n    \"LEAD_VIEW\",\n    \"LOAN_APPLICATION_CREATE\",\n    \"LOAN_APPLICATION_VIEW\",\n    \"CUSTOMER_CREATE\",\n    \"CUSTOMER_VIEW\"\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. List Designation-to-Role Mappings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/designations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "designations"
+              ]
+            },
+            "description": "Lists all designations with mapped roles and inherited permissions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Map Designation to Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/designations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "designations"
+              ]
+            },
+            "description": "Maps bank designation to role to inherit permissions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Credit Officer\",\n  \"roleName\": \"CHECKER\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Delete Designation Mapping",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/designations/Credit%20Officer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "designations",
+                "Credit%20Officer"
+              ]
+            },
+            "description": "Removes designation to role mapping",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. List Custom Permission Overrides",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/overrides",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "overrides"
+              ]
+            },
+            "description": "Lists all granular ALLOW / DENY permission overrides",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Set Permission Override (ALLOW / DENY)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/overrides",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "overrides"
+              ]
+            },
+            "description": "Sets fine-grained ALLOW or DENY override on Role or Designation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"DESIGNATION\",\n  \"targetName\": \"Credit Officer\",\n  \"permissionCode\": \"LOAN_SANCTION_FAST_TRACK\",\n  \"effect\": \"ALLOW\",\n  \"reason\": \"Branch authorization delegation policy\",\n  \"isActive\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Delete Permission Override",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/overrides/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "overrides",
+                "1"
+              ]
+            },
+            "description": "Removes an override rule",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Get Effective Permissions for Target/Self",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/rbac/effective-permissions?targetType=ROLE&targetName=MAKER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "rbac",
+                "effective-permissions"
+              ],
+              "query": [
+                {
+                  "key": "targetType",
+                  "value": "ROLE"
+                },
+                {
+                  "key": "targetName",
+                  "value": "MAKER"
+                }
+              ]
+            },
+            "description": "Evaluates effective permissions including base roles, designations, and overrides",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11. Bank Tenant - Branches",
+      "item": [
+        {
+          "name": "1. List All Active Branches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/branches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "branches"
+              ]
+            },
+            "description": "Lists all operational branches for current bank",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Branch by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/branches/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "branches",
+                "1"
+              ]
+            },
+            "description": "Fetches branch information and address",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Create New Branch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/branches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "branches"
+              ]
+            },
+            "description": "Creates a new bank branch",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Andheri West Branch\",\n  \"code\": \"BR-HDFC-002\",\n  \"address\": \"Linking Road, Andheri West\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"400058\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12. Bank Tenant - Customers",
+      "item": [
+        {
+          "name": "1. List Customers (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Retrieves paginated list of bank customers",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1"
+              ]
+            },
+            "description": "Fetches customer master details and KYC status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Register New Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers"
+              ]
+            },
+            "description": "Registers a new customer in bank's database",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": 1,\n  \"firstName\": \"Vikram\",\n  \"middleName\": \"S\",\n  \"lastName\": \"Mehta\",\n  \"email\": \"vikram.mehta@gmail.com\",\n  \"phone\": \"+919820011223\",\n  \"password\": \"CustomerSecure@123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Update Customer Details",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "customers",
+                "1"
+              ]
+            },
+            "description": "Updates customer personal details",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Vikram\",\n  \"middleName\": \"Singh\",\n  \"lastName\": \"Mehta\",\n  \"email\": \"vikram.mehta@outlook.com\",\n  \"phone\": \"+919820011223\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "13. Bank Tenant - Leads",
+      "item": [
+        {
+          "name": "1. List Leads (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Lists loan leads with search and pagination",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Lead by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "leads",
+                "1"
+              ]
+            },
+            "description": "Fetches lead information",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Capture New Loan Lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "leads"
+              ]
+            },
+            "description": "Captures new inbound loan lead",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Pooja Hegde\",\n  \"email\": \"pooja.hegde@gmail.com\",\n  \"phone\": \"+919833445566\",\n  \"loanProductType\": \"HOME_LOAN\",\n  \"requestedAmount\": 4500000.0,\n  \"branchId\": 1,\n  \"remarks\": \"Interested in 20-year fixed home loan for 3BHK in Thane\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "14. Bank Tenant - Loan Products",
+      "item": [
+        {
+          "name": "1. List Loan Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-products"
+              ]
+            },
+            "description": "Lists all configured loan products offered by this bank",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Loan Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-products",
+                "1"
+              ]
+            },
+            "description": "Fetches product terms, interest rate limits, and tenure",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Configure New Loan Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-products"
+              ]
+            },
+            "description": "Creates new bank product offering",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PROD-EV-01\",\n  \"name\": \"Electric Vehicle Green Auto Loan\",\n  \"description\": \"Special subsidized rates for 2-wheeler and 4-wheeler Electric Vehicles\",\n  \"minAmount\": 50000.0,\n  \"maxAmount\": 3000000.0,\n  \"interestRatePercent\": 8.25,\n  \"minTenureMonths\": 12,\n  \"maxTenureMonths\": 84,\n  \"processingFeePercent\": 0.5,\n  \"status\": \"ACTIVE\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "15. Bank Tenant - Loan Applications",
+      "item": [
+        {
+          "name": "1. List Loan Applications (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-applications?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-applications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Lists all loan origination applications across stages",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Loan Application by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-applications/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-applications",
+                "1"
+              ]
+            },
+            "description": "Fetches full loan application summary, applicant info, and status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Initiate Loan Application (Maker Action)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-applications"
+              ]
+            },
+            "description": "Maker initiates a new loan application. Application transitions to SUBMITTED state",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"branchId\": 1,\n  \"productCode\": \"PROD-HOME-01\",\n  \"appliedAmount\": 3500000.0,\n  \"tenureMonths\": 180\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "16. Bank Tenant - Loan Approvals (Maker-Checker)",
+      "item": [
+        {
+          "name": "1. Decision: APPROVE Loan (Checker Action)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-approvals/1/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-approvals",
+                "1",
+                "decision"
+              ]
+            },
+            "description": "Checker approves loan application. Dual control ensures Maker cannot approve own application.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVE\",\n  \"sanctionedAmount\": 3500000.0,\n  \"remarks\": \"CIBIL score is 785. KYC and property title verified. Sanction approved.\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Decision: REJECT Loan (Checker Action)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-approvals/1/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-approvals",
+                "1",
+                "decision"
+              ]
+            },
+            "description": "Checker rejects loan application",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"REJECT\",\n  \"remarks\": \"High debt-to-income ratio and prior overdue defaults.\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Decision: RETURN TO MAKER (Checker Action)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-approvals/1/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "loan-approvals",
+                "1",
+                "decision"
+              ]
+            },
+            "description": "Checker returns application to Maker for additional documentation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"RETURN_TO_MAKER\",\n  \"remarks\": \"Latest salary slip and Form 16 missing. Please attach and resubmit.\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "17. Bank Tenant - Lookups",
+      "item": [
+        {
+          "name": "1. List All Active Bank Lookup Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "types"
+              ]
+            },
+            "description": "Lists all lookup types available in current bank",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Lookup Type by Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/types/10002",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "types",
+                "10002"
+              ]
+            },
+            "description": "Fetches lookup dictionary details and allowed permissions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Active Options for Lookup Code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/10002/options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "10002",
+                "options"
+              ]
+            },
+            "description": "Returns active options for dropdowns (e.g. 10002 Designation, 10004 Loan Types)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Add Custom Option to Bank Database",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/types/10002/sub-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "types",
+                "10002",
+                "sub-types"
+              ]
+            },
+            "description": "Adds a bank-specific designation or option",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subTypeCode\": \"SENIOR_UNDERWRITER\",\n  \"subTypeDescription\": \"Senior Underwriter\",\n  \"displayOrder\": 7\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Import Master Option into Bank Database",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/types/10004/import-master/GREEN_ENERGY_LOAN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "types",
+                "10004",
+                "import-master",
+                "GREEN_ENERGY_LOAN"
+              ]
+            },
+            "description": "Imports a standard option from central platform catalog into this bank's database",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Update Bank Lookup Option",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/sub-types/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "sub-types",
+                "1"
+              ]
+            },
+            "description": "Updates bank custom option",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subTypeDescription\": \"Chief Credit Officer (CCO)\",\n  \"displayOrder\": 2\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Delete Bank Lookup Option",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/sub-types/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "sub-types",
+                "1"
+              ]
+            },
+            "description": "Deletes bank custom option",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Activate Bank Lookup Option",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/sub-types/1/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "sub-types",
+                "1",
+                "activate"
+              ]
+            },
+            "description": "Activates an option",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Deactivate Bank Lookup Option",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/lookups/sub-types/1/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "lookups",
+                "sub-types",
+                "1",
+                "deactivate"
+              ]
+            },
+            "description": "Deactivates an option",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "18. Bank Tenant - Dashboards (Role-Based)",
+      "item": [
+        {
+          "name": "1. Bank Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/admin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "admin"
+              ]
+            },
+            "description": "Dashboard for Bank Admin: branch stats, staff count, total portfolio volume",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Maker Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/maker",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "maker"
+              ]
+            },
+            "description": "Dashboard for Loan Maker: draft applications, submitted applications, returned items",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Checker Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/checker",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "checker"
+              ]
+            },
+            "description": "Dashboard for Loan Checker: pending approval queue, SLA timers, sanctioned volume",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Viewer Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/viewer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "viewer"
+              ]
+            },
+            "description": "Dashboard for Auditors & Viewers: portfolio trends and disbursement metrics",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Customer Portal Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/customer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "customer"
+              ]
+            },
+            "description": "Dashboard for Retail Customer: my active applications, sanctioned loan status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "19. Bank Tenant - Audit Logs",
+      "item": [
+        {
+          "name": "1. List Bank Audit Logs (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit-logs?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Audit trail of staff logins, maker-checker decisions, customer edits, and compliance events",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "20. Bank Tenant - Third-Party Integrations",
+      "item": [
+        {
+          "name": "1. KYC Document Verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/integration/kyc/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "integration",
+                "kyc",
+                "verify"
+              ]
+            },
+            "description": "Simulated integration with NSDL/UIDAI/DigiLocker gateway",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentType\": \"PAN\",\n  \"documentNumber\": \"ABCDE1234F\",\n  \"fullName\": \"Rajesh Kumar\",\n  \"dob\": \"1988-05-12\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Credit Bureau Check (CIBIL / Experian)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/integration/bureau/check",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "integration",
+                "bureau",
+                "check"
+              ]
+            },
+            "description": "Fetches credit score, overdue counts, and credit inquiry report",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"panNumber\": \"ABCDE1234F\",\n  \"customerName\": \"Rajesh Kumar\",\n  \"dateOfBirth\": \"1988-05-12\",\n  \"mobileNumber\": \"+919876500001\",\n  \"bureauType\": \"CIBIL\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. LMS Disbursal Synchronization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bank/integration/lms/disburse-sync",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bank",
+                "integration",
+                "lms",
+                "disburse-sync"
+              ]
+            },
+            "description": "Hands off approved loan application to Core Banking / LMS for repayment schedule creation and disbursement",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationNumber\": \"APP-HDFC-2026-0001\",\n  \"approvedAmount\": 3500000.0,\n  \"interestRate\": 8.5,\n  \"tenureMonths\": 180,\n  \"customerAccountNumber\": \"50100234567890\",\n  \"ifscCode\": \"HDFC0000123\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
 }

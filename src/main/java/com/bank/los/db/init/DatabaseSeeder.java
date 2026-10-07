@@ -70,6 +70,35 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final BankDataSourceProvider bankDataSourceProvider;
     private final com.bank.los.security.TenantResolutionService tenantResolutionService;
 
+    @org.springframework.beans.factory.annotation.Value("${bank.datasource.default-host:${tenant.datasource.default-host:localhost}}")
+    private String defaultDbHost;
+
+    @org.springframework.beans.factory.annotation.Value("${bank.datasource.default-port:${tenant.datasource.default-port:5432}}")
+    private int defaultDbPort;
+
+    @org.springframework.beans.factory.annotation.Value("${master.datasource.url:jdbc:postgresql://localhost:5432/los_master_db}")
+    private String masterUrl;
+
+    private String resolveDefaultDbHost() {
+        if (defaultDbHost != null && !defaultDbHost.isBlank() && !"localhost".equalsIgnoreCase(defaultDbHost.trim())) {
+            return defaultDbHost.trim();
+        }
+        try {
+            com.bank.los.config.PersistenceConfig.ConnectionDetails masterDetails =
+                    com.bank.los.config.PersistenceConfig.parseConnectionDetails(masterUrl, "postgres", "postgres");
+            String jdbc = masterDetails.jdbcUrl();
+            if (jdbc != null && jdbc.startsWith("jdbc:postgresql://")) {
+                String sub = jdbc.substring("jdbc:postgresql://".length());
+                int slash = sub.indexOf('/');
+                String hostPort = slash > 0 ? sub.substring(0, slash) : sub;
+                String host = hostPort.contains(":") ? hostPort.split(":", 2)[0] : hostPort;
+                if (!host.isBlank() && !"localhost".equalsIgnoreCase(host) && !"127.0.0.1".equals(host)) {
+                    return host;
+                }
+            }
+        } catch (Exception ignored) {}
+        return (defaultDbHost != null && !defaultDbHost.isBlank()) ? defaultDbHost : "localhost";
+    }
 
     @Override
     public void run(String... args) {
@@ -111,8 +140,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .contactEmail("contact@hdfcbank.com")
                         .contactPhone("+912261606161")
                         .dbName("los_hdfc01_db")
-                        .dbHost("localhost")
-                        .dbPort(5432)
+                        .dbHost(resolveDefaultDbHost())
+                        .dbPort(defaultDbPort > 0 ? defaultDbPort : 5432)
                         .build()));
 
         Organization bajaj = organizationRepository.findByBankCode("BAJAJ02")
@@ -124,8 +153,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                         .contactEmail("customercare@bajajfinserv.in")
                         .contactPhone("+912071576403")
                         .dbName("los_bajaj02_db")
-                        .dbHost("localhost")
-                        .dbPort(5432)
+                        .dbHost(resolveDefaultDbHost())
+                        .dbPort(defaultDbPort > 0 ? defaultDbPort : 5432)
                         .build()));
 
         tenantResolutionService.cacheOrganization(hdfc);

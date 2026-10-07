@@ -21,6 +21,15 @@ public class LosApplication {
         SpringApplication.run(LosApplication.class, args);
     }
 
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        String tz = System.getProperty("app.timezone", System.getenv("APP_TIMEZONE"));
+        if (tz == null || tz.isBlank()) {
+            tz = "Asia/Kolkata";
+        }
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(tz));
+    }
+
     private static void loadDotEnvIfPresent() {
         File dotEnvFile = new File(".env");
         if (!dotEnvFile.exists() || !dotEnvFile.isFile()) {
