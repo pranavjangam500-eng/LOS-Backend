@@ -27,7 +27,7 @@ public class BankUserManagementController {
     private final BankUserManagementService bankUserManagementService;
 
     @GetMapping
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "List all staff and users across all organizations or for a specific organization")
     public ResponseEntity<ApiResponse<List<UserResponse>>> listAllUsers(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -37,7 +37,7 @@ public class BankUserManagementController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get user details by ID for platform administration")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -48,7 +48,7 @@ public class BankUserManagementController {
     }
 
     @GetMapping("/organizations/{orgId}/users")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "List all staff and users for a specific bank organization")
     public ResponseEntity<ApiResponse<List<UserResponse>>> listOrganizationUsers(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -58,7 +58,7 @@ public class BankUserManagementController {
     }
 
     @PostMapping("/users")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Provision a Bank Super Admin / User for an onboarded organization")
     public ResponseEntity<ApiResponse<UserResponse>> provisionBankUser(
             @AuthenticationPrincipal UserPrincipal principal,
