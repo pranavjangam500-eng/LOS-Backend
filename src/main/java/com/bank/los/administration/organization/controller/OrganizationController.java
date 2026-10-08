@@ -28,7 +28,7 @@ public class OrganizationController {
     private final OrganizationService organizationService;
 
     @GetMapping
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "List all onboarded organizations / financial institutions")
     public ResponseEntity<ApiResponse<List<OrganizationResponse>>> getAllOrganizations() {
         List<OrganizationResponse> orgs = organizationService.getAllOrganizations();
@@ -36,7 +36,7 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get organization details by ID")
     public ResponseEntity<ApiResponse<OrganizationResponse>> getOrganizationById(@PathVariable Long id) {
         OrganizationResponse org = organizationService.getOrganizationById(id);
@@ -53,7 +53,7 @@ public class OrganizationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Update an existing Bank/NBFC organization by ID, UUID, or Bank Code")
     public ResponseEntity<ApiResponse<OrganizationResponse>> updateOrganization(
             @PathVariable String id,
@@ -63,7 +63,7 @@ public class OrganizationController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Partially update an existing Bank/NBFC organization by ID, UUID, or Bank Code")
     public ResponseEntity<ApiResponse<OrganizationResponse>> patchOrganization(
             @PathVariable String id,
@@ -84,7 +84,7 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}/roles")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get roles configured within a specific bank/NBFC organization")
     public ResponseEntity<ApiResponse<List<RoleResponse>>> getOrganizationRoles(@PathVariable Long id) {
         List<RoleResponse> roles = organizationService.getOrganizationRoles(id);
@@ -92,7 +92,7 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}/branches")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get branches of a specific bank/NBFC organization")
     public ResponseEntity<ApiResponse<List<BranchResponse>>> getOrganizationBranches(@PathVariable Long id) {
         List<BranchResponse> branches = organizationService.getOrganizationBranches(id);
