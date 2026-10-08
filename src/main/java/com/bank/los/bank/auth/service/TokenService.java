@@ -116,6 +116,7 @@ public class TokenService {
         refreshTokenRepository.save(storedToken);
 
         return TokenResponse.builder()
+                .organizationId(principal.getOrganizationId())
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .tokenType("Bearer")

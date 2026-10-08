@@ -36,6 +36,7 @@ public class UserProfileResponse {
     private Boolean multiBranchAccess;
     private Long branchId;
     private String branchName;
+    private Long organizationId;
     private String organizationCode;
     private String organizationName;
     private Boolean loginOnHolidays;

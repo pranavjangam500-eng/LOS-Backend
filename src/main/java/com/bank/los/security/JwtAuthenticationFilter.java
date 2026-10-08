@@ -65,13 +65,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // NEVER trust client headers for database routing.
                 String resolvedDb = tenantResolutionService.resolveTenantDb(orgId, orgCode, orgUuid, userType);
 
-                // Configure dynamic multi-tenant routing context
-                OrganizationContext.setCurrentOrganization(resolvedDb);
-                BankContext.setCurrentBank(resolvedDb);
+                String requestUri = request.getRequestURI();
+                boolean isMasterAdministrationEndpoint = requestUri != null && (
+                        requestUri.startsWith("/api/v1/administration/banks") ||
+                        requestUri.startsWith("/api/v1/administration/organizations") ||
+                        requestUri.startsWith("/api/v1/organizations") ||
+                        requestUri.startsWith("/api/v1/administration/administrators") ||
+                        requestUri.startsWith("/api/v1/administration/lookups") ||
+                        requestUri.startsWith("/api/v1/administration/rbac") ||
+                        requestUri.startsWith("/api/v1/administration/audit") ||
+                        requestUri.startsWith("/api/v1/administration/monitoring") ||
+                        requestUri.startsWith("/api/v1/administration/dashboard")
+                );
 
-                if (StringUtils.hasText(orgCode)) {
-                    OrganizationContext.setCurrentOrgCode(orgCode);
-                    BankContext.setCurrentBankCode(orgCode);
+                if (isMasterAdministrationEndpoint) {
+                    OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                    BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+                } else {
+                    // Configure dynamic multi-tenant routing context
+                    OrganizationContext.setCurrentOrganization(resolvedDb);
+                    BankContext.setCurrentBank(resolvedDb);
+
+                    if (StringUtils.hasText(orgCode)) {
+                        OrganizationContext.setCurrentOrgCode(orgCode);
+                        BankContext.setCurrentBankCode(orgCode);
+                    }
                 }
 
                 String jti = claims.getId();

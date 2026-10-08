@@ -1,6 +1,7 @@
 package com.bank.los.administration.usermanagement.service;
 
 import com.bank.los.bank.user.dto.CreateUserRequest;
+import com.bank.los.bank.user.dto.UpdateUserRequest;
 import com.bank.los.bank.user.dto.UserResponse;
 import com.bank.los.bank.user.service.UserService;
 import com.bank.los.security.UserPrincipal;
@@ -35,5 +36,9 @@ public class BankUserManagementService {
 
     public UserResponse verifyBankUser(UserPrincipal principal, Long userId, Long organizationId) {
         return userService.verifyUser(principal, userId);
+    }
+
+    public UserResponse updateUser(UserPrincipal principal, Long userId, UpdateUserRequest request, Long organizationId) {
+        return userService.updateUser(principal, userId, request, organizationId);
     }
 }

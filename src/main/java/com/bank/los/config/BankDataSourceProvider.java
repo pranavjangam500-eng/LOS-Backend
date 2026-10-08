@@ -89,23 +89,92 @@ public class BankDataSourceProvider {
         return getAllBankDataSources();
     }
 
+    private record ResolvedConnection(String host, int port, String username, String password, String queryParams) {}
+
+    private ResolvedConnection resolveConnection(String dbHost, Integer dbPort) {
+        PersistenceConfig.ConnectionDetails masterDetails =
+                PersistenceConfig.parseConnectionDetails(masterUrl, defaultUsername, defaultPassword);
+
+        String masterHost = null;
+        int masterPort = 5432;
+        String queryParams = "";
+
+        try {
+            String cleanMasterUrl = masterDetails.jdbcUrl();
+            if (cleanMasterUrl != null && cleanMasterUrl.startsWith("jdbc:postgresql://")) {
+                String uriPart = cleanMasterUrl.substring("jdbc:postgresql://".length());
+                int qIdx = uriPart.indexOf('?');
+                if (qIdx > 0) {
+                    queryParams = uriPart.substring(qIdx);
+                    uriPart = uriPart.substring(0, qIdx);
+                }
+                int slashIdx = uriPart.indexOf('/');
+                String hostPort = slashIdx > 0 ? uriPart.substring(0, slashIdx) : uriPart;
+                if (hostPort.contains(":")) {
+                    String[] parts = hostPort.split(":", 2);
+                    masterHost = parts[0];
+                    try { masterPort = Integer.parseInt(parts[1]); } catch (Exception ignored) {}
+                } else if (!hostPort.isBlank()) {
+                    masterHost = hostPort;
+                }
+            }
+        } catch (Exception ignored) {}
+
+        boolean hasExplicitHost = dbHost != null && !dbHost.isBlank() &&
+                !"localhost".equalsIgnoreCase(dbHost.trim()) && !"127.0.0.1".equals(dbHost.trim());
+
+        String host;
+        int port;
+
+        if (hasExplicitHost) {
+            host = dbHost.trim();
+            port = (dbPort != null && dbPort > 0) ? dbPort : defaultPort;
+        } else if (defaultHost != null && !defaultHost.isBlank() &&
+                !"localhost".equalsIgnoreCase(defaultHost.trim()) && !"127.0.0.1".equals(defaultHost.trim())) {
+            host = defaultHost.trim();
+            port = (defaultPort > 0) ? defaultPort : 5432;
+        } else if (masterHost != null && !masterHost.isBlank() &&
+                !"localhost".equalsIgnoreCase(masterHost) && !"127.0.0.1".equals(masterHost)) {
+            host = masterHost;
+            port = masterPort;
+        } else {
+            host = (dbHost != null && !dbHost.isBlank()) ? dbHost.trim() :
+                    (defaultHost != null && !defaultHost.isBlank() ? defaultHost.trim() : "localhost");
+            port = (dbPort != null && dbPort > 0) ? dbPort : (defaultPort > 0 ? defaultPort : 5432);
+        }
+
+        String username = defaultUsername;
+        String password = defaultPassword;
+        if ("postgres".equalsIgnoreCase(username) && masterDetails.username() != null && !"postgres".equalsIgnoreCase(masterDetails.username())) {
+            username = masterDetails.username();
+            password = masterDetails.password();
+        }
+
+        return new ResolvedConnection(host, port, username, password, queryParams);
+    }
+
     private DataSource createDataSource(String dbName, String dbHost, Integer dbPort) {
         log.info("Creating dynamic HikariDataSource for bank DB: {}", dbName);
 
         String jdbcUrl;
+        String effectiveUsername = defaultUsername;
+        String effectivePassword = defaultPassword;
+
         if (urlPrefix != null && !urlPrefix.isEmpty()) {
             jdbcUrl = urlPrefix + dbName + (urlSuffix != null ? urlSuffix : "");
         } else {
-            ensurePostgreSqlDatabaseExists(masterUrl, dbName, defaultUsername, defaultPassword);
-            String host = (dbHost != null && !dbHost.isEmpty()) ? dbHost : defaultHost;
-            int port = (dbPort != null && dbPort > 0) ? dbPort : defaultPort;
-            jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s", host, port, dbName);
+            ResolvedConnection conn = resolveConnection(dbHost, dbPort);
+            effectiveUsername = conn.username();
+            effectivePassword = conn.password();
+            ensurePostgreSqlDatabaseExists(masterUrl, dbName, effectiveUsername, effectivePassword);
+            jdbcUrl = String.format("jdbc:postgresql://%s:%d/%s%s",
+                    conn.host(), conn.port(), dbName, conn.queryParams());
         }
 
         HikariDataSource ds = new HikariDataSource();
         ds.setDriverClassName(driverClassName);
 
-        PersistenceConfig.ConnectionDetails details = PersistenceConfig.parseConnectionDetails(jdbcUrl, defaultUsername, defaultPassword);
+        PersistenceConfig.ConnectionDetails details = PersistenceConfig.parseConnectionDetails(jdbcUrl, effectiveUsername, effectivePassword);
         ds.setJdbcUrl(details.jdbcUrl());
         ds.setUsername(details.username());
         ds.setPassword(details.password());

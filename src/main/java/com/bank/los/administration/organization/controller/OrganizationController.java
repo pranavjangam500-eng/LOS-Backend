@@ -7,13 +7,18 @@ import com.bank.los.administration.organization.service.OrganizationService;
 import com.bank.los.bank.branch.dto.BranchResponse;
 import com.bank.los.bank.user.dto.RoleResponse;
 import com.bank.los.common.response.ApiResponse;
+import com.bank.los.config.BankContext;
+import com.bank.los.config.OrganizationContext;
+import com.bank.los.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,17 +33,27 @@ public class OrganizationController {
     private final OrganizationService organizationService;
 
     @GetMapping
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "List all onboarded organizations / financial institutions")
-    public ResponseEntity<ApiResponse<List<OrganizationResponse>>> getAllOrganizations() {
-        List<OrganizationResponse> orgs = organizationService.getAllOrganizations();
+    public ResponseEntity<ApiResponse<List<OrganizationResponse>>> getAllOrganizations(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        List<OrganizationResponse> orgs = organizationService.getAllOrganizations(principal);
         return ResponseEntity.ok(ApiResponse.ok(orgs));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get organization details by ID")
-    public ResponseEntity<ApiResponse<OrganizationResponse>> getOrganizationById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<OrganizationResponse>> getOrganizationById(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        if (principal != null && !principal.belongsToOrganization(id)) {
+            throw new AccessDeniedException("Access denied: You cannot access organization " + id);
+        }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse org = organizationService.getOrganizationById(id);
         return ResponseEntity.ok(ApiResponse.ok(org));
     }
@@ -48,26 +63,40 @@ public class OrganizationController {
     @Operation(summary = "Onboard a new Bank/NBFC organization with dedicated database provisioning")
     public ResponseEntity<ApiResponse<OrganizationResponse>> createOrganization(
             @Valid @RequestBody CreateOrganizationRequest request) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse org = organizationService.createOrganization(request);
         return ResponseEntity.ok(ApiResponse.ok("Organization onboarded and database provisioned successfully", org));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Update an existing Bank/NBFC organization by ID, UUID, or Bank Code")
     public ResponseEntity<ApiResponse<OrganizationResponse>> updateOrganization(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable String id,
             @RequestBody UpdateOrganizationRequest request) {
+        if (principal != null && !principal.belongsToOrganization(id)) {
+            throw new AccessDeniedException("Access denied: You cannot modify organization " + id);
+        }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse updated = organizationService.updateOrganization(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Organization updated successfully", updated));
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Partially update an existing Bank/NBFC organization by ID, UUID, or Bank Code")
     public ResponseEntity<ApiResponse<OrganizationResponse>> patchOrganization(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable String id,
             @RequestBody UpdateOrganizationRequest request) {
+        if (principal != null && !principal.belongsToOrganization(id)) {
+            throw new AccessDeniedException("Access denied: You cannot modify organization " + id);
+        }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse updated = organizationService.updateOrganization(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Organization updated successfully", updated));
     }
@@ -78,24 +107,37 @@ public class OrganizationController {
     public ResponseEntity<ApiResponse<Void>> deleteOrganization(
             @PathVariable String id,
             @RequestParam(defaultValue = "false") boolean hardDelete) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         organizationService.deleteOrganization(id, hardDelete);
         String msg = hardDelete ? "Organization permanently deleted successfully" : "Organization deactivated/deleted successfully";
         return ResponseEntity.ok(ApiResponse.ok(msg, null));
     }
 
     @GetMapping("/{id}/roles")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get roles configured within a specific bank/NBFC organization")
-    public ResponseEntity<ApiResponse<List<RoleResponse>>> getOrganizationRoles(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<RoleResponse>>> getOrganizationRoles(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        if (principal != null && !principal.belongsToOrganization(id)) {
+            throw new AccessDeniedException("Access denied: You cannot access roles of organization " + id);
+        }
         List<RoleResponse> roles = organizationService.getOrganizationRoles(id);
         return ResponseEntity.ok(ApiResponse.ok(roles));
     }
 
     @GetMapping("/{id}/branches")
-    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get branches of a specific bank/NBFC organization")
-    public ResponseEntity<ApiResponse<List<BranchResponse>>> getOrganizationBranches(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<BranchResponse>>> getOrganizationBranches(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        if (principal != null && !principal.belongsToOrganization(id)) {
+            throw new AccessDeniedException("Access denied: You cannot access branches of organization " + id);
+        }
         List<BranchResponse> branches = organizationService.getOrganizationBranches(id);
         return ResponseEntity.ok(ApiResponse.ok(branches));
     }
 }
+
