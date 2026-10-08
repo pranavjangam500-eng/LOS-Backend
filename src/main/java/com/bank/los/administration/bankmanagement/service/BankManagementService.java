@@ -6,11 +6,11 @@ import com.bank.los.administration.master.repository.OrganizationRepository;
 import com.bank.los.administration.organization.dto.OrganizationResponse;
 import com.bank.los.administration.organization.service.OrganizationService;
 import com.bank.los.common.exception.ResourceNotFoundException;
+import com.bank.los.config.BankContext;
 import com.bank.los.config.OrganizationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -20,8 +20,8 @@ public class BankManagementService {
     private final OrganizationRepository organizationRepository;
     private final OrganizationService organizationService;
 
-    @Transactional
     public OrganizationResponse updateBankStatus(Long organizationId, BankStatusUpdateRequest request) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
         Organization org = organizationRepository.findById(organizationId)

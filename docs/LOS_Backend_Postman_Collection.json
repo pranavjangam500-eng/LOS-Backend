@@ -1304,7 +1304,7 @@
                 "1"
               ]
             },
-            "description": "Partially updates bank details",
+            "description": "Partially updates bank details such as GSTIN, contact, name",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1317,7 +1317,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contact_phone\": \"+912228569999\"\n}"
+              "raw": "{\n  \"gst_number\": \"27AAACA9876K1ZC\",\n  \"contact_phone\": \"+912228569999\"\n}"
             }
           },
           "response": []
@@ -1511,6 +1511,88 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"organization_id\": 1,\n  \"first_name\": \"Kavita\",\n  \"last_name\": \"Sharma\",\n  \"username\": \"kavita.superadmin\",\n  \"email\": \"kavita.sharma@hdfcbank.com\",\n  \"mobile\": \"+919876543299\",\n  \"password\": \"Password@123\",\n  \"role\": \"SUPER_ADMIN\",\n  \"designation\": \"Vice President - Operations\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Update Bank Staff User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/user-management/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "user-management",
+                "1"
+              ]
+            },
+            "description": "Updates bank staff user details across fields",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kavita Sharma\",\n  \"email\": \"kavita.sharma@hdfcbank.com\",\n  \"mobile\": \"+919876543288\",\n  \"designation\": \"Executive Vice President\",\n  \"role\": \"SUPER_ADMIN\",\n  \"status\": \"OPERATIVE\",\n  \"is_active\": true\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Patch Bank Staff User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/user-management/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "user-management",
+                "1"
+              ]
+            },
+            "description": "Partially updates bank staff user details",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"+919876543200\",\n  \"designation\": \"Senior Vice President\"\n}"
             }
           },
           "response": []
@@ -2515,6 +2597,86 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"newPassword\": \"NewTempPassword@123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Update Staff User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Full update of bank staff user details",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Rohan\",\n  \"middle_name\": \"Kumar\",\n  \"last_name\": \"Deshmukh\",\n  \"email\": \"rohan.deshmukh@hdfcbank.com\",\n  \"mobile\": \"+919876543222\",\n  \"gender\": \"MALE\",\n  \"dob\": \"1994-06-15\",\n  \"role\": \"CHECKER\",\n  \"designation\": \"Deputy Branch Manager\",\n  \"status\": \"OPERATIVE\",\n  \"is_active\": true,\n  \"multi_branch_access\": true,\n  \"login_on_holidays\": false,\n  \"inactive_session_timeout\": 1800\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Patch Staff User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Partial update of bank staff user fields (e.g. designation, mobile, status)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Branch Manager\",\n  \"mobile\": \"+919876543999\"\n}"
             }
           },
           "response": []

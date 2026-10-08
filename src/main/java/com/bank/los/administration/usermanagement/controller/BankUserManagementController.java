@@ -2,6 +2,7 @@ package com.bank.los.administration.usermanagement.controller;
 
 import com.bank.los.administration.usermanagement.service.BankUserManagementService;
 import com.bank.los.bank.user.dto.CreateUserRequest;
+import com.bank.los.bank.user.dto.UpdateUserRequest;
 import com.bank.los.bank.user.dto.UserResponse;
 import com.bank.los.common.response.ApiResponse;
 import com.bank.los.security.UserPrincipal;
@@ -86,5 +87,37 @@ public class BankUserManagementController {
         }
         UserResponse response = bankUserManagementService.provisionBankAdmin(principal, request);
         return ResponseEntity.ok(ApiResponse.ok("Bank user provisioned successfully", response));
+    }
+
+    @PutMapping({"/{id}", "/users/{id}"})
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
+    @Operation(summary = "Update bank user details by ID")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestParam(required = false) Long organizationId,
+            @RequestBody UpdateUserRequest request) {
+        if (principal != null && organizationId != null && !principal.belongsToOrganization(organizationId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot modify users of another organization");
+        }
+        Long targetOrgId = (principal != null && !principal.isPlatformAdmin()) ? principal.getOrganizationId() : organizationId;
+        UserResponse response = bankUserManagementService.updateUser(principal, id, request, targetOrgId);
+        return ResponseEntity.ok(ApiResponse.ok("User updated successfully", response));
+    }
+
+    @PatchMapping({"/{id}", "/users/{id}"})
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
+    @Operation(summary = "Partially update bank user details by ID")
+    public ResponseEntity<ApiResponse<UserResponse>> patchUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestParam(required = false) Long organizationId,
+            @RequestBody UpdateUserRequest request) {
+        if (principal != null && organizationId != null && !principal.belongsToOrganization(organizationId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot modify users of another organization");
+        }
+        Long targetOrgId = (principal != null && !principal.isPlatformAdmin()) ? principal.getOrganizationId() : organizationId;
+        UserResponse response = bankUserManagementService.updateUser(principal, id, request, targetOrgId);
+        return ResponseEntity.ok(ApiResponse.ok("User updated successfully", response));
     }
 }

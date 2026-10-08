@@ -7,6 +7,8 @@ import com.bank.los.administration.organization.service.OrganizationService;
 import com.bank.los.bank.branch.dto.BranchResponse;
 import com.bank.los.bank.user.dto.RoleResponse;
 import com.bank.los.common.response.ApiResponse;
+import com.bank.los.config.BankContext;
+import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -35,6 +37,8 @@ public class OrganizationController {
     @Operation(summary = "List all onboarded organizations / financial institutions")
     public ResponseEntity<ApiResponse<List<OrganizationResponse>>> getAllOrganizations(
             @AuthenticationPrincipal UserPrincipal principal) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         List<OrganizationResponse> orgs = organizationService.getAllOrganizations(principal);
         return ResponseEntity.ok(ApiResponse.ok(orgs));
     }
@@ -48,6 +52,8 @@ public class OrganizationController {
         if (principal != null && !principal.belongsToOrganization(id)) {
             throw new AccessDeniedException("Access denied: You cannot access organization " + id);
         }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse org = organizationService.getOrganizationById(id);
         return ResponseEntity.ok(ApiResponse.ok(org));
     }
@@ -57,6 +63,8 @@ public class OrganizationController {
     @Operation(summary = "Onboard a new Bank/NBFC organization with dedicated database provisioning")
     public ResponseEntity<ApiResponse<OrganizationResponse>> createOrganization(
             @Valid @RequestBody CreateOrganizationRequest request) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse org = organizationService.createOrganization(request);
         return ResponseEntity.ok(ApiResponse.ok("Organization onboarded and database provisioned successfully", org));
     }
@@ -71,6 +79,8 @@ public class OrganizationController {
         if (principal != null && !principal.belongsToOrganization(id)) {
             throw new AccessDeniedException("Access denied: You cannot modify organization " + id);
         }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse updated = organizationService.updateOrganization(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Organization updated successfully", updated));
     }
@@ -85,6 +95,8 @@ public class OrganizationController {
         if (principal != null && !principal.belongsToOrganization(id)) {
             throw new AccessDeniedException("Access denied: You cannot modify organization " + id);
         }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse updated = organizationService.updateOrganization(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Organization updated successfully", updated));
     }
@@ -95,6 +107,8 @@ public class OrganizationController {
     public ResponseEntity<ApiResponse<Void>> deleteOrganization(
             @PathVariable String id,
             @RequestParam(defaultValue = "false") boolean hardDelete) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         organizationService.deleteOrganization(id, hardDelete);
         String msg = hardDelete ? "Organization permanently deleted successfully" : "Organization deactivated/deleted successfully";
         return ResponseEntity.ok(ApiResponse.ok(msg, null));

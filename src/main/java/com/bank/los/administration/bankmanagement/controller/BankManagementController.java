@@ -6,6 +6,8 @@ import com.bank.los.administration.organization.dto.CreateOrganizationRequest;
 import com.bank.los.administration.organization.dto.OrganizationResponse;
 import com.bank.los.administration.organization.service.OrganizationService;
 import com.bank.los.common.response.ApiResponse;
+import com.bank.los.config.BankContext;
+import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -35,6 +37,8 @@ public class BankManagementController {
     @Operation(summary = "List all onboarded banks/NBFCs")
     public ResponseEntity<ApiResponse<List<OrganizationResponse>>> listAllBanks(
             @AuthenticationPrincipal UserPrincipal principal) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         List<OrganizationResponse> banks = organizationService.getAllOrganizations(principal);
         return ResponseEntity.ok(ApiResponse.ok(banks));
     }
@@ -44,6 +48,8 @@ public class BankManagementController {
     @Operation(summary = "Onboard a new Bank/NBFC institution with full regulatory and multi-tenant details")
     public ResponseEntity<ApiResponse<OrganizationResponse>> onboardBank(
             @Valid @RequestBody CreateOrganizationRequest request) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse response = organizationService.createOrganization(request);
         return ResponseEntity.ok(ApiResponse.ok("Bank onboarded and database provisioned successfully", response));
     }
@@ -58,6 +64,8 @@ public class BankManagementController {
         if (principal != null && !principal.belongsToOrganization(organizationId)) {
             throw new AccessDeniedException("Access denied: You cannot update status of organization " + organizationId);
         }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse response = bankManagementService.updateBankStatus(organizationId, request);
         return ResponseEntity.ok(ApiResponse.ok("Organization status updated successfully", response));
     }
@@ -72,6 +80,8 @@ public class BankManagementController {
         if (principal != null && !principal.belongsToOrganization(id)) {
             throw new AccessDeniedException("Access denied: You cannot modify organization " + id);
         }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse updated = organizationService.updateOrganization(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Bank updated successfully", updated));
     }
@@ -86,6 +96,8 @@ public class BankManagementController {
         if (principal != null && !principal.belongsToOrganization(id)) {
             throw new AccessDeniedException("Access denied: You cannot modify organization " + id);
         }
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         OrganizationResponse updated = organizationService.updateOrganization(id, request);
         return ResponseEntity.ok(ApiResponse.ok("Bank updated successfully", updated));
     }
@@ -96,6 +108,8 @@ public class BankManagementController {
     public ResponseEntity<ApiResponse<Void>> deleteBank(
             @PathVariable String id,
             @RequestParam(defaultValue = "false") boolean hardDelete) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         organizationService.deleteOrganization(id, hardDelete);
         String msg = hardDelete ? "Bank permanently deleted successfully" : "Bank deactivated/deleted successfully";
         return ResponseEntity.ok(ApiResponse.ok(msg, null));

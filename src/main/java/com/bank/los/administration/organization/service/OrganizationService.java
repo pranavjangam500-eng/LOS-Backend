@@ -13,6 +13,7 @@ import com.bank.los.bank.master.repository.OrganizationRoleRepository;
 import com.bank.los.bank.user.dto.RoleResponse;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
+import com.bank.los.config.BankContext;
 import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -126,8 +127,8 @@ public class OrganizationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Organization", "identifier", identifier));
     }
 
-    @Transactional
     public OrganizationResponse updateOrganization(String identifier, UpdateOrganizationRequest request) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         Organization org = findOrganizationByIdOrIdentifier(identifier);
 
@@ -222,8 +223,8 @@ public class OrganizationService {
         return mapToResponse(updated);
     }
 
-    @Transactional
     public void deleteOrganization(String identifier, boolean hardDelete) {
+        BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         Organization org = findOrganizationByIdOrIdentifier(identifier);
 

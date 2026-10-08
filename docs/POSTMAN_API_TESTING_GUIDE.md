@@ -1,6 +1,6 @@
 # Loan Origination System (LOS) Backend - Security & Postman API Testing Guide
 
-This comprehensive guide details the architecture, security enhancements, and testing procedures for the **LOS Multi-Tenant Spring Boot Backend**, accompanied by the complete Postman API collection of **111 endpoints** across **21 functional modules**.
+This comprehensive guide details the architecture, security enhancements, and testing procedures for the **LOS Multi-Tenant Spring Boot Backend**, accompanied by the complete Postman API collection of **115 endpoints** across **21 functional modules**.
 
 ---
 
@@ -10,7 +10,7 @@ The complete, importable Postman Collection (v2.1.0) is located at:
 - **File**: [`docs/LOS_Backend_Postman_Collection.json`](file:///c:/Users/Pranav%20Jangam/Desktop/LOS-BACKEND/docs/LOS_Backend_Postman_Collection.json)
 
 ### Collection Summary
-- **Total Requests**: 111 Endpoints
+- **Total Requests**: 115 Endpoints
 - **Total Modules / Folders**: 21 Folders
 - **Pre-configured Variables**: `baseUrl`, `accessToken`, `refreshToken`, `preAuthToken`
 - **Dynamic Token Automation**: Login scripts automatically extract and inject the JWT Bearer token into all subsequent authenticated requests.
@@ -156,6 +156,64 @@ To test and operate the LOS system properly, follow this end-to-end workflow seq
   }
   ```
   > All users created under Axis Bank belong strictly to Axis Bank (`organizationId = 20`) and are stored in `los_axis01_db`.
+
+### Step 5: Editing Bank / Institution Details
+- **Actor**: Master Platform Admin OR Bank Super Admin (of their own bank)
+- **Endpoints**:
+  - `PATCH /api/v1/administration/banks/{id}` (or `PATCH /api/v1/administration/organizations/{id}`)
+  - `PUT /api/v1/administration/banks/{id}` (or `PUT /api/v1/administration/organizations/{id}`)
+- **Identifier**: Primary key ID (e.g. `20`), UUID, or Bank Code (e.g. `AXISBA02`)
+- **Headers**:
+  ```http
+  Authorization: Bearer <accessToken>
+  Content-Type: application/json
+  ```
+- **Example Payload (Editing GST Number & Contact Info)**:
+  ```json
+  {
+      "gst_number": "27AAACA9876K1ZC",
+      "contact_phone": "+912228569999",
+      "contact_email": "operations@axisbank.com"
+  }
+  ```
+- **Supported Fields**: `bank_name`, `legal_name`, `bank_type`, `gst_number` (or `gst_no`), `pan`, `cin`, `website`, `logo`, `contact_email`, `contact_phone`, `ifsc_code`, `micr_code`, `number_of_branches`, `address_type`, `unit_gala_name_number`, `street_road`, `landmark`, `city`, `state`, `pincode`, `country`, `status`.
+
+### Step 6: Editing a Particular User
+- **Actor**: Master Platform Admin OR Bank Super Admin / Admin (within their own bank)
+- **Endpoints**:
+  - `PATCH /api/v1/users/{id}` (Partial update)
+  - `PUT /api/v1/users/{id}` (Full update)
+  - Also available under `/api/v1/administration/user-management/{id}` and `/api/v1/administration/users/{id}`
+- **Path Parameter**: `id` = User primary key ID (e.g. `1`)
+- **Optional Query Param**: `?organizationId=20` (optional for platform admin)
+- **Headers**:
+  ```http
+  Authorization: Bearer <accessToken>
+  Content-Type: application/json
+  ```
+- **Example Payload (Updating Designation, Role, Mobile, Status)**:
+  ```json
+  {
+      "first_name": "Sohan",
+      "last_name": "Verma",
+      "email": "sohan@gmail.com",
+      "mobile": "+919876543299",
+      "designation": "Senior Vice President - Credit Operations",
+      "role": "SUPER_ADMIN",
+      "status": "OPERATIVE",
+      "is_active": true,
+      "multi_branch_access": true,
+      "login_on_holidays": false,
+      "inactive_session_timeout": 1800
+  }
+  ```
+- **Partial Update (e.g. changing only mobile and designation)**:
+  ```json
+  {
+      "mobile": "+919876543999",
+      "designation": "Executive Vice President"
+  }
+  ```
 
 ---
 

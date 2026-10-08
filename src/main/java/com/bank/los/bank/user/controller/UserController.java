@@ -2,6 +2,7 @@ package com.bank.los.bank.user.controller;
 
 import com.bank.los.bank.user.dto.AdminResetUserPasswordRequest;
 import com.bank.los.bank.user.dto.CreateUserRequest;
+import com.bank.los.bank.user.dto.UpdateUserRequest;
 import com.bank.los.bank.user.dto.UserResponse;
 import com.bank.los.bank.user.service.UserService;
 import com.bank.los.common.response.ApiResponse;
@@ -95,5 +96,37 @@ public class UserController {
             @Valid @RequestBody AdminResetUserPasswordRequest request) {
         userService.adminResetPassword(principal, id, request);
         return ResponseEntity.ok(ApiResponse.ok("Password reset successfully", "OK"));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
+    @Operation(summary = "Update an existing bank staff user by ID")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestParam(required = false) Long organizationId,
+            @RequestBody UpdateUserRequest request) {
+        if (principal != null && organizationId != null && !principal.belongsToOrganization(organizationId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot modify users of another organization");
+        }
+        Long targetOrgId = (principal != null && !principal.isPlatformAdmin()) ? principal.getOrganizationId() : organizationId;
+        UserResponse response = userService.updateUser(principal, id, request, targetOrgId);
+        return ResponseEntity.ok(ApiResponse.ok("User updated successfully", response));
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
+    @Operation(summary = "Partially update an existing bank staff user by ID")
+    public ResponseEntity<ApiResponse<UserResponse>> patchUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestParam(required = false) Long organizationId,
+            @RequestBody UpdateUserRequest request) {
+        if (principal != null && organizationId != null && !principal.belongsToOrganization(organizationId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot modify users of another organization");
+        }
+        Long targetOrgId = (principal != null && !principal.isPlatformAdmin()) ? principal.getOrganizationId() : organizationId;
+        UserResponse response = userService.updateUser(principal, id, request, targetOrgId);
+        return ResponseEntity.ok(ApiResponse.ok("User updated successfully", response));
     }
 }

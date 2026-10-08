@@ -12,6 +12,7 @@ import com.bank.los.bank.master.repository.OrganizationRoleRepository;
 import com.bank.los.bank.master.repository.OrganizationUserRepository;
 import com.bank.los.bank.user.dto.AdminResetUserPasswordRequest;
 import com.bank.los.bank.user.dto.CreateUserRequest;
+import com.bank.los.bank.user.dto.UpdateUserRequest;
 import com.bank.los.bank.user.dto.UserResponse;
 import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.common.exception.BusinessException;
@@ -401,6 +402,199 @@ public class UserService {
 
         organizationUserRepository.save(user);
         log.info("Password reset by admin id={} for user id={}", principal.getId(), userId);
+    }
+
+    public UserResponse updateUser(UserPrincipal principal, Long userId, UpdateUserRequest request, Long organizationId) {
+        boolean isInternalAdmin = isInternalAdmin(principal);
+        Organization targetOrg = null;
+
+        if (isInternalAdmin) {
+            if (organizationId != null) {
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                targetOrg = organizationRepository.findById(organizationId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
+                bankDataSourceProvider.getOrCreateBankDataSource(targetOrg.getDbName(), targetOrg.getDbHost(), targetOrg.getDbPort());
+                OrganizationContext.setCurrentOrganization(targetOrg.getDbName());
+                OrganizationContext.setCurrentOrgCode(targetOrg.getCode());
+            } else {
+                // If not supplied, search across organizations to locate which tenant has this user
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                List<Organization> orgs = organizationRepository.findAll();
+                for (Organization candidate : orgs) {
+                    try {
+                        bankDataSourceProvider.getOrCreateBankDataSource(candidate.getDbName(), candidate.getDbHost(), candidate.getDbPort());
+                        OrganizationContext.setCurrentOrganization(candidate.getDbName());
+                        OrganizationContext.setCurrentOrgCode(candidate.getCode());
+                        if (organizationUserRepository.existsById(userId)) {
+                            targetOrg = candidate;
+                            break;
+                        }
+                    } catch (Exception ignored) {}
+                }
+                if (targetOrg == null) {
+                    throw new ResourceNotFoundException("User", "id", userId);
+                }
+            }
+        } else {
+            if (organizationId != null && !principal.belongsToOrganization(organizationId)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Access denied: You cannot modify users of another organization"
+                );
+            }
+            if (principal != null && principal.getOrganizationId() != null) {
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                targetOrg = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
+            }
+            OrganizationContext.setCurrentOrganization(principal.getOrganizationDbName());
+            OrganizationContext.setCurrentOrgCode(principal.getOrganizationCode());
+        }
+
+        final Organization finalOrg = targetOrg;
+        OrganizationUser user = organizationUserRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        // Name
+        if (request.getName() != null && !request.getName().isBlank()) {
+            String[] parts = request.getName().trim().split("\\s+");
+            if (parts.length == 1) {
+                user.setFirstName(parts[0]);
+            } else if (parts.length == 2) {
+                user.setFirstName(parts[0]);
+                user.setLastName(parts[1]);
+            } else {
+                user.setFirstName(parts[0]);
+                user.setMiddleName(parts[1]);
+                StringBuilder sb = new StringBuilder();
+                for (int i = 2; i < parts.length; i++) {
+                    if (i > 2) sb.append(" ");
+                    sb.append(parts[i]);
+                }
+                user.setLastName(sb.toString());
+            }
+        }
+        if (request.getFirstName() != null && !request.getFirstName().isBlank()) {
+            user.setFirstName(request.getFirstName().trim());
+        }
+        if (request.getMiddleName() != null) {
+            user.setMiddleName(request.getMiddleName().trim());
+        }
+        if (request.getLastName() != null && !request.getLastName().isBlank()) {
+            user.setLastName(request.getLastName().trim());
+        }
+
+        // Email update
+        String oldEmail = user.getEmail();
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            String newEmail = request.getEmail().trim().toLowerCase();
+            if (!newEmail.equalsIgnoreCase(oldEmail)) {
+                if (organizationUserRepository.existsByEmail(newEmail)) {
+                    throw new BusinessException("EMAIL_EXISTS", "User with email '" + newEmail + "' already exists in this organization");
+                }
+                user.setEmail(newEmail);
+            }
+        }
+
+        // Mobile update
+        String oldMobile = user.getMobile();
+        if (request.getMobile() != null && !request.getMobile().isBlank()) {
+            String newMobile = request.getMobile().trim();
+            if (!newMobile.equalsIgnoreCase(oldMobile)) {
+                user.setMobile(newMobile);
+            }
+        }
+
+        if (request.getGender() != null && !request.getGender().isBlank()) {
+            user.setGender(request.getGender().trim());
+        }
+        if (request.getDob() != null) {
+            user.setDob(request.getDob());
+        }
+        if (request.getDesignation() != null && !request.getDesignation().isBlank()) {
+            user.setDesignation(request.getDesignation().trim());
+        }
+
+        // Role update
+        if (request.getRoleId() != null) {
+            OrganizationRole role = organizationRoleRepository.findById(request.getRoleId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
+            user.setRole(role);
+        } else if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
+            String roleName = request.getRoleName().trim().toUpperCase();
+            OrganizationRole role = organizationRoleRepository.findByName(roleName)
+                    .orElseGet(() -> autoSeedRole(roleName));
+            user.setRole(role);
+        }
+
+        // Branch update
+        Long targetBranchId = request.getLoginBranchId();
+        String branchIdentifier = request.getLoginBranch();
+        if (targetBranchId == null && branchIdentifier != null && !branchIdentifier.isBlank()) {
+            try {
+                targetBranchId = Long.parseLong(branchIdentifier.trim());
+            } catch (NumberFormatException ignored) {}
+        }
+        if (targetBranchId != null) {
+            Branch branch = branchRepository.findById(targetBranchId).orElse(null);
+            if (branch != null) user.setLoginBranch(branch);
+        } else if (branchIdentifier != null && !branchIdentifier.isBlank()) {
+            Branch branch = branchRepository.findByName(branchIdentifier.trim())
+                    .or(() -> branchRepository.findByCode(branchIdentifier.trim()))
+                    .orElse(null);
+            if (branch != null) user.setLoginBranch(branch);
+        }
+
+        if (request.getTwoFaEnabled() != null) {
+            user.setTwoFaEnabled(request.getTwoFaEnabled());
+        }
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            user.setStatus(request.getStatus().trim().toUpperCase());
+        }
+        if (request.getIsActive() != null) {
+            user.setIsActive(request.getIsActive());
+        }
+        if (request.getMultiBranchAccess() != null) {
+            user.setMultiBranchAccess(request.getMultiBranchAccess());
+        }
+        if (request.getLoginOnHolidays() != null) {
+            user.setLoginOnHolidays(request.getLoginOnHolidays());
+        }
+        if (request.getLoginTime() != null) {
+            user.setLoginTime(request.getLoginTime());
+        }
+        if (request.getLogoutTime() != null) {
+            user.setLogoutTime(request.getLogoutTime());
+        }
+        if (request.getInactiveSessionTimeout() != null) {
+            user.setInactiveSessionTimeout(request.getInactiveSessionTimeout());
+        }
+
+        if (principal != null) {
+            user.setModifiedBy(principal.getId());
+        }
+        user.setUpdatedAt(LocalDateTime.now());
+
+        OrganizationUser updatedUser = organizationUserRepository.save(user);
+
+        // Sync with Master Login Directory if email, phone, or empNo changed
+        try {
+            String currentDb = OrganizationContext.getCurrentOrganization();
+            String currentCode = OrganizationContext.getCurrentOrgCode();
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+            loginDirectoryRepository.findByUserCode(updatedUser.getEmpNo()).ifPresent(ld -> {
+                ld.setEmail(updatedUser.getEmail());
+                ld.setPhone(updatedUser.getMobile());
+                loginDirectoryRepository.save(ld);
+            });
+            OrganizationContext.setCurrentOrganization(currentDb);
+            OrganizationContext.setCurrentOrgCode(currentCode);
+        } catch (Exception e) {
+            log.warn("Could not sync updated user with login directory: {}", e.getMessage());
+        }
+
+        log.info("Successfully updated user id={} username={} by principal={}",
+                updatedUser.getId(), updatedUser.getUsername(), principal != null ? principal.getId() : null);
+
+        return mapToResponse(updatedUser, finalOrg);
     }
 
     public UserResponse mapToResponse(OrganizationUser user, Organization org) {
