@@ -15,6 +15,9 @@ import java.util.List;
 @Schema(description = "Response returned after successful authentication / OTP challenge")
 public class LoginResponse {
 
+    @Schema(description = "Bank / Organization ID", example = "20")
+    private Long organizationId;
+
     @Schema(description = "Indicates whether 2FA OTP is required to complete authentication (always true for bank staff)", example = "true")
     private Boolean otpRequired;
 

@@ -177,6 +177,7 @@ public class AuthenticationService {
         String tempToken = jwtTokenProvider.generateTempSessionToken(tempPrincipal);
 
         LoginResponse.LoginResponseBuilder resp = LoginResponse.builder()
+                .organizationId(org.getId())
                 .otpRequired(true)
                 .tempSessionToken(tempToken);
 
@@ -446,6 +447,7 @@ public class AuthenticationService {
 
         OrganizationContext.setCurrentOrganization(principal.getOrganizationDbName());
         Organization org = Organization.builder()
+                .id(principal.getOrganizationId())
                 .code(principal.getOrganizationCode())
                 .dbName(principal.getOrganizationDbName())
                 .name(principal.getOrganizationCode())
@@ -698,7 +700,12 @@ public class AuthenticationService {
         List<String> permissions = principal.getPermissions() != null ? principal.getPermissions() :
                 permissionService.getEffectivePermissions(principal.getOrganizationDbName(), principal.getRole(), principal.getDesignation());
 
+        if (profile != null && profile.getOrganizationId() == null && principal.getOrganizationId() != null) {
+            profile.setOrganizationId(principal.getOrganizationId());
+        }
+
         return LoginResponse.builder()
+                .organizationId(principal.getOrganizationId())
                 .accessToken(accessToken)
                 .refreshToken(refreshTokenEntity.getToken())
                 .tokenType("Bearer")

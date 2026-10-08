@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Response returned after token refresh")
 public class TokenResponse {
 
+    @Schema(description = "Bank / Organization ID", example = "20")
+    private Long organizationId;
+
     @Schema(description = "New signed JWT Access Token")
     private String accessToken;
 

@@ -14,6 +14,7 @@ import com.bank.los.bank.user.dto.RoleResponse;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.config.OrganizationContext;
+import com.bank.los.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,7 +67,27 @@ public class OrganizationService {
     }
 
     public List<OrganizationResponse> getAllOrganizations() {
+        return getAllOrganizations(null);
+    }
+
+    public List<OrganizationResponse> getAllOrganizations(UserPrincipal principal) {
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        if (principal != null && !principal.isPlatformAdmin()) {
+            if (principal.getOrganizationId() != null) {
+                return organizationRepository.findById(principal.getOrganizationId())
+                        .map(this::mapToResponse)
+                        .map(List::of)
+                        .orElse(List.of());
+            } else if (principal.getOrganizationCode() != null) {
+                return organizationRepository.findByBankCode(principal.getOrganizationCode().toUpperCase())
+                        .or(() -> organizationRepository.findByCode(principal.getOrganizationCode().toUpperCase()))
+                        .map(this::mapToResponse)
+                        .map(List::of)
+                        .orElse(List.of());
+            }
+            return List.of();
+        }
+
         return organizationRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

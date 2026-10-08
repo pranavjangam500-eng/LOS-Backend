@@ -80,10 +80,21 @@ public class UserService {
             }
         } else {
             // Organization admin / staff querying their own organization
+            if (organizationId != null && !principal.belongsToOrganization(organizationId)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Access denied: You cannot access users of another organization"
+                );
+            }
+            Organization org = null;
+            if (principal != null && principal.getOrganizationId() != null) {
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                org = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
+            }
+            final Organization finalOrg = org;
             OrganizationContext.setCurrentOrganization(principal.getOrganizationDbName());
             OrganizationContext.setCurrentOrgCode(principal.getOrganizationCode());
             return organizationUserRepository.findAll().stream()
-                    .map(u -> mapToResponse(u, null))
+                    .map(u -> mapToResponse(u, finalOrg))
                     .collect(Collectors.toList());
         }
     }
@@ -104,6 +115,15 @@ public class UserService {
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
             }
         } else {
+            if (organizationId != null && !principal.belongsToOrganization(organizationId)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Access denied: You cannot access users of another organization"
+                );
+            }
+            if (principal != null && principal.getOrganizationId() != null) {
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                targetOrg = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
+            }
             OrganizationContext.setCurrentOrganization(principal.getOrganizationDbName());
             OrganizationContext.setCurrentOrgCode(principal.getOrganizationCode());
         }
@@ -134,8 +154,21 @@ public class UserService {
                 throw new BusinessException("ORGANIZATION_REQUIRED", "Please specify organizationId, organizationUuid, or organizationCode when creating a bank user as Super Admin");
             }
         } else {
-            org = organizationRepository.findByCode(principal.getOrganizationCode())
-                    .orElseThrow(() -> new ResourceNotFoundException("Organization", "code", principal.getOrganizationCode()));
+            if (request.getOrganizationId() != null && !principal.belongsToOrganization(request.getOrganizationId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot create users for another organization");
+            }
+            if (request.getOrganizationCode() != null && !principal.belongsToOrganization(request.getOrganizationCode())) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot create users for another organization");
+            }
+            if (principal.getOrganizationId() != null) {
+                org = organizationRepository.findById(principal.getOrganizationId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", principal.getOrganizationId()));
+            } else {
+                org = organizationRepository.findByCode(principal.getOrganizationCode())
+                        .orElseThrow(() -> new ResourceNotFoundException("Organization", "code", principal.getOrganizationCode()));
+            }
+            request.setOrganizationId(org.getId());
+            request.setOrganizationCode(org.getCode());
         }
 
         String orgDb = org.getDbName();
@@ -258,7 +291,8 @@ public class UserService {
 
         String initialStatus = request.getStatus();
         if (initialStatus == null || initialStatus.isBlank()) {
-            initialStatus = isInternalAdmin ? ApplicationConstants.UserStatus.OPERATIVE : ApplicationConstants.UserStatus.PENDING_VERIFICATION;
+            boolean isStaffSuperAdmin = principal != null && ApplicationConstants.Roles.SUPER_ADMIN.equalsIgnoreCase(principal.getRole());
+            initialStatus = (isInternalAdmin || isStaffSuperAdmin) ? ApplicationConstants.UserStatus.OPERATIVE : ApplicationConstants.UserStatus.PENDING_VERIFICATION;
         }
 
         Boolean twoFa = request.getTwoFaEnabled();
@@ -342,7 +376,13 @@ public class UserService {
 
         OrganizationUser updated = organizationUserRepository.save(user);
         log.info("User id={} verified and marked OPERATIVE by verifier={}", userId, principal.getId());
-        return mapToResponse(updated, null);
+        Organization org = null;
+        if (principal != null && principal.getOrganizationId() != null) {
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+            org = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
+            OrganizationContext.setCurrentOrganization(orgDb);
+        }
+        return mapToResponse(updated, org);
     }
 
     @Transactional
@@ -421,11 +461,7 @@ public class UserService {
 
 
     private boolean isInternalAdmin(UserPrincipal principal) {
-        return principal != null && (
-                ApplicationConstants.Roles.INTERNAL_ADMIN.equalsIgnoreCase(principal.getRole()) ||
-                ApplicationConstants.Roles.SUPER_ADMIN.equalsIgnoreCase(principal.getRole()) ||
-                ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(principal.getUserType())
-        );
+        return principal != null && principal.isPlatformAdmin();
     }
 
     private OrganizationRole autoSeedRole(String roleName) {

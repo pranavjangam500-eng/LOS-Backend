@@ -33,7 +33,11 @@ public class UserController {
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(required = false) Long organizationId) {
-        List<UserResponse> users = userService.getAllUsers(principal, organizationId);
+        if (principal != null && organizationId != null && !principal.belongsToOrganization(organizationId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot access users of another organization");
+        }
+        Long targetOrgId = (principal != null && !principal.isPlatformAdmin()) ? principal.getOrganizationId() : organizationId;
+        List<UserResponse> users = userService.getAllUsers(principal, targetOrgId);
         return ResponseEntity.ok(ApiResponse.ok(users));
     }
 
@@ -44,7 +48,11 @@ public class UserController {
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long id,
             @RequestParam(required = false) Long organizationId) {
-        UserResponse user = userService.getUserById(principal, id, organizationId);
+        if (principal != null && organizationId != null && !principal.belongsToOrganization(organizationId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot access users of another organization");
+        }
+        Long targetOrgId = (principal != null && !principal.isPlatformAdmin()) ? principal.getOrganizationId() : organizationId;
+        UserResponse user = userService.getUserById(principal, id, targetOrgId);
         return ResponseEntity.ok(ApiResponse.ok(user));
     }
 
@@ -54,6 +62,16 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> createUser(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreateUserRequest request) {
+        if (principal != null && !principal.isPlatformAdmin()) {
+            if (request.getOrganizationId() != null && !principal.belongsToOrganization(request.getOrganizationId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot create users for another organization");
+            }
+            if (request.getOrganizationCode() != null && !principal.belongsToOrganization(request.getOrganizationCode())) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot create users for another organization");
+            }
+            request.setOrganizationId(principal.getOrganizationId());
+            request.setOrganizationCode(principal.getOrganizationCode());
+        }
         UserResponse user = userService.createUser(principal, request);
         return ResponseEntity.ok(ApiResponse.ok("User created successfully", user));
     }

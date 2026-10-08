@@ -26,8 +26,153 @@ The complete, importable Postman Collection (v2.1.0) is located at:
 5. Ensure your collection variables or active environment has:
    - `baseUrl`: `http://localhost:8080` (or your deployed server domain)
 
-> 💡 **Automated JWT Token Management**:
-> Executing any login request (e.g., `01. Authentication & 2FA -> 1. Login - Master Internal Admin`) automatically executes a Postman Test script that stores `accessToken` and `refreshToken` into your active environment and collection variables. All subsequent requests automatically inherit `Bearer {{accessToken}}` in their Authorization header!
+> 💡 **Automated JWT Token & Organization ID Management**:
+> Executing any login request (e.g., `01. Authentication & 2FA -> 1. Login - Master Internal Admin` or bank staff login) automatically executes a Postman Test script that stores `accessToken`, `refreshToken`, and `organizationId` into your active environment and collection variables. All subsequent requests automatically inherit `Bearer {{accessToken}}` in their Authorization header and can reference `{{organizationId}}`!
+
+---
+
+## 🔄 Proper Multi-Tenant API Execution Sequence
+
+To test and operate the LOS system properly, follow this end-to-end workflow sequence:
+
+### Step 1: Bank / NBFC Institution Onboarding (Master Admin Only)
+- **Actor**: Master Platform Admin (`admin@losplatform.com`)
+- **API**: `POST /api/v1/administration/organizations` (or `/api/v1/administration/banks/onboard`)
+- **Action**: Onboards a new institution (e.g. Axis Bank, Bank Code `AXISBA02`).
+- **What happens**:
+  1. Record created in `los_master_db.identity.organizations` with sequential `id` (e.g., `20`).
+  2. Dedicated physical PostgreSQL database (e.g., `los_axis01_db`) is dynamically created/connected.
+  3. Schema, default roles (`SUPER_ADMIN`, `ADMIN`, `MAKER`, `CHECKER`, `VIEWER`, `CUSTOMER`), permissions, catalog lookups, and primary branch are provisioned inside that bank's database.
+
+### Step 2: Provision Bank Super Admin (Master Admin or Bank Admin)
+- **Actor**: Master Platform Admin (`admin@losplatform.com`)
+- **API**: `POST /api/v1/administration/user-management/users` (or `POST /api/v1/users`)
+- **Payload**:
+  ```json
+  {
+      "organizationId": 20,
+      "email": "superadmin@axisbank.com",
+      "username": "axis_superadmin",
+      "password": "Password@123",
+      "firstName": "Sohan",
+      "lastName": "Verma",
+      "roleName": "SUPER_ADMIN",
+      "designation": "Bank Super Administrator"
+  }
+  ```
+- **What happens**:
+  1. Globally registered in `los_master_db.identity.login_directory` for zero-friction dynamic routing.
+  2. Created in `los_axis01_db.identity.organization_users` with role `SUPER_ADMIN` and status `OPERATIVE`.
+
+### Step 3: Bank Super Admin Login & 2FA (Returns `organizationId`)
+- **Actor**: Bank Super Admin (`superadmin@axisbank.com`)
+- **Step 3A (Initiate Login)**: `POST /api/v1/auth/login`
+  ```json
+  {
+      "identifier": "superadmin@axisbank.com",
+      "password": "Password@123"
+  }
+  ```
+  **Response**:
+  ```json
+  {
+      "success": true,
+      "message": "Login successful",
+      "data": {
+          "organizationId": 20,
+          "otpRequired": true,
+          "tempSessionToken": "...",
+          "devOtp": "123456"
+      }
+  }
+  ```
+- **Step 3B (Verify 2FA OTP)**: `POST /api/v1/auth/verify-otp`
+  ```json
+  {
+      "tempSessionToken": "{{preAuthToken}}",
+      "otp": "123456"
+  }
+  ```
+  **Response**:
+  ```json
+  {
+      "success": true,
+      "message": "Login successful",
+      "data": {
+          "organizationId": 20,
+          "accessToken": "eyJhbGci...",
+          "refreshToken": "...",
+          "dashboardUrl": "/dashboard/admin",
+          "user": {
+              "id": 1,
+              "organizationId": 20,
+              "organizationCode": "AXISBA02",
+              "organizationName": "Axis Bank",
+              "role": "SUPER_ADMIN",
+              "userType": "STAFF"
+          }
+      }
+  }
+  ```
+  > Both `data.organizationId` and `data.user.organizationId` explicitly return the numeric ID (`20`).
+
+### Step 4: Bank Super Admin Creates Bank Users (Maker, Checker, Viewer)
+- **Actor**: Bank Super Admin (Axis Bank, Org 20)
+- **API**: `POST /api/v1/users` (or `POST /api/v1/administration/user-management/users`)
+- **Maker**:
+  ```json
+  {
+      "email": "maker@axisbank.com",
+      "username": "axis_maker",
+      "password": "Password@123",
+      "firstName": "Rahul",
+      "lastName": "Sharma",
+      "roleName": "MAKER",
+      "status": "OPERATIVE"
+  }
+  ```
+- **Checker**:
+  ```json
+  {
+      "email": "checker@axisbank.com",
+      "username": "axis_checker",
+      "password": "Password@123",
+      "firstName": "Priya",
+      "lastName": "Nair",
+      "roleName": "CHECKER",
+      "status": "OPERATIVE"
+  }
+  ```
+- **Viewer**:
+  ```json
+  {
+      "email": "viewer@axisbank.com",
+      "username": "axis_viewer",
+      "password": "Password@123",
+      "firstName": "Anil",
+      "lastName": "Mehta",
+      "roleName": "VIEWER",
+      "status": "OPERATIVE"
+  }
+  ```
+  > All users created under Axis Bank belong strictly to Axis Bank (`organizationId = 20`) and are stored in `los_axis01_db`.
+
+---
+
+## 🔒 Strict Multi-Tenant Database Isolation Rules
+
+| Action / Request | Caller Persona | Target Org | Result |
+| :--- | :--- | :--- | :--- |
+| `GET /api/v1/administration/organizations` | Axis Super Admin (Org 20) | N/A | ✅ Returns **ONLY Axis Bank** (Org 20) |
+| `GET /api/v1/administration/organizations/20` | Axis Super Admin (Org 20) | Org 20 | ✅ **200 OK** (Access granted to own bank) |
+| `GET /api/v1/administration/organizations/17` | Axis Super Admin (Org 20) | Org 17 | 🚫 **403 Forbidden** (`Access denied: You cannot access organization 17`) |
+| `GET /api/v1/users?organizationId=20` | Axis Super Admin (Org 20) | Org 20 | ✅ Returns Axis Bank staff |
+| `GET /api/v1/users` (no param) | Axis Super Admin (Org 20) | Org 20 | ✅ Automatically scoped to Axis Bank staff |
+| `GET /api/v1/users?organizationId=17` | Axis Super Admin (Org 20) | Org 17 | 🚫 **403 Forbidden** (`Access denied: You cannot access users of another organization`) |
+| `POST /api/v1/users` (target orgId=17) | Axis Super Admin (Org 20) | Org 17 | 🚫 **403 Forbidden** (`Access denied: You cannot create users for another organization`) |
+| `GET /api/v1/administration/organizations` | Master Platform Admin | All | ✅ Returns all institutions in platform |
+| `GET /api/v1/users?organizationId=17` | Master Platform Admin | Org 17 | ✅ Returns Org 17 staff |
+
 
 ---
 

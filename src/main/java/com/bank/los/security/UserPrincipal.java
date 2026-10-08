@@ -51,6 +51,46 @@ public class UserPrincipal implements UserDetails {
         return permissions != null && permissions.contains(permissionCode);
     }
 
+    /**
+     * Checks if this principal is a global platform master administrator.
+     * Bank-level Super Admins and Staff are tenant users and return false.
+     */
+    public boolean isPlatformAdmin() {
+        return ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(userType) ||
+               (ApplicationConstants.Roles.INTERNAL_ADMIN.equalsIgnoreCase(role) &&
+                (organizationId == null || organizationId == 0L || "MASTER".equalsIgnoreCase(organizationCode)));
+    }
+
+    /**
+     * Validates whether this principal is permitted to access the given organization ID.
+     * Platform master administrators have system-wide access.
+     */
+    public boolean belongsToOrganization(Long targetOrgId) {
+        if (targetOrgId == null) return false;
+        if (isPlatformAdmin()) return true;
+        return targetOrgId.equals(this.organizationId);
+    }
+
+    /**
+     * Validates whether this principal is permitted to access the given organization identifier (ID, UUID, or Code).
+     */
+    public boolean belongsToOrganization(String targetOrgIdentifier) {
+        if (targetOrgIdentifier == null || targetOrgIdentifier.isBlank()) return false;
+        if (isPlatformAdmin()) return true;
+
+        String trimmed = targetOrgIdentifier.trim();
+        if (this.organizationId != null && trimmed.equals(String.valueOf(this.organizationId))) {
+            return true;
+        }
+        if (this.organizationCode != null && this.organizationCode.equalsIgnoreCase(trimmed)) {
+            return true;
+        }
+        if (this.organizationUuid != null && this.organizationUuid.toString().equalsIgnoreCase(trimmed)) {
+            return true;
+        }
+        return false;
+    }
+
     // Backward-compatible alias for tenantId
     public Long getTenantId() {
         return organizationId;
