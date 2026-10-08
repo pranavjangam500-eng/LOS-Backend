@@ -1,9 +1,19 @@
 package com.bank.los.otp.controller;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.bank.los.otp.dto.OtpResponse;
 import com.bank.los.otp.dto.SendOtpRequest;
 import com.bank.los.otp.dto.VerifyOtpRequest;
 import com.bank.los.otp.service.OtpService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,14 +22,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 /**
- * REST controller for standalone Email OTP generation and verification.
- * Exposed publicly on both /api/v1/otp and /api/otp.
+ * REST controller for standalone Email OTP generation and verification. Exposed
+ * publicly on both /api/v1/otp and /api/otp.
  */
 @Slf4j
 @RestController("emailOtpController")
@@ -35,20 +41,20 @@ public class OtpController {
     }
 
     /**
-     * 1. POST /api/v1/otp/send or POST /api/otp/send
-     * Generates a 6-digit OTP, stores its SHA-256 hash, and sends an HTML email.
+     * 1. POST /api/v1/otp/send or POST /api/otp/send Generates a 6-digit OTP,
+     * stores its SHA-256 hash, and sends an HTML email.
      */
     @PostMapping("/send")
     @Operation(summary = "Send Email OTP", description = "Generates and sends a single-use 6-digit OTP to the specified email with a 60-second cooldown")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OTP sent successfully",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request or validation failure",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class))),
-            @ApiResponse(responseCode = "429", description = "Cooldown active (too many requests)",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error during email dispatch",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class)))
+        @ApiResponse(responseCode = "200", description = "OTP sent successfully",
+                content = @Content(schema = @Schema(implementation = OtpResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid request or validation failure",
+                content = @Content(schema = @Schema(implementation = OtpResponse.class))),
+        @ApiResponse(responseCode = "429", description = "Cooldown active (too many requests)",
+                content = @Content(schema = @Schema(implementation = OtpResponse.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error during email dispatch",
+                content = @Content(schema = @Schema(implementation = OtpResponse.class)))
     })
     public ResponseEntity<OtpResponse> sendOtp(@Valid @RequestBody SendOtpRequest request) {
         try {
@@ -71,18 +77,19 @@ public class OtpController {
     }
 
     /**
-     * 2. POST /api/v1/otp/verify or POST /api/otp/verify
-     * Verifies the 6-digit OTP code against the SHA-256 hash with attempt tracking and single-use invalidation.
+     * 2. POST /api/v1/otp/verify or POST /api/otp/verify Verifies the 6-digit
+     * OTP code against the SHA-256 hash with attempt tracking and single-use
+     * invalidation.
      */
     @PostMapping("/verify")
     @Operation(summary = "Verify Email OTP", description = "Validates submitted OTP code against salted SHA-256 hash. Invalids after max 5 attempts or on success (single-use).")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "OTP successfully verified",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid code, expired code, or maximum attempts reached",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error during verification",
-                    content = @Content(schema = @Schema(implementation = OtpResponse.class)))
+        @ApiResponse(responseCode = "200", description = "OTP successfully verified",
+                content = @Content(schema = @Schema(implementation = OtpResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid code, expired code, or maximum attempts reached",
+                content = @Content(schema = @Schema(implementation = OtpResponse.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error during verification",
+                content = @Content(schema = @Schema(implementation = OtpResponse.class)))
     })
     public ResponseEntity<OtpResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
         try {
