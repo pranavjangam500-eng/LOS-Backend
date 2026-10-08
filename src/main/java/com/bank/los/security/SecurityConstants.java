@@ -46,6 +46,8 @@ public final class SecurityConstants {
             "/actuator/**",
             "/api/leads/**",
             "/api/v1/leads/**",
+            "/api/otp/**",
+            "/api/v1/otp/**",
             "/index.html",
             "/sample_leads.csv"
     };

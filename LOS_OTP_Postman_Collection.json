@@ -1,0 +1,497 @@
+{
+  "info": {
+    "_postman_id": "a9d72e61-8910-4bf2-a589-9cb8e5c26b91",
+    "name": "LOS Email OTP Authentication API Collection",
+    "description": "Ready-to-use Postman Collection for Frontend Developers integrating the Email OTP service into web, mobile, and customer onboarding applications.\n\n### Endpoints Supported:\n- `POST /api/v1/otp/send` & `POST /api/otp/send`: Generates and dispatches 6-digit cryptographic OTP to email.\n- `POST /api/v1/otp/verify` & `POST /api/otp/verify`: Verifies code with attempt tracking (max 5) and single-use protection.\n\n### Base URL:\nDefault is `http://localhost:8080`. No Bearer token or authorization header required (public endpoints).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "test_email",
+      "value": "demo@allianzapay.com",
+      "type": "string"
+    },
+    {
+      "key": "test_otp",
+      "value": "123456",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Send OTP",
+      "item": [
+        {
+          "name": "1.1 Send OTP (Primary API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "send"
+              ]
+            },
+            "description": "Sends a 6-digit numeric OTP to the provided email. Triggers real SMTP email or simulation if SMTP is unconfigured."
+          },
+          "response": [
+            {
+              "name": "Success Response (200 OK)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"demo@allianzapay.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/otp/send",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "otp",
+                    "send"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"OTP sent successfully to demo@allianzapay.com.\"\n}"
+            },
+            {
+              "name": "Cooldown Rate Limited (429 Too Many Requests)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"demo@allianzapay.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/otp/send",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "otp",
+                    "send"
+                  ]
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Please wait 45s before requesting a new OTP.\",\n  \"cooldownRemaining\": 45\n}"
+            }
+          ]
+        },
+        {
+          "name": "1.2 Send OTP (Alias /api/otp/send)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/otp/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "otp",
+                "send"
+              ]
+            },
+            "description": "Short-path alias endpoint identical to /api/v1/otp/send."
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Resend OTP (Cooldown Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "send"
+              ]
+            },
+            "description": "Calling this within 60 seconds of a previous send returns HTTP 429 with remaining seconds countdown."
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Send OTP (Invalid Email Validation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email-format\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "send"
+              ]
+            },
+            "description": "Validates email format using @Email constraint. Returns HTTP 400 Bad Request."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Verify OTP",
+      "item": [
+        {
+          "name": "2.1 Verify OTP (Primary API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"otp\": \"{{test_otp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Verifies 6-digit numeric OTP code. Immediately invalidates OTP upon success (single-use)."
+          },
+          "response": [
+            {
+              "name": "Success Response (200 OK)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"demo@allianzapay.com\",\n  \"otp\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/otp/verify",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "otp",
+                    "verify"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Email Verified Successfully\",\n  \"verifiedEmail\": \"demo@allianzapay.com\",\n  \"verifiedAt\": \"2026-10-08T08:21:34.794Z\"\n}"
+            },
+            {
+              "name": "Wrong OTP (400 Bad Request)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"demo@allianzapay.com\",\n  \"otp\": \"000000\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/otp/verify",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "otp",
+                    "verify"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"Incorrect OTP code. 4 attempt(s) remaining.\"\n}"
+            },
+            {
+              "name": "Expired / Not Found (400 Bad Request)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"demo@allianzapay.com\",\n  \"otp\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/otp/verify",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "otp",
+                    "verify"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"No active OTP found for this email or it has expired. Please request a new code.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "2.2 Verify OTP (Alias /api/otp/verify)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"otp\": \"{{test_otp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Short-path alias endpoint identical to /api/v1/otp/verify."
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Verify Wrong Code (Attempt Countdown)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"otp\": \"000000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Submitting a wrong 6-digit code decrements the attempt counter (max 5)."
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Verify Replay Attack (Single-Use Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"otp\": \"{{test_otp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Submitting the same OTP code twice will fail on the second attempt because the code is instantly purged upon initial verification."
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Verify Invalid OTP Format (Non-numeric or length != 6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"otp\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Validates that OTP is exactly a 6-digit number via regex pattern ^\\d{6}$. Returns HTTP 400."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

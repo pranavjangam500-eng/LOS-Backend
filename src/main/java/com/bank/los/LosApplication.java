@@ -16,6 +16,10 @@ import java.util.List;
 @EnableScheduling
 public class LosApplication {
 
+    static {
+        loadDotEnvIfPresent();
+    }
+
     public static void main(String[] args) {
         loadDotEnvIfPresent();
         SpringApplication.run(LosApplication.class, args);
@@ -40,6 +44,10 @@ public class LosApplication {
                 if ((value.startsWith("\"") && value.endsWith("\"")) ||
                     (value.startsWith("'") && value.endsWith("'"))) {
                     value = value.substring(1, value.length() - 1);
+                }
+
+                if (key.contains("PASSWORD") || key.contains("PASS")) {
+                    value = value.replaceAll("\\s+", "");
                 }
 
                 if (System.getenv(key) == null && System.getProperty(key) == null) {

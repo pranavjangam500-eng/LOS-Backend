@@ -26,10 +26,10 @@ spring:
       write_dates_as_timestamps: false
     default-property-inclusion: non_null
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: ${MAIL_HOST:${SMTP_HOST:smtp.gmail.com}}
+    port: ${MAIL_PORT:${SMTP_PORT:587}}
+    username: ${MAIL_USERNAME:${SMTP_USERNAME:${SMTP_USER:}}}
+    password: ${MAIL_PASSWORD:${SMTP_APP_PASSWORD:${SMTP_PASS:}}}
     properties:
       mail:
         smtp:
@@ -37,6 +37,8 @@ spring:
           starttls:
             enable: true
             required: true
+          ssl:
+            trust: "*"
         debug: false
 
 app:
@@ -58,11 +60,10 @@ app:
       url: ${RENDER_EXTERNAL_URL:${APP_KEEP_ALIVE_URL:}}
       interval-ms: ${RENDER_KEEP_ALIVE_INTERVAL_MS:600000} # 10 minutes (prevents 15m idle shutdown)
 
-  # Mail — disabled until SMTP credentials are configured via env vars
-  # To activate: set MAIL_ENABLED=true and provide SMTP creds
+  # Mail configuration (supports standard SMTP variables)
   mail:
     enabled: ${MAIL_ENABLED:false}
-    from: ${MAIL_FROM:noreply@losplatform.com}
+    from: ${SMTP_FROM:${MAIL_FROM:OTP Auth Service <demo@allianzapay.com>}}
 
 # Master Database (Registry & Global Routing)
 master:
