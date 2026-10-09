@@ -189,6 +189,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         // Login directory entries for HDFC demo staff
+        registerLoginDirectoryEntry("superadmin@hdfcbank.com", "EMP-HDFC-000", "+919876500000", hdfc, ApplicationConstants.UserTypes.STAFF);
+        registerLoginDirectoryEntry("demo@allianzapay.com", "EMP-DEMO-001", "+919999900009", hdfc, ApplicationConstants.UserTypes.STAFF);
         registerLoginDirectoryEntry("admin@hdfcbank.com", "EMP-HDFC-001", "+919876500001", hdfc, ApplicationConstants.UserTypes.STAFF);
         registerLoginDirectoryEntry("maker@hdfcbank.com", "EMP-HDFC-002", "+919876500002", hdfc, ApplicationConstants.UserTypes.STAFF);
         registerLoginDirectoryEntry("checker@hdfcbank.com", "EMP-HDFC-003", "+919876500003", hdfc, ApplicationConstants.UserTypes.STAFF);
@@ -338,6 +340,8 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // ── Staff Users ───────────────────────────────────────────────────
         if ("HDFC01".equals(orgCode)) {
+            createStaffUser("superadmin@hdfcbank.com", "EMP-HDFC-000", "superadmin", "Rajiv", "", "Bansal", "+919876500000", "Admin@123", superAdminRole, mainBranch, "Managing Director");
+            createStaffUser("demo@allianzapay.com", "EMP-DEMO-001", "demo_user", "Demo", "", "User", "+919999900009", "Admin@123", adminRole, mainBranch, "Technical Admin");
             createStaffUser("admin@hdfcbank.com", "EMP-HDFC-001", "admin", "Vikram", "Aditya", "Mehta", "+919876500001", "Admin@123", adminRole, mainBranch, "General Manager");
             createStaffUser("maker@hdfcbank.com", "EMP-HDFC-002", "maker01", "Rohan", "Kumar", "Verma", "+919876500002", "Maker@123", makerRole, mainBranch, "Officer");
             createStaffUser("checker@hdfcbank.com", "EMP-HDFC-003", "chk01", "Priyanka", "Devi", "Nair", "+919876500003", "Checker@123", checkerRole, mainBranch, "Asst. Manager");

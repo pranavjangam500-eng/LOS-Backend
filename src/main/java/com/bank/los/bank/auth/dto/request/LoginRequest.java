@@ -16,6 +16,7 @@ public class LoginRequest {
 
     @NotBlank(message = "Identifier (Email, Employee No, Customer Code, or Mobile) is required")
     @Schema(description = "Registered email, employee number (e.g. EMP001), customer code (e.g. CUST001), or mobile number", example = "admin@hdfcbank.com")
+    @com.fasterxml.jackson.annotation.JsonAlias({"identifier", "username"})
     private String email;
 
     @NotBlank(message = "Password is required")

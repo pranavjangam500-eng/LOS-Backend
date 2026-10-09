@@ -5,13 +5,19 @@ import com.bank.los.bank.auth.dto.request.VerifyOtpRequest;
 import com.bank.los.bank.auth.dto.response.LoginResponse;
 import com.bank.los.bank.auth.service.AuthenticationService;
 import com.bank.los.common.exception.UnauthorizedException;
+import com.bank.los.otp.service.OtpEmailService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @ActiveProfiles("local")
@@ -19,6 +25,15 @@ class AuthenticationServiceTest {
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @MockBean
+    private OtpEmailService otpEmailService;
+
+    private String captureLastOtp(String email) {
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(otpEmailService, atLeastOnce()).sendOtpEmail(eq(email), captor.capture());
+        return captor.getValue();
+    }
 
     @Test
     @DisplayName("Should successfully authenticate Internal Super Admin on Master DB (single step)")
@@ -52,12 +67,15 @@ class AuthenticationServiceTest {
         assertNotNull(step1);
         assertTrue(Boolean.TRUE.equals(step1.getOtpRequired()), "2FA OTP must be mandatory for tenant staff");
         assertNotNull(step1.getTempSessionToken());
-        assertNotNull(step1.getDevOtp(), "Dev OTP should be available in dev/test mode");
+        assertNull(step1.getDevOtp(), "devOtp must not be returned in response");
+
+        String emailOtp = captureLastOtp("admin@hdfcbank.com");
+        assertNotNull(emailOtp);
 
         // Step 2: Verify OTP
         VerifyOtpRequest step2Request = VerifyOtpRequest.builder()
                 .tempSessionToken(step1.getTempSessionToken())
-                .otp(step1.getDevOtp())
+                .otp(emailOtp)
                 .build();
 
         LoginResponse step2 = authenticationService.verifyOtp(step2Request);
@@ -79,10 +97,14 @@ class AuthenticationServiceTest {
 
         LoginResponse step1 = authenticationService.login(step1Request);
         assertTrue(Boolean.TRUE.equals(step1.getOtpRequired()));
+        assertNull(step1.getDevOtp(), "devOtp must not be returned in response");
+
+        String emailOtp = captureLastOtp("maker@hdfcbank.com");
+        assertNotNull(emailOtp);
 
         LoginResponse step2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
                 .tempSessionToken(step1.getTempSessionToken())
-                .otp(step1.getDevOtp())
+                .otp(emailOtp)
                 .build());
 
         assertNotNull(step2);
@@ -101,10 +123,14 @@ class AuthenticationServiceTest {
 
         LoginResponse step1 = authenticationService.login(step1Request);
         assertTrue(Boolean.TRUE.equals(step1.getOtpRequired()));
+        assertNull(step1.getDevOtp(), "devOtp must not be returned in response");
+
+        String emailOtp = captureLastOtp("checker@hdfcbank.com");
+        assertNotNull(emailOtp);
 
         LoginResponse step2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
                 .tempSessionToken(step1.getTempSessionToken())
-                .otp(step1.getDevOtp())
+                .otp(emailOtp)
                 .build());
 
         assertNotNull(step2);
@@ -160,10 +186,13 @@ class AuthenticationServiceTest {
                 .password("Admin@123")
                 .build());
 
+        assertNull(step1.getDevOtp(), "devOtp must not be returned in response");
+        String emailOtp = captureLastOtp("admin@hdfcbank.com");
+
         // Step 2: Verify OTP
         LoginResponse step2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
                 .tempSessionToken(step1.getTempSessionToken())
-                .otp(step1.getDevOtp())
+                .otp(emailOtp)
                 .build());
 
         assertNotNull(step2.getAccessToken());
@@ -188,4 +217,3 @@ class AuthenticationServiceTest {
         assertDoesNotThrow(() -> authenticationService.logout(principal, logoutRequest, "127.0.0.1"));
     }
 }
-

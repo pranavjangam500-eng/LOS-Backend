@@ -16,9 +16,11 @@ public class VerifyOtpRequest {
 
     @NotBlank(message = "Temporary session token is required")
     @Schema(description = "Temporary challenge session token returned from /login", example = "eyJhbGciOiJIUzI1NiJ9...")
+    @com.fasterxml.jackson.annotation.JsonAlias({"preAuthToken", "tempToken"})
     private String tempSessionToken;
 
     @NotBlank(message = "OTP is required")
     @Schema(description = "6-digit One-Time Password sent to the registered email address", example = "123456")
+    @com.fasterxml.jackson.annotation.JsonAlias({"otpCode", "code"})
     private String otp;
 }

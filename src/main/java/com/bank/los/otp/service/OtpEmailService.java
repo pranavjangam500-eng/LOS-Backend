@@ -46,7 +46,21 @@ public class OtpEmailService {
                     StandardCharsets.UTF_8.name()
             );
 
-            helper.setFrom(fromAddress);
+            if (fromAddress != null && fromAddress.contains("<") && fromAddress.contains(">")) {
+                int openAngle = fromAddress.indexOf('<');
+                int closeAngle = fromAddress.indexOf('>', openAngle);
+                String personal = fromAddress.substring(0, openAngle).trim().replaceAll("^\"|\"$", "");
+                String address = fromAddress.substring(openAngle + 1, closeAngle).trim();
+                if (!personal.isEmpty()) {
+                    helper.setFrom(address, personal);
+                } else {
+                    helper.setFrom(address);
+                }
+            } else if (fromAddress != null && !fromAddress.isBlank()) {
+                helper.setFrom(fromAddress.trim().replaceAll("^\"|\"$", ""));
+            } else {
+                helper.setFrom("demo@allianzapay.com", "OTP Auth Service");
+            }
             helper.setTo(recipientEmail);
             helper.setSubject("Your Verification Code");
 
@@ -77,7 +91,7 @@ public class OtpEmailService {
             mailSender.send(message);
             log.info("[SMTP SUCCESS] Email successfully dispatched to {}", recipientEmail);
 
-        } catch (MessagingException | MailException e) {
+        } catch (MessagingException | MailException | java.io.UnsupportedEncodingException e) {
             log.error("[SMTP ERROR] Failed to send email via SMTP: {}", e.getMessage());
             throw new RuntimeException("SMTP delivery failed: " + e.getMessage(), e);
         }

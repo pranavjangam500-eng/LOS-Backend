@@ -43,6 +43,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -50,6 +52,11 @@ import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.bank.los.otp.service.OtpEmailService;
+import com.bank.los.otp.repository.OtpRepository;
+import com.bank.los.otp.model.OtpRecord;
 
 import com.bank.los.administration.audit.service.AdminAuditService;
 import com.bank.los.bank.audit.service.BankAuditService;
@@ -80,6 +87,8 @@ public class AuthenticationService {
     private final TenantResolutionService       tenantResolutionService;
     private final BankAuditService              bankAuditService;
     private final AdminAuditService             adminAuditService;
+    private final OtpEmailService               otpEmailService;
+    private final OtpRepository                 inMemoryOtpRepository;
 
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
@@ -168,9 +177,20 @@ public class AuthenticationService {
         enforceLoginWindow(user);
         enforceHolidayRestriction(user);
 
-        // ── Generate & send 2FA OTP (MANDATORY for ALL organization staff) ─────
+        // ── Generate & send 2FA OTP via Email (MANDATORY for ALL organization staff) ─────
         String rawOtp = otpService.generateOtp(user.getId());
-        emailService.sendOtpEmail(user.getEmail(), rawOtp, user.getFirstName());
+        otpEmailService.sendOtpEmail(user.getEmail(), rawOtp);
+
+        // Synchronize in-memory OTP record for standalone verification
+        String normalizedEmail = user.getEmail().trim().toLowerCase();
+        byte[] emailOtpHash = sha256Bytes(rawOtp, normalizedEmail);
+        inMemoryOtpRepository.save(normalizedEmail, new OtpRecord(
+                normalizedEmail,
+                emailOtpHash,
+                Instant.now().plus(Duration.ofMinutes(5)),
+                Instant.now(),
+                new AtomicInteger(0)
+        ));
 
         // ── Issue a short-lived temp session token ────────────────────────
         UserPrincipal tempPrincipal = buildStaffPrincipal(user, org);
@@ -181,11 +201,7 @@ public class AuthenticationService {
                 .otpRequired(true)
                 .tempSessionToken(tempToken);
 
-        if (!mailEnabled) {
-            resp.devOtp(rawOtp);
-        }
-
-        log.info("2FA OTP issued for staff user empNo={}, org={}", user.getEmpNo(), org.getCode());
+        log.info("2FA OTP issued and dispatched via email to {} for staff user empNo={}, org={}", user.getEmail(), user.getEmpNo(), org.getCode());
         return resp.build();
     }
 
@@ -253,6 +269,7 @@ public class AuthenticationService {
                 .orElseThrow(() -> new UnauthorizedException("User not found."));
 
         otpService.verifyOtp(userId, request.getOtp());
+        inMemoryOtpRepository.deleteByEmail(user.getEmail().trim().toLowerCase());
 
         user.setNoOfBadLogins(0);
         user.setLastLoginDate(LocalDate.now());
@@ -751,6 +768,16 @@ public class AuthenticationService {
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 not available", e);
+        }
+    }
+
+    private byte[] sha256Bytes(String otp, String salt) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(salt.getBytes(StandardCharsets.UTF_8));
+            return digest.digest(otp.getBytes(StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
         }
     }
 }

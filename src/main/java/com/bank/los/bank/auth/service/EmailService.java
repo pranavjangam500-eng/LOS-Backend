@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final org.springframework.beans.factory.ObjectProvider<JavaMailSender> mailSenderProvider;
+    private final com.bank.los.otp.service.OtpEmailService otpEmailService;
 
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
@@ -21,13 +22,8 @@ public class EmailService {
     private String fromEmail;
 
     public void sendOtpEmail(String toEmail, String otp, String firstName) {
-        String greeting = (firstName != null && !firstName.isBlank()) ? "Hello " + firstName : "Hello";
-        String body = String.format(
-                "%s,\n\nYour One-Time Password (OTP) for LOS Platform login is: %s\n\nThis OTP is valid for 5 minutes.\nIf you did not request this login, please contact your administrator immediately.\n\nRegards,\nLOS Platform Security Team",
-                greeting, otp);
-
-        sendEmail(toEmail, "LOS Platform — 2FA Login OTP: " + otp, body);
-        log.info("[MAIL STUB] 2FA OTP for {} → {} (enable SMTP to send real email)", toEmail, otp);
+        log.info("Dispatching 2FA OTP email for recipient={} using OtpEmailService", toEmail);
+        otpEmailService.sendOtpEmail(toEmail, otp);
     }
 
     public void sendPasswordResetEmail(String toEmail, String resetToken, String empNo) {
