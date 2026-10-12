@@ -24,13 +24,37 @@ public class OtpEmailService {
     @Value("${spring.mail.username:${SMTP_USERNAME:${SMTP_USER:}}}")
     private String mailUsername;
 
+    @Value("${app.mail.resend-api-key:${RESEND_API_KEY:}}")
+    private String resendApiKey;
+
     public OtpEmailService(ObjectProvider<JavaMailSender> mailSenderProvider) {
         this.mailSenderProvider = mailSenderProvider;
     }
 
     public void sendOtpEmail(String recipientEmail, String otp) {
+        log.info("🔐 [2FA OTP GENERATED] Recipient: {}, OTP Code: {}", recipientEmail, otp);
+        // Non-blocking async execution so HTTP login request never hangs or times out
+        java.util.concurrent.CompletableFuture.runAsync(() -> doSendEmail(recipientEmail, otp));
+    }
+
+    public void sendOtpEmailSync(String recipientEmail, String otp) {
+        doSendEmail(recipientEmail, otp);
+    }
+
+    private void doSendEmail(String recipientEmail, String otp) {
         log.info("[EMAIL] Dispatching OTP email to recipient: {}", recipientEmail);
 
+        // 1. Try Resend HTTPS API (port 443) if RESEND_API_KEY is configured (bypasses Render Free Tier SMTP block)
+        if (resendApiKey != null && !resendApiKey.isBlank()) {
+            try {
+                sendViaResendHttpApi(recipientEmail, otp);
+                return;
+            } catch (Exception e) {
+                log.warn("[RESEND HTTP API FAILED] Falling back to SMTP: {}", e.getMessage());
+            }
+        }
+
+        // 2. SMTP dispatch
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
 
         if (mailSender == null || mailUsername == null || mailUsername.isBlank() || mailUsername.contains("your_email")) {
@@ -64,36 +88,71 @@ public class OtpEmailService {
             helper.setTo(recipientEmail);
             helper.setSubject("Your Verification Code");
 
-            String htmlContent = """
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 32px 24px; border-radius: 16px; border: 1px solid #1e293b;">
-                  <div style="text-align: center; margin-bottom: 24px;">
-                    <div style="display: inline-block; padding: 6px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; font-size: 12px; font-weight: 600; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.05em;">
-                      Security Verification
-                    </div>
-                  </div>
-                  <h2 style="color: #ffffff; font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 12px 0;">Your Verification Code</h2>
-                  <p style="color: #94a3b8; font-size: 14px; text-align: center; margin: 0 0 24px 0;">Use the following single-use code to authenticate your email address:</p>
-                  
-                  <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
-                    <span style="font-family: 'Courier New', monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #38bdf8;">%s</span>
-                  </div>
-                  
-                  <p style="color: #64748b; font-size: 13px; text-align: center; line-height: 1.5; margin: 0 0 16px 0;">
-                    ⏳ This code will expire in <strong>5 minutes</strong>.<br/>
-                    🔒 Single-use only. Never share this code with anyone.
-                  </p>
-                  <hr style="border: none; border-top: 1px solid #1e293b; margin: 20px 0;" />
-                  <p style="color: #475569; font-size: 11px; text-align: center; margin: 0;">If you didn't request this verification code, you can safely ignore this email.</p>
-                </div>
-            """.formatted(otp);
-
-            helper.setText(htmlContent, true);
+            helper.setText(buildHtmlContent(otp), true);
             mailSender.send(message);
             log.info("[SMTP SUCCESS] Email successfully dispatched to {}", recipientEmail);
 
-        } catch (MessagingException | MailException | java.io.UnsupportedEncodingException e) {
-            log.error("[SMTP ERROR] Failed to send email via SMTP: {}", e.getMessage());
-            throw new RuntimeException("SMTP delivery failed: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("[SMTP ERROR] Could not dispatch email via SMTP to {}: {}. "
+                    + "(Note: Render Free Tier blocks outbound SMTP ports 25, 465, and 587. Check Render logs for 2FA OTP code: {})",
+                    recipientEmail, e.getMessage(), otp);
         }
+    }
+
+    private void sendViaResendHttpApi(String recipientEmail, String otp) throws Exception {
+        log.info("[RESEND] Dispatching OTP email via Resend HTTPS API (port 443) to {}", recipientEmail);
+        String fromSender = (fromAddress != null && !fromAddress.isBlank()) ? fromAddress : "onboarding@resend.dev";
+        String escapedHtml = buildHtmlContent(otp).replace("\"", "\\\"").replace("\n", "");
+        String jsonPayload = String.format(
+                "{\"from\":\"%s\",\"to\":[\"%s\"],\"subject\":\"Your Verification Code\",\"html\":\"%s\"}",
+                fromSender.replace("\"", "\\\""),
+                recipientEmail,
+                escapedHtml
+        );
+
+        java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofSeconds(5))
+                .build();
+
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create("https://api.resend.com/emails"))
+                .header("Authorization", "Bearer " + resendApiKey.trim())
+                .header("Content-Type", "application/json")
+                .timeout(java.time.Duration.ofSeconds(10))
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                .build();
+
+        java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+            log.info("[RESEND SUCCESS] Email dispatched successfully via Resend HTTPS API to {}", recipientEmail);
+        } else {
+            throw new RuntimeException("Resend API returned status " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    private String buildHtmlContent(String otp) {
+        return """
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 32px 24px; border-radius: 16px; border: 1px solid #1e293b;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="display: inline-block; padding: 6px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; font-size: 12px; font-weight: 600; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.05em;">
+                  Security Verification
+                </div>
+              </div>
+              <h2 style="color: #ffffff; font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 12px 0;">Your Verification Code</h2>
+              <p style="color: #94a3b8; font-size: 14px; text-align: center; margin: 0 0 24px 0;">Use the following single-use code to authenticate your email address:</p>
+              
+              <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+                <span style="font-family: 'Courier New', monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #38bdf8;">%s</span>
+              </div>
+              
+              <p style="color: #64748b; font-size: 13px; text-align: center; line-height: 1.5; margin: 0 0 16px 0;">
+                ⏳ This code will expire in <strong>5 minutes</strong>.<br/>
+                🔒 Single-use only. Never share this code with anyone.
+              </p>
+              <hr style="border: none; border-top: 1px solid #1e293b; margin: 20px 0;" />
+              <p style="color: #475569; font-size: 11px; text-align: center; margin: 0;">If you didn't request this verification code, you can safely ignore this email.</p>
+            </div>
+        """.formatted(otp);
+    }
     }
 }
