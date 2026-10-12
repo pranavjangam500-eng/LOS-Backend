@@ -65,10 +65,12 @@ app:
       url: ${RENDER_EXTERNAL_URL:${APP_KEEP_ALIVE_URL:}}
       interval-ms: ${RENDER_KEEP_ALIVE_INTERVAL_MS:600000} # 10 minutes (prevents 15m idle shutdown)
 
-  # Mail configuration (supports standard SMTP variables)
+  # Mail configuration (supports standard SMTP variables & Cloud HTTPS email providers)
   mail:
     enabled: ${MAIL_ENABLED:true}
     from: ${SMTP_FROM:${MAIL_FROM:OTP Auth Service <demo@allianzapay.com>}}
+    brevo-api-key: ${BREVO_API_KEY:}
+    resend-api-key: ${RESEND_API_KEY:}
 
 # Master Database (Registry & Global Routing)
 master:

@@ -27,6 +27,9 @@ public class OtpEmailService {
     @Value("${app.mail.resend-api-key:${RESEND_API_KEY:}}")
     private String resendApiKey;
 
+    @Value("${app.mail.brevo-api-key:${BREVO_API_KEY:}}")
+    private String brevoApiKey;
+
     public OtpEmailService(ObjectProvider<JavaMailSender> mailSenderProvider) {
         this.mailSenderProvider = mailSenderProvider;
     }
@@ -44,7 +47,17 @@ public class OtpEmailService {
     private void doSendEmail(String recipientEmail, String otp) {
         log.info("[EMAIL] Dispatching OTP email to recipient: {}", recipientEmail);
 
-        // 1. Try Resend HTTPS API (port 443) if RESEND_API_KEY is configured (bypasses Render Free Tier SMTP block)
+        // 1. Try Brevo HTTPS API (port 443) if BREVO_API_KEY is configured
+        if (brevoApiKey != null && !brevoApiKey.isBlank()) {
+            try {
+                sendViaBrevoHttpApi(recipientEmail, otp);
+                return;
+            } catch (Exception e) {
+                log.warn("[BREVO HTTP API FAILED] Falling back: {}", e.getMessage());
+            }
+        }
+
+        // 2. Try Resend HTTPS API (port 443) if RESEND_API_KEY is configured (bypasses Render Free Tier SMTP block)
         if (resendApiKey != null && !resendApiKey.isBlank()) {
             try {
                 sendViaResendHttpApi(recipientEmail, otp);
@@ -127,6 +140,38 @@ public class OtpEmailService {
             log.info("[RESEND SUCCESS] Email dispatched successfully via Resend HTTPS API to {}", recipientEmail);
         } else {
             throw new RuntimeException("Resend API returned status " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    private void sendViaBrevoHttpApi(String recipientEmail, String otp) throws Exception {
+        log.info("[BREVO] Dispatching OTP email via Brevo HTTPS API (port 443) to {}", recipientEmail);
+        String senderEmail = (mailUsername != null && !mailUsername.isBlank()) ? mailUsername : "demo@allianzapay.com";
+        String escapedHtml = buildHtmlContent(otp).replace("\"", "\\\"").replace("\r", "").replace("\n", "");
+        String jsonPayload = String.format(
+                "{\"sender\":{\"name\":\"LOS Auth\",\"email\":\"%s\"},\"to\":[{\"email\":\"%s\"}],\"subject\":\"Your Verification Code\",\"htmlContent\":\"%s\"}",
+                senderEmail.replace("\"", "\\\""),
+                recipientEmail.replace("\"", "\\\""),
+                escapedHtml
+        );
+
+        java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                .connectTimeout(java.time.Duration.ofSeconds(5))
+                .build();
+
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create("https://api.brevo.com/v3/smtp/email"))
+                .header("api-key", brevoApiKey.trim())
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .timeout(java.time.Duration.ofSeconds(10))
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                .build();
+
+        java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+            log.info("[BREVO SUCCESS] Email dispatched successfully via Brevo HTTPS API to {}", recipientEmail);
+        } else {
+            throw new RuntimeException("Brevo API returned status " + response.statusCode() + ": " + response.body());
         }
     }
 
