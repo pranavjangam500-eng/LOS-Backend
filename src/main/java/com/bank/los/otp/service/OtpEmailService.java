@@ -154,5 +154,4 @@ public class OtpEmailService {
             </div>
         """.formatted(otp);
     }
-    }
 }
