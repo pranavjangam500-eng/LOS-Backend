@@ -70,6 +70,7 @@ app:
     enabled: ${MAIL_ENABLED:true}
     from: ${SMTP_FROM:${MAIL_FROM:OTP Auth Service <demo@allianzapay.com>}}
     brevo-api-key: ${BREVO_API_KEY:}
+    brevo-sender-email: ${BREVO_SENDER_EMAIL:}
     resend-api-key: ${RESEND_API_KEY:}
 
 # Master Database (Registry & Global Routing)

@@ -30,6 +30,9 @@ public class OtpEmailService {
     @Value("${app.mail.brevo-api-key:${BREVO_API_KEY:}}")
     private String brevoApiKey;
 
+    @Value("${app.mail.brevo-sender-email:${BREVO_SENDER_EMAIL:}}")
+    private String brevoSenderEmail;
+
     public OtpEmailService(ObjectProvider<JavaMailSender> mailSenderProvider) {
         this.mailSenderProvider = mailSenderProvider;
     }
@@ -53,7 +56,7 @@ public class OtpEmailService {
                 sendViaBrevoHttpApi(recipientEmail, otp);
                 return;
             } catch (Exception e) {
-                log.warn("[BREVO HTTP API FAILED] Falling back: {}", e.getMessage());
+                log.error("❌ [BREVO HTTP API FAILED] Could not send via Brevo: {}", e.getMessage());
             }
         }
 
@@ -144,8 +147,8 @@ public class OtpEmailService {
     }
 
     private void sendViaBrevoHttpApi(String recipientEmail, String otp) throws Exception {
-        log.info("[BREVO] Dispatching OTP email via Brevo HTTPS API (port 443) to {}", recipientEmail);
-        String senderEmail = (mailUsername != null && !mailUsername.isBlank()) ? mailUsername : "demo@allianzapay.com";
+        String senderEmail = resolveBrevoSenderEmail();
+        log.info("[BREVO] Dispatching OTP email via Brevo HTTPS API (port 443) to {} from {}", recipientEmail, senderEmail);
         String escapedHtml = buildHtmlContent(otp).replace("\"", "\\\"").replace("\r", "").replace("\n", "");
         String jsonPayload = String.format(
                 "{\"sender\":{\"name\":\"LOS Auth\",\"email\":\"%s\"},\"to\":[{\"email\":\"%s\"}],\"subject\":\"Your Verification Code\",\"htmlContent\":\"%s\"}",
@@ -171,8 +174,33 @@ public class OtpEmailService {
         if (response.statusCode() >= 200 && response.statusCode() < 300) {
             log.info("[BREVO SUCCESS] Email dispatched successfully via Brevo HTTPS API to {}", recipientEmail);
         } else {
-            throw new RuntimeException("Brevo API returned status " + response.statusCode() + ": " + response.body());
+            throw new RuntimeException("Brevo API returned status " + response.statusCode() + ": " + response.body()
+                    + " (Tip: Ensure '" + senderEmail + "' is added under Senders in your Brevo account)");
         }
+    }
+
+    private String resolveBrevoSenderEmail() {
+        if (brevoSenderEmail != null && !brevoSenderEmail.isBlank()) {
+            return extractCleanEmail(brevoSenderEmail);
+        }
+        if (fromAddress != null && !fromAddress.isBlank()) {
+            String extracted = extractCleanEmail(fromAddress);
+            if (!extracted.equalsIgnoreCase("noreply@losplatform.com") && !extracted.isBlank()) {
+                return extracted;
+            }
+        }
+        if (mailUsername != null && !mailUsername.isBlank() && mailUsername.contains("@") && !mailUsername.endsWith("@smtp-brevo.com")) {
+            return mailUsername.trim();
+        }
+        return "demo@allianzapay.com";
+    }
+
+    private String extractCleanEmail(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        if (raw.contains("<") && raw.contains(">")) {
+            return raw.substring(raw.indexOf("<") + 1, raw.indexOf(">")).trim();
+        }
+        return raw.trim();
     }
 
     private String buildHtmlContent(String otp) {
