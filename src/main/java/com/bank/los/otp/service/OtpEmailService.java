@@ -185,14 +185,14 @@ public class OtpEmailService {
         }
         if (fromAddress != null && !fromAddress.isBlank()) {
             String extracted = extractCleanEmail(fromAddress);
-            if (!extracted.equalsIgnoreCase("noreply@losplatform.com") && !extracted.isBlank()) {
+            if (!extracted.equalsIgnoreCase("noreply@losplatform.com") && !extracted.equalsIgnoreCase("demo@allianzapay.com") && !extracted.isBlank()) {
                 return extracted;
             }
         }
-        if (mailUsername != null && !mailUsername.isBlank() && mailUsername.contains("@") && !mailUsername.endsWith("@smtp-brevo.com")) {
+        if (mailUsername != null && !mailUsername.isBlank() && mailUsername.contains("@") && !mailUsername.endsWith("@smtp-brevo.com") && !mailUsername.equalsIgnoreCase("demo@allianzapay.com")) {
             return mailUsername.trim();
         }
-        return "demo@allianzapay.com";
+        return "khushmeet@allianzapay.com";
     }
 
     private String extractCleanEmail(String raw) {
