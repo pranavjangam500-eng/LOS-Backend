@@ -1,18 +1,18 @@
 # Loan Origination System (LOS) Backend - Security & Postman API Testing Guide
 
-This comprehensive guide details the architecture, security enhancements, and testing procedures for the **LOS Multi-Tenant Spring Boot Backend**, accompanied by the complete Postman API collection of **115 endpoints** across **21 functional modules**.
+This guide covers testing the **LOS Multi-Tenant Spring Boot Backend** with the complete Postman collection of **123 requests** across **22 functional folders**.
 
 ---
 
 ## 📦 Postman Collection File
 
-The complete, importable Postman Collection (v2.1.0) is located at:
-- **File**: [`docs/LOS_Backend_Postman_Collection.json`](file:///c:/Users/Pranav%20Jangam/Desktop/LOS-BACKEND/docs/LOS_Backend_Postman_Collection.json)
+The importable Postman Collection (v2.1.0), displayed in Postman as **los postman collection**, is located at:
+- **File**: [`LOS_Backend_Postman_Collection.json`](./LOS_Backend_Postman_Collection.json)
 
 ### Collection Summary
-- **Total Requests**: 115 Endpoints
-- **Total Modules / Folders**: 21 Folders
-- **Pre-configured Variables**: `baseUrl`, `accessToken`, `refreshToken`, `preAuthToken`
+- **Total Requests**: 123
+- **Total Modules / Folders**: 22
+- **Pre-configured Variables**: `baseUrl`, `accessToken`, `refreshToken`, `preAuthToken`, `organizationId`, `leadId`, `otpEmail`, `otp`
 - **Dynamic Token Automation**: Login scripts automatically extract and inject the JWT Bearer token into all subsequent authenticated requests.
 
 ---
@@ -21,7 +21,7 @@ The complete, importable Postman Collection (v2.1.0) is located at:
 
 1. Open **Postman**.
 2. Click **Import** (top left).
-3. Drag & drop or browse to [`docs/LOS_Backend_Postman_Collection.json`](file:///c:/Users/Pranav%20Jangam/Desktop/LOS-BACKEND/docs/LOS_Backend_Postman_Collection.json).
+3. Drag and drop or browse to [`LOS_Backend_Postman_Collection.json`](./LOS_Backend_Postman_Collection.json).
 4. Click **Import**.
 5. Ensure your collection variables or active environment has:
    - `baseUrl`: `http://localhost:8080` (or your deployed server domain)
@@ -30,6 +30,12 @@ The complete, importable Postman Collection (v2.1.0) is located at:
 > Executing any login request (e.g., `01. Authentication & 2FA -> 1. Login - Master Internal Admin` or bank staff login) automatically executes a Postman Test script that stores `accessToken`, `refreshToken`, and `organizationId` into your active environment and collection variables. All subsequent requests automatically inherit `Bearer {{accessToken}}` in their Authorization header and can reference `{{organizationId}}`!
 
 ---
+
+### Lead CSV and Email OTP Requests
+
+- Run **Capture New Loan Lead** before lead update or assignment; its test script saves the response `leadId` for later requests.
+- Download **Sample Lead CSV** before **Import Leads from CSV**, then select the downloaded file in the request's `file` form field.
+- **Send Email OTP** and **Verify Email OTP** use the `otpEmail` and `otp` collection variables. Set `otp` to the real code received by email. Email delivery must be configured on the server.
 
 ## 🔄 Proper Multi-Tenant API Execution Sequence
 

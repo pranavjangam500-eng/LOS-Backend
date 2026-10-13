@@ -175,10 +175,16 @@ public class UserService {
         String orgDb = org.getDbName();
         String orgCode = org.getCode();
 
-        // 1. Check globally in Master Login Directory for unique email
+        // 1. Check globally in Master Login Directory for unique email & empNo
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         if (loginDirectoryRepository.findByEmail(request.getEmail().trim().toLowerCase()).isPresent()) {
             throw new BusinessException("EMAIL_EXISTS", "User with email '" + request.getEmail() + "' is already registered in the platform");
+        }
+        if (request.getEmpNo() != null && !request.getEmpNo().isBlank()) {
+            String candidateEmpNo = request.getEmpNo().trim();
+            if (loginDirectoryRepository.findByUserCode(candidateEmpNo).isPresent()) {
+                throw new BusinessException("EMP_NO_EXISTS", "User with employee number '" + candidateEmpNo + "' is already registered in the platform");
+            }
         }
 
         // Pre-warm / register Bank DataSource using org's database settings
@@ -285,9 +291,14 @@ public class UserService {
 
         String empNo = request.getEmpNo();
         if (empNo == null || empNo.isBlank()) {
-            empNo = "EMP-" + orgCode + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            do {
+                empNo = "EMP-" + orgCode + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            } while (organizationUserRepository.existsByEmpNo(empNo) || organizationUserRepository.existsByEmpNoIgnoreCase(empNo));
         } else {
             empNo = empNo.trim();
+            if (organizationUserRepository.existsByEmpNo(empNo) || organizationUserRepository.existsByEmpNoIgnoreCase(empNo)) {
+                throw new BusinessException("EMP_NO_EXISTS", "User with employee number '" + empNo + "' already exists in " + org.getName());
+            }
         }
 
         String initialStatus = request.getStatus();

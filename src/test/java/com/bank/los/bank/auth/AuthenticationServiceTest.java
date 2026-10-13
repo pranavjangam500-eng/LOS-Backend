@@ -36,14 +36,14 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    @DisplayName("Should successfully authenticate Internal Super Admin on Master DB (single step)")
+    @DisplayName("Should successfully authenticate Internal Super Admin on Master DB via internalAdminLogin")
     void testInternalAdminLogin() {
         LoginRequest request = LoginRequest.builder()
                 .email("admin@losplatform.com")
                 .password("Admin@123")
                 .build();
 
-        LoginResponse response = authenticationService.login(request);
+        LoginResponse response = authenticationService.internalAdminLogin(request);
 
         assertNotNull(response);
         assertNotNull(response.getAccessToken());
@@ -52,6 +52,16 @@ class AuthenticationServiceTest {
         assertEquals("INTERNAL_ADMIN", response.getUser().getRole());
         assertEquals("INTERNAL", response.getUser().getUserType());
         assertEquals("/dashboard/internal-admin", response.getDashboardUrl());
+
+        // Internal admin attempting to use banking login endpoint should be rejected
+        assertThrows(UnauthorizedException.class, () -> authenticationService.login(request));
+
+        // Banking staff attempting to use internal admin login endpoint should be rejected
+        LoginRequest bankingUserRequest = LoginRequest.builder()
+                .email("admin@hdfcbank.com")
+                .password("Admin@123")
+                .build();
+        assertThrows(UnauthorizedException.class, () -> authenticationService.internalAdminLogin(bankingUserRequest));
     }
 
     @Test

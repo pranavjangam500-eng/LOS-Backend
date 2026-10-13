@@ -181,6 +181,7 @@ ALTER TABLE identity.users ADD COLUMN IF NOT EXISTS modified_by BIGINT;
 CREATE INDEX IF NOT EXISTS idx_users_role_id       ON identity.users(role_id);
 CREATE INDEX IF NOT EXISTS idx_users_login_branch  ON identity.users(login_branch_id);
 CREATE INDEX IF NOT EXISTS idx_users_status        ON identity.users(status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_emp_no ON identity.users(emp_no);
 
 -- -----------------------------------------------------------------------
 -- identity.user_branches  (for multi_branch_access = true)

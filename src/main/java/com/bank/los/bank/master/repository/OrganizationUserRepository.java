@@ -15,6 +15,7 @@ public interface OrganizationUserRepository extends JpaRepository<OrganizationUs
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
     boolean existsByEmpNo(String empNo);
+    boolean existsByEmpNoIgnoreCase(String empNo);
     List<OrganizationUser> findByLoginBranchId(Long branchId);
     long countByLoginBranchId(Long branchId);
 }

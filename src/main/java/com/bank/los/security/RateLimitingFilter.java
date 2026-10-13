@@ -52,11 +52,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         String clientIp = getClientIp(request);
 
-        boolean isAuthEndpoint = path.startsWith("/api/v1/auth/login") ||
-                path.startsWith("/api/v1/auth/forgot-password") ||
-                path.startsWith("/api/v1/auth/reset-password") ||
-                path.startsWith("/api/v1/auth/refresh-token") ||
-                path.startsWith("/api/v1/auth/change-password");
+        boolean isAuthEndpoint = path.startsWith("/api/v1/auth/") ||
+                path.startsWith("/api/v1/admin/auth/") ||
+                path.startsWith("/api/v1/administration/auth/");
 
         int maxLimit = isAuthEndpoint ? authLimitPerMinute : apiLimitPerMinute;
         Map<String, RequestBucket> buckets = isAuthEndpoint ? authRequestBuckets : apiRequestBuckets;
