@@ -120,5 +120,10 @@ public class LeadMapper {
         if (empName != null) {
             existingLead.setEmployeeName(empName);
         }
+
+        if (updateData.getCreatedAt() != null && existingLead.getCreatedAt() == null) {
+            existingLead.setCreatedAt(updateData.getCreatedAt());
+        }
+        existingLead.setUpdatedAt(java.time.LocalDateTime.now());
     }
 }
