@@ -18,6 +18,15 @@ import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.common.validation.PasswordPolicy;
+import com.bank.los.administration.master.entity.MasterLookupSubType;
+import com.bank.los.administration.master.entity.MasterLookupType;
+import com.bank.los.administration.master.repository.MasterLookupSubTypeRepository;
+import com.bank.los.administration.master.repository.MasterLookupTypeRepository;
+import com.bank.los.bank.master.entity.BankLookupSubType;
+import com.bank.los.bank.master.entity.BankLookupType;
+import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
+import com.bank.los.bank.master.repository.BankLookupTypeRepository;
+import com.bank.los.config.BankContext;
 import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +53,11 @@ public class UserService {
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
     private final com.bank.los.config.BankDataSourceProvider bankDataSourceProvider;
+    private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
+    private final BankLookupTypeRepository bankLookupTypeRepository;
+    private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
+    private final MasterLookupTypeRepository masterLookupTypeRepository;
+
 
     public List<UserResponse> getAllUsers(UserPrincipal principal, Long organizationId) {
         boolean isInternalAdmin = isInternalAdmin(principal);
@@ -235,20 +249,12 @@ public class UserService {
             throw new BusinessException("EMAIL_EXISTS", "User with email '" + request.getEmail() + "' already exists in " + org.getName());
         }
 
-        // 3. Resolve Role in organization DB
-        OrganizationRole role = null;
-        if (request.getRoleId() != null) {
-            role = organizationRoleRepository.findById(request.getRoleId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
-        } else if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
-            String roleName = request.getRoleName().trim().toUpperCase();
-            role = organizationRoleRepository.findByName(roleName)
-                    .orElseGet(() -> autoSeedRole(roleName));
-        } else {
-            String defaultRole = isInternalAdmin ? "ADMIN" : "VIEWER";
-            role = organizationRoleRepository.findByName(defaultRole)
-                    .orElseGet(() -> autoSeedRole(defaultRole));
-        }
+        // 3. Resolve and validate Role in organization DB against lookup 10003
+        OrganizationRole role = validateAndResolveRole(request.getRoleName(), request.getRoleId(), isInternalAdmin);
+
+        // 4. Validate and resolve Designation against lookup 10002
+        String designationCode = validateAndResolveDesignation(request.getDesignation());
+
 
         // 4. Resolve Branch in organization DB
         Branch loginBranch = null;
@@ -320,8 +326,9 @@ public class UserService {
                 .email(request.getEmail().trim().toLowerCase())
                 .mobile(request.getMobile())
                 .gender(request.getGender())
-                .designation(request.getDesignation() != null ? request.getDesignation() : (role.getName() + " - " + org.getName()))
+                .designation(designationCode)
                 .loginOnHolidays(Boolean.TRUE.equals(request.getLoginOnHolidays()))
+
                 .loginTime(request.getLoginTime())
                 .logoutTime(request.getLogoutTime())
                 .inactiveSessionTimeout(request.getInactiveSessionTimeout() != null ? request.getInactiveSessionTimeout() : 1800)
@@ -510,20 +517,16 @@ public class UserService {
             user.setDob(request.getDob());
         }
         if (request.getDesignation() != null && !request.getDesignation().isBlank()) {
-            user.setDesignation(request.getDesignation().trim());
+            String validatedCode = validateAndResolveDesignation(request.getDesignation());
+            user.setDesignation(validatedCode);
         }
 
         // Role update
-        if (request.getRoleId() != null) {
-            OrganizationRole role = organizationRoleRepository.findById(request.getRoleId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Role", "id", request.getRoleId()));
-            user.setRole(role);
-        } else if (request.getRoleName() != null && !request.getRoleName().isBlank()) {
-            String roleName = request.getRoleName().trim().toUpperCase();
-            OrganizationRole role = organizationRoleRepository.findByName(roleName)
-                    .orElseGet(() -> autoSeedRole(roleName));
+        if (request.getRoleId() != null || (request.getRoleName() != null && !request.getRoleName().isBlank())) {
+            OrganizationRole role = validateAndResolveRole(request.getRoleName(), request.getRoleId(), isInternalAdmin);
             user.setRole(role);
         }
+
 
         // Branch update
         Long targetBranchId = request.getLoginBranchId();
@@ -604,6 +607,33 @@ public class UserService {
         String branchName = user.getLoginBranch() != null ? user.getLoginBranch().getName() : null;
         Long branchId = user.getLoginBranch() != null ? user.getLoginBranch().getId() : null;
 
+        String rawDesignation = user.getDesignation();
+        String designationCode = rawDesignation;
+        String designationName = rawDesignation;
+
+        if (rawDesignation != null && !rawDesignation.isBlank()) {
+            BankLookupSubType subType = bankLookupSubTypeRepository
+                    .findByLookupTypeCodeAndSubTypeCode("10002", rawDesignation.trim())
+                    .orElse(null);
+            if (subType != null) {
+                designationCode = subType.getSubTypeCode();
+                designationName = subType.getSubTypeDescription();
+            } else {
+                var matched = bankLookupSubTypeRepository
+                        .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002")
+                        .stream()
+                        .filter(st -> st.getSubTypeDescription().equalsIgnoreCase(rawDesignation.trim()))
+                        .findFirst()
+                        .orElse(null);
+                if (matched != null) {
+                    designationCode = matched.getSubTypeCode();
+                    designationName = matched.getSubTypeDescription();
+                }
+            }
+        }
+
+        String roleCode = resolveRoleLookupCode(roleName);
+
         return UserResponse.builder()
                 .pkid(user.getId())
                 .id(user.getId())
@@ -620,7 +650,9 @@ public class UserService {
                 .mobile(user.getMobile())
                 .gender(user.getGender())
                 .dob(user.getDob())
-                .designation(user.getDesignation())
+                .designation(designationCode != null ? designationCode : rawDesignation)
+                .designationCode(designationCode)
+                .designationName(designationName)
                 .status(user.getStatus())
                 .isActive(user.getIsActive())
                 .twoFa(user.getTwoFaEnabled())
@@ -628,6 +660,7 @@ public class UserService {
                 .role(roleName)
                 .roleId(roleId)
                 .roleName(roleName)
+                .roleCode(roleCode)
                 .mBrAccess(user.getMultiBranchAccess())
                 .multiBranchAccess(user.getMultiBranchAccess())
                 .loginBranch(branchName)
@@ -653,6 +686,178 @@ public class UserService {
                 .build();
     }
 
+    private String validateAndResolveDesignation(String submittedDesignation) {
+        if (submittedDesignation == null || submittedDesignation.trim().isEmpty()) {
+            throw new BusinessException("INVALID_DESIGNATION", "Designation is required. Please provide a valid active option code from lookup 10002.");
+        }
+        String code = submittedDesignation.trim();
+
+        // 1. Look up in bank database by code
+        BankLookupSubType subType = bankLookupSubTypeRepository
+                .findByLookupTypeCodeAndSubTypeCode("10002", code)
+                .orElse(null);
+
+        // 2. If not found by code, look up by description
+        if (subType == null) {
+            subType = bankLookupSubTypeRepository
+                    .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002")
+                    .stream()
+                    .filter(st -> st.getSubTypeDescription().equalsIgnoreCase(code))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // 3. Fallback to master DB
+        if (subType == null) {
+            String currentBank = BankContext.getCurrentBank();
+            String currentOrg = OrganizationContext.getCurrentOrganization();
+            try {
+                BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                var masterSub = masterLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode("10002", code)
+                        .or(() -> masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002")
+                                .stream()
+                                .filter(st -> st.getSubTypeDescription().equalsIgnoreCase(code))
+                                .findFirst())
+                        .orElse(null);
+
+                if (masterSub != null) {
+                    if (!Boolean.TRUE.equals(masterSub.getIsActive())) {
+                        throw new BusinessException("INVALID_DESIGNATION", "Designation option code '" + code + "' is inactive in lookup 10002.");
+                    }
+                    return masterSub.getSubTypeCode();
+                }
+            } finally {
+                BankContext.setCurrentBank(currentBank);
+                OrganizationContext.setCurrentOrganization(currentOrg);
+            }
+        }
+
+        if (subType == null) {
+            throw new BusinessException("INVALID_DESIGNATION", "Invalid designation option code: '" + code + "'. Must be an active option in lookup 10002.");
+        }
+
+        if (!Boolean.TRUE.equals(subType.getIsActive())) {
+            throw new BusinessException("INVALID_DESIGNATION", "Designation option code '" + code + "' (" + subType.getSubTypeDescription() + ") is inactive in lookup 10002.");
+        }
+
+        return subType.getSubTypeCode();
+    }
+
+    private OrganizationRole validateAndResolveRole(String roleInput, Integer roleId, boolean isInternalAdmin) {
+        if (roleId != null) {
+            OrganizationRole role = organizationRoleRepository.findById(roleId)
+                    .orElseThrow(() -> new BusinessException("INVALID_ROLE", "Role ID " + roleId + " does not exist."));
+            validateRoleNameInLookup(role.getName());
+            return role;
+        }
+
+        if (roleInput == null || roleInput.trim().isEmpty()) {
+            roleInput = isInternalAdmin ? "3" : "6"; // default Admin (3) or Viewer (6)
+        }
+
+        String trimmed = roleInput.trim();
+
+        // 1. Look up in bank database by code
+        BankLookupSubType subType = bankLookupSubTypeRepository
+                .findByLookupTypeCodeAndSubTypeCode("10003", trimmed)
+                .orElse(null);
+
+        // 2. If not found by code, look up by description or normalized name
+        if (subType == null) {
+            subType = bankLookupSubTypeRepository
+                    .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10003")
+                    .stream()
+                    .filter(st -> matchesRoleOption(st, trimmed))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // 3. Fallback to master DB
+        if (subType == null) {
+            String currentBank = BankContext.getCurrentBank();
+            String currentOrg = OrganizationContext.getCurrentOrganization();
+            try {
+                BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                var masterSub = masterLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode("10003", trimmed)
+                        .or(() -> masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10003")
+                                .stream()
+                                .filter(st -> matchesMasterRoleOption(st, trimmed))
+                                .findFirst())
+                        .orElse(null);
+
+                if (masterSub != null) {
+                    if (!Boolean.TRUE.equals(masterSub.getIsActive())) {
+                        throw new BusinessException("INVALID_ROLE", "Role option code '" + trimmed + "' is inactive in lookup 10003.");
+                    }
+                    return mapRoleCodeToEntity(masterSub.getSubTypeCode(), masterSub.getSubTypeDescription());
+                }
+            } finally {
+                BankContext.setCurrentBank(currentBank);
+                OrganizationContext.setCurrentOrganization(currentOrg);
+            }
+        }
+
+        if (subType == null) {
+            throw new BusinessException("INVALID_ROLE", "Invalid role option: '" + trimmed + "'. Must be an active option in lookup 10003.");
+        }
+
+        if (!Boolean.TRUE.equals(subType.getIsActive())) {
+            throw new BusinessException("INVALID_ROLE", "Role option code '" + trimmed + "' (" + subType.getSubTypeDescription() + ") is inactive in lookup 10003.");
+        }
+
+        return mapRoleCodeToEntity(subType.getSubTypeCode(), subType.getSubTypeDescription());
+    }
+
+    private OrganizationRole mapRoleCodeToEntity(String subTypeCode, String description) {
+        String roleName = switch (subTypeCode) {
+            case "1", "2" -> "SUPER_ADMIN";
+            case "3" -> "ADMIN";
+            case "4" -> "CHECKER";
+            case "5" -> "MAKER";
+            case "6" -> "VIEWER";
+            default -> description.toUpperCase().replace(" ", "_");
+        };
+
+        return organizationRoleRepository.findByName(roleName)
+                .orElseGet(() -> autoSeedRole(roleName));
+    }
+
+    private boolean matchesRoleOption(BankLookupSubType st, String input) {
+        String cleanInput = input.toUpperCase().replace("_", " ").trim();
+        String desc = st.getSubTypeDescription().toUpperCase().trim();
+        return desc.equalsIgnoreCase(cleanInput) || st.getSubTypeCode().equalsIgnoreCase(input);
+    }
+
+    private boolean matchesMasterRoleOption(MasterLookupSubType st, String input) {
+        String cleanInput = input.toUpperCase().replace("_", " ").trim();
+        String desc = st.getSubTypeDescription().toUpperCase().trim();
+        return desc.equalsIgnoreCase(cleanInput) || st.getSubTypeCode().equalsIgnoreCase(input);
+    }
+
+    private void validateRoleNameInLookup(String roleName) {
+        boolean existsAndActive = bankLookupSubTypeRepository
+                .findByLookupTypeCodeAndIsActiveTrueOrderByDisplayOrderAscIdAsc("10003")
+                .stream()
+                .anyMatch(st -> matchesRoleOption(st, roleName));
+        if (!existsAndActive) {
+            throw new BusinessException("INVALID_ROLE", "Role '" + roleName + "' is not active in lookup 10003.");
+        }
+    }
+
+    private String resolveRoleLookupCode(String roleName) {
+        if (roleName == null) return null;
+        return switch (roleName.toUpperCase()) {
+            case "SUPER_ADMIN" -> "2";
+            case "ADMIN" -> "3";
+            case "CHECKER" -> "4";
+            case "MAKER" -> "5";
+            case "VIEWER" -> "6";
+            case "CUSTOMER" -> "7";
+            default -> null;
+        };
+    }
 
     private boolean isInternalAdmin(UserPrincipal principal) {
         return principal != null && principal.isPlatformAdmin();
@@ -677,3 +882,4 @@ public class UserService {
                 .build());
     }
 }
+

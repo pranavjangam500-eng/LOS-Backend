@@ -41,8 +41,10 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
+
 @Component
 @RequiredArgsConstructor
 public class DatabaseSeeder implements CommandLineRunner {
@@ -209,16 +211,23 @@ public class DatabaseSeeder implements CommandLineRunner {
 
 
     private void registerLoginDirectoryEntry(String email, String userCode, String phone, Organization org, String userType) {
-        if (loginDirectoryRepository.findByEmail(email).isEmpty()) {
-            loginDirectoryRepository.save(LoginDirectory.builder()
-                    .email(email)
-                    .userCode(userCode)
-                    .phone(phone)
-                    .organization(org)
-                    .userType(userType)
-                    .build());
+        if (loginDirectoryRepository.findByEmail(email).isEmpty()
+                && loginDirectoryRepository.findByUserCode(userCode).isEmpty()
+                && (phone == null || loginDirectoryRepository.findByPhone(phone).isEmpty())) {
+            try {
+                loginDirectoryRepository.save(LoginDirectory.builder()
+                        .email(email)
+                        .userCode(userCode)
+                        .phone(phone)
+                        .organization(org)
+                        .userType(userType)
+                        .build());
+            } catch (Exception ex) {
+                log.warn("Notice: could not register login directory entry for {}: {}", email, ex.getMessage());
+            }
         }
     }
+
 
     // =====================================================================
     //  ORGANIZATION DATABASE (Bank / NBFC Panel)
@@ -591,6 +600,9 @@ public class DatabaseSeeder implements CommandLineRunner {
     // =========================================================================
 
     private void seedMasterLookups() {
+        BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+
         // 10001: Bank User Status (Fixed)
         seedMasterLookupType("10001", "Bank User Status", true);
         seedMasterLookupSubType("10001", "Bank User Status", "1", "Entered", true, 1);
@@ -700,7 +712,24 @@ public class DatabaseSeeder implements CommandLineRunner {
                 }
             }
         }
+
+        // Sync master lookups to all tenant databases
+        List<Organization> orgs = organizationRepository.findAll();
+        for (Organization org : orgs) {
+            try {
+                if (org.getDbName() != null && !org.getDbName().isBlank()) {
+                    bankDataSourceProvider.getOrCreateBankDataSource(org.getDbName(), org.getDbHost(), org.getDbPort());
+                    seedBankLookups(org.getDbName());
+                }
+            } catch (Exception ex) {
+                log.debug("Notice seeding lookups for bank org {}: {}", org.getBankCode(), ex.getMessage());
+            }
+        }
+
+        // Migrate any existing user designations that store matching descriptions to option codes
+        migrateExistingUserDesignations();
     }
+
 
     private void seedMasterLookupType(String code, String description, boolean isFixed) {
         if (masterLookupTypeRepository.findByCode(code).isEmpty()) {
@@ -779,5 +808,54 @@ public class DatabaseSeeder implements CommandLineRunner {
             log.warn("Notice seeding bank lookups for {}: {}", orgDbName, e.getMessage());
         }
     }
+
+    private void migrateExistingUserDesignations() {
+        List<Organization> orgs = organizationRepository.findAll();
+        for (Organization org : orgs) {
+            try {
+                if (org.getDbName() == null || org.getDbName().isBlank()) continue;
+                bankDataSourceProvider.getOrCreateBankDataSource(org.getDbName(), org.getDbHost(), org.getDbPort());
+                BankContext.setCurrentBank(org.getDbName());
+                OrganizationContext.setCurrentOrganization(org.getDbName());
+
+                List<BankLookupSubType> desigOptions = bankLookupSubTypeRepository
+                        .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002");
+
+                java.util.Map<String, String> descToCodeMap = desigOptions.stream()
+                        .collect(Collectors.toMap(
+                                opt -> opt.getSubTypeDescription().trim().toLowerCase(),
+                                BankLookupSubType::getSubTypeCode,
+                                (existing, replace) -> existing
+                        ));
+
+                java.util.Set<String> validCodes = desigOptions.stream()
+                        .map(BankLookupSubType::getSubTypeCode)
+                        .collect(Collectors.toSet());
+
+                List<OrganizationUser> users = organizationUserRepository.findAll();
+                for (OrganizationUser u : users) {
+                    String currentDesig = u.getDesignation();
+                    if (currentDesig == null || currentDesig.isBlank()) continue;
+                    String trimmed = currentDesig.trim();
+                    if (validCodes.contains(trimmed)) {
+                        continue;
+                    }
+                    String matchedCode = descToCodeMap.get(trimmed.toLowerCase());
+                    if (matchedCode != null) {
+                        log.info("MIGRATION: Updating designation for user id={} username='{}' in org='{}': '{}' -> '{}'",
+                                u.getId(), u.getUsername(), org.getCode(), currentDesig, matchedCode);
+                        u.setDesignation(matchedCode);
+                        organizationUserRepository.save(u);
+                    } else {
+                        log.warn("MIGRATION UNMATCHED: User id={} username='{}' email='{}' in org='{}' has unmatched designation: '{}'",
+                                u.getId(), u.getUsername(), u.getEmail(), org.getCode(), currentDesig);
+                    }
+                }
+            } catch (Exception ex) {
+                log.debug("Notice during designation migration for org {}: {}", org.getCode(), ex.getMessage());
+            }
+        }
+    }
 }
+
 

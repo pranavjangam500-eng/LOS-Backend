@@ -244,4 +244,67 @@ class AdministrationLookupServiceTest {
         verify(bankLookupTypePermissionRepository, times(1)).deleteByLookupTypeCode("10004");
         verify(adminAuditService, times(1)).logAdminAction(any(), any(), eq("UPDATE_BANK_LOOKUP_PERMISSIONS"), any(), eq("HDFC01"), any(), any());
     }
+
+    @Test
+    @DisplayName("getActiveOptionsByLookupCode should return only active options ordered by display order")
+    void testGetActiveOptionsByLookupCodeSuccess() {
+        MasterLookupType type = MasterLookupType.builder()
+                .code("10002")
+                .description("Designation")
+                .isActive(true)
+                .build();
+        when(masterLookupTypeRepository.findByCode("10002")).thenReturn(Optional.of(type));
+
+        MasterLookupSubType opt1 = MasterLookupSubType.builder()
+                .lookupTypeCode("10002")
+                .subTypeCode("1")
+                .subTypeDescription("Clerk")
+                .isActive(true)
+                .displayOrder(1)
+                .build();
+        MasterLookupSubType opt2 = MasterLookupSubType.builder()
+                .lookupTypeCode("10002")
+                .subTypeCode("2")
+                .subTypeDescription("Officer")
+                .isActive(true)
+                .displayOrder(2)
+                .build();
+
+        when(masterLookupSubTypeRepository.findByLookupTypeCodeAndIsActiveTrueOrderByDisplayOrderAscIdAsc("10002"))
+                .thenReturn(List.of(opt1, opt2));
+
+        List<LookupOptionResponse> options = lookupService.getActiveOptionsByLookupCode("10002");
+        assertNotNull(options);
+        assertEquals(2, options.size());
+        assertEquals("1", options.get(0).getCode());
+        assertEquals("Clerk", options.get(0).getDescription());
+        assertEquals("2", options.get(1).getCode());
+        assertEquals("Officer", options.get(1).getDescription());
+    }
+
+    @Test
+    @DisplayName("getActiveOptionsByLookupCode should throw ResourceNotFoundException for unknown type code")
+    void testGetActiveOptionsByLookupCodeUnknownThrows() {
+        when(masterLookupTypeRepository.findByCode("99999")).thenReturn(Optional.empty());
+
+        assertThrows(com.bank.los.common.exception.ResourceNotFoundException.class, () -> {
+            lookupService.getActiveOptionsByLookupCode("99999");
+        });
+    }
+
+    @Test
+    @DisplayName("getActiveOptionsByLookupCode should throw ResourceNotFoundException for inactive type")
+    void testGetActiveOptionsByLookupCodeInactiveThrows() {
+        MasterLookupType inactiveType = MasterLookupType.builder()
+                .code("10002")
+                .description("Designation")
+                .isActive(false)
+                .build();
+        when(masterLookupTypeRepository.findByCode("10002")).thenReturn(Optional.of(inactiveType));
+
+        assertThrows(com.bank.los.common.exception.ResourceNotFoundException.class, () -> {
+            lookupService.getActiveOptionsByLookupCode("10002");
+        });
+    }
 }
+

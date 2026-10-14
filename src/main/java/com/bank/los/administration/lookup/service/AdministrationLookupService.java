@@ -474,4 +474,28 @@ public class AdministrationLookupService {
                 .updatedAt(entity.getUpdatedAt())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public List<LookupOptionResponse> getActiveOptionsByLookupCode(String lookupTypeCode) {
+        BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+
+        MasterLookupType type = masterLookupTypeRepository.findByCode(lookupTypeCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode));
+
+        if (!Boolean.TRUE.equals(type.getIsActive())) {
+            throw new ResourceNotFoundException("Master lookup type is not active with code: " + lookupTypeCode);
+        }
+
+        List<MasterLookupSubType> activeSubTypes = masterLookupSubTypeRepository
+                .findByLookupTypeCodeAndIsActiveTrueOrderByDisplayOrderAscIdAsc(lookupTypeCode);
+
+        return activeSubTypes.stream()
+                .map(st -> LookupOptionResponse.builder()
+                        .code(st.getSubTypeCode())
+                        .description(st.getSubTypeDescription())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }
+
