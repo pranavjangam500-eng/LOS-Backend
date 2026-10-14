@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,6 +49,7 @@ public class LeadController {
      * @return 201 Created with the saved Lead object containing generated leadId
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Create a new Lead across 4 sections (Personal, Loan, Income, Referral)")
     public ResponseEntity<Lead> createLead(@RequestBody LeadRequest request) {
         Lead savedLead = leadService.createLead(request);
@@ -63,6 +65,7 @@ public class LeadController {
      * @return 200 OK with updated Lead
      */
     @PutMapping("/{leadId}")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Update an existing Lead (editable fields only)")
     public ResponseEntity<Lead> updateLead(@PathVariable String leadId, @RequestBody LeadRequest request) {
         Lead updatedLead = leadService.updateLead(leadId, request);
@@ -78,6 +81,7 @@ public class LeadController {
      * @return 200 OK with LeadAssignResponse
      */
     @PutMapping("/{leadId}/assign")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Assign a Lead to an active Maker user by Admin")
     public ResponseEntity<LeadAssignResponse> assignLead(
             @PathVariable String leadId,
@@ -93,6 +97,7 @@ public class LeadController {
      * @return 200 OK with Lead or 404 Not Found
      */
     @GetMapping("/{leadId}")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get Lead details by ID")
     public ResponseEntity<Lead> getLeadById(@PathVariable String leadId) {
         return leadService.getLeadById(leadId)
@@ -106,6 +111,7 @@ public class LeadController {
      * @return 200 OK with list of leads
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Get all leads")
     public ResponseEntity<List<Lead>> getAllLeads() {
         return ResponseEntity.ok(leadService.getAllLeads());
@@ -117,6 +123,7 @@ public class LeadController {
      * @return 200 OK with next Lead ID string
      */
     @GetMapping("/next-id")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Preview the next auto-generated Lead ID (LDYYYYMM####)")
     public ResponseEntity<String> getNextLeadId() {
         return ResponseEntity.ok(leadService.generateNextLeadId());
@@ -130,7 +137,12 @@ public class LeadController {
      * @param request HTTP request for stream fallback
      * @return 200 OK with CsvImportResult summary
      */
-    @PostMapping(value = "/import", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, "text/csv", MediaType.APPLICATION_OCTET_STREAM_VALUE})
+    @PostMapping(value = "/import", consumes = {
+            MediaType.MULTIPART_FORM_DATA_VALUE,
+            "text/csv",
+            MediaType.APPLICATION_OCTET_STREAM_VALUE
+    })
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Bulk import leads from CSV file (multipart or stream)")
     public ResponseEntity<CsvImportResult> importLeads(
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -154,6 +166,7 @@ public class LeadController {
      * @return 200 OK with CSV file attachment
      */
     @GetMapping(value = "/export", produces = "text/csv")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Export all leads to CSV attachment")
     public ResponseEntity<byte[]> exportLeads() {
         byte[] csvData = leadService.exportLeadsToCsv();
@@ -169,6 +182,7 @@ public class LeadController {
      * @return 200 OK with sample CSV file attachment
      */
     @GetMapping(value = "/sample-csv", produces = "text/csv")
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Download pre-configured sample CSV template for bulk import")
     public ResponseEntity<byte[]> getSampleCsv() {
         byte[] csvData = leadService.getSampleCsv();
@@ -176,6 +190,5 @@ public class LeadController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"sample_leads.csv\"")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
                 .body(csvData);
-
     }
 }

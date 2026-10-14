@@ -310,3 +310,72 @@ CREATE TABLE IF NOT EXISTS identity.lookup_sub_types (
 
 CREATE INDEX IF NOT EXISTS idx_master_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
 
+-- -----------------------------------------------------------------------
+-- customer.leads
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS customer.leads (
+    lead_id                         VARCHAR(50) PRIMARY KEY,
+    lead_status                     VARCHAR(50) DEFAULT 'NEW',
+    assigned_employee_id            VARCHAR(100),
+    assignment_timestamp            TIMESTAMP,
+    assigned_by                     VARCHAR(100),
+    first_name_business_name        VARCHAR(150),
+    customer_name                   VARCHAR(150),
+    dob                             VARCHAR(20),
+    age                             INT,
+    customer_type                   VARCHAR(50),
+    pan_number                      VARCHAR(20),
+    pan_validation_status           VARCHAR(50),
+    aadhaar_number                  VARCHAR(20),
+    aadhaar_validation_status       VARCHAR(50),
+    residential_status              VARCHAR(50),
+    gender                          VARCHAR(20),
+    marital_status                  VARCHAR(50),
+    passport_number                 VARCHAR(50),
+    passport_expiry_date            VARCHAR(20),
+    dedupe_status                   VARCHAR(50),
+    blacklist_status                VARCHAR(50),
+    loan_product_type               VARCHAR(100),
+    loan_amount                     DOUBLE PRECISION,
+    purpose_of_loan                 VARCHAR(255),
+    tenure                          INT,
+    number_of_instalments           INT,
+    emi                             DOUBLE PRECISION,
+    interest_rate                   DOUBLE PRECISION,
+    total_interest                  DOUBLE PRECISION,
+    security_amount                 DOUBLE PRECISION,
+    employment_type                 VARCHAR(50),
+    annual_income                   DOUBLE PRECISION,
+    designation                     VARCHAR(100),
+    employer_business_name          VARCHAR(200),
+    location                        VARCHAR(100),
+    state                           VARCHAR(100),
+    take_home_pay                   DOUBLE PRECISION,
+    deductions_or_emis_payable      DOUBLE PRECISION,
+    bank_name                       VARCHAR(150),
+    primary_bank_account            VARCHAR(100),
+    account_statement_consent       VARCHAR(50),
+    cibil_liability_check           VARCHAR(50),
+    debt_to_income_ratio            DOUBLE PRECISION,
+    loan_to_value_ratio             DOUBLE PRECISION,
+    debt_service_coverage_ratio     DOUBLE PRECISION,
+    net_disposable_income           DOUBLE PRECISION,
+    lead_acquisition_channel        VARCHAR(100),
+    date                            VARCHAR(20),
+    sourcing_agent_partner_id       VARCHAR(100),
+    agent_partner_name              VARCHAR(150),
+    employee_id                     VARCHAR(100),
+    employee_name                   VARCHAR(150),
+    last_name                       VARCHAR(100),
+    email_address                   VARCHAR(150),
+    pin_code                        VARCHAR(20),
+    number_of_dependents            INT,
+    down_payment_collateral         DOUBLE PRECISION,
+    created_at                      TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at                      TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_leads_status ON customer.leads(lead_status);
+CREATE INDEX IF NOT EXISTS idx_leads_assigned ON customer.leads(assigned_employee_id);
+
+
