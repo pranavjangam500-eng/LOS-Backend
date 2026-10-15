@@ -389,6 +389,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedMasterPermissions() {
+        BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         List<Object[]> masterPerms = List.of(
                 new Object[]{ApplicationConstants.Permissions.ORGANIZATION_CREATE, "Create new organizations", ApplicationConstants.PermissionModules.SYSTEM, true},
                 new Object[]{ApplicationConstants.Permissions.ORGANIZATION_VIEW, "View organizations", ApplicationConstants.PermissionModules.SYSTEM, true},
@@ -806,54 +808,62 @@ public class DatabaseSeeder implements CommandLineRunner {
             }
         } catch (Exception e) {
             log.warn("Notice seeding bank lookups for {}: {}", orgDbName, e.getMessage());
+        } finally {
+            BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         }
     }
 
     private void migrateExistingUserDesignations() {
-        List<Organization> orgs = organizationRepository.findAll();
-        for (Organization org : orgs) {
-            try {
-                if (org.getDbName() == null || org.getDbName().isBlank()) continue;
-                bankDataSourceProvider.getOrCreateBankDataSource(org.getDbName(), org.getDbHost(), org.getDbPort());
-                BankContext.setCurrentBank(org.getDbName());
-                OrganizationContext.setCurrentOrganization(org.getDbName());
+        try {
+            List<Organization> orgs = organizationRepository.findAll();
+            for (Organization org : orgs) {
+                try {
+                    if (org.getDbName() == null || org.getDbName().isBlank()) continue;
+                    bankDataSourceProvider.getOrCreateBankDataSource(org.getDbName(), org.getDbHost(), org.getDbPort());
+                    BankContext.setCurrentBank(org.getDbName());
+                    OrganizationContext.setCurrentOrganization(org.getDbName());
 
-                List<BankLookupSubType> desigOptions = bankLookupSubTypeRepository
-                        .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002");
+                    List<BankLookupSubType> desigOptions = bankLookupSubTypeRepository
+                            .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002");
 
-                java.util.Map<String, String> descToCodeMap = desigOptions.stream()
-                        .collect(Collectors.toMap(
-                                opt -> opt.getSubTypeDescription().trim().toLowerCase(),
-                                BankLookupSubType::getSubTypeCode,
-                                (existing, replace) -> existing
-                        ));
+                    java.util.Map<String, String> descToCodeMap = desigOptions.stream()
+                            .collect(Collectors.toMap(
+                                    opt -> opt.getSubTypeDescription().trim().toLowerCase(),
+                                    BankLookupSubType::getSubTypeCode,
+                                    (existing, replace) -> existing
+                            ));
 
-                java.util.Set<String> validCodes = desigOptions.stream()
-                        .map(BankLookupSubType::getSubTypeCode)
-                        .collect(Collectors.toSet());
+                    java.util.Set<String> validCodes = desigOptions.stream()
+                            .map(BankLookupSubType::getSubTypeCode)
+                            .collect(Collectors.toSet());
 
-                List<OrganizationUser> users = organizationUserRepository.findAll();
-                for (OrganizationUser u : users) {
-                    String currentDesig = u.getDesignation();
-                    if (currentDesig == null || currentDesig.isBlank()) continue;
-                    String trimmed = currentDesig.trim();
-                    if (validCodes.contains(trimmed)) {
-                        continue;
+                    List<OrganizationUser> users = organizationUserRepository.findAll();
+                    for (OrganizationUser u : users) {
+                        String currentDesig = u.getDesignation();
+                        if (currentDesig == null || currentDesig.isBlank()) continue;
+                        String trimmed = currentDesig.trim();
+                        if (validCodes.contains(trimmed)) {
+                            continue;
+                        }
+                        String matchedCode = descToCodeMap.get(trimmed.toLowerCase());
+                        if (matchedCode != null) {
+                            log.info("MIGRATION: Updating designation for user id={} username='{}' in org='{}': '{}' -> '{}'",
+                                    u.getId(), u.getUsername(), org.getCode(), currentDesig, matchedCode);
+                            u.setDesignation(matchedCode);
+                            organizationUserRepository.save(u);
+                        } else {
+                            log.warn("MIGRATION UNMATCHED: User id={} username='{}' email='{}' in org='{}' has unmatched designation: '{}'",
+                                    u.getId(), u.getUsername(), u.getEmail(), org.getCode(), currentDesig);
+                        }
                     }
-                    String matchedCode = descToCodeMap.get(trimmed.toLowerCase());
-                    if (matchedCode != null) {
-                        log.info("MIGRATION: Updating designation for user id={} username='{}' in org='{}': '{}' -> '{}'",
-                                u.getId(), u.getUsername(), org.getCode(), currentDesig, matchedCode);
-                        u.setDesignation(matchedCode);
-                        organizationUserRepository.save(u);
-                    } else {
-                        log.warn("MIGRATION UNMATCHED: User id={} username='{}' email='{}' in org='{}' has unmatched designation: '{}'",
-                                u.getId(), u.getUsername(), u.getEmail(), org.getCode(), currentDesig);
-                    }
+                } catch (Exception ex) {
+                    log.debug("Notice during designation migration for org {}: {}", org.getCode(), ex.getMessage());
                 }
-            } catch (Exception ex) {
-                log.debug("Notice during designation migration for org {}: {}", org.getCode(), ex.getMessage());
             }
+        } finally {
+            BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         }
     }
 }

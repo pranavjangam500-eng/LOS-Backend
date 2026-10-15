@@ -688,57 +688,37 @@ public class UserService {
 
     private String validateAndResolveDesignation(String submittedDesignation) {
         if (submittedDesignation == null || submittedDesignation.trim().isEmpty()) {
-            throw new BusinessException("INVALID_DESIGNATION", "Designation is required. Please provide a valid active option code from lookup 10002.");
+            throw new BusinessException("INVALID_DESIGNATION", "Designation is required. Must be an active option code under lookup type 10002.");
         }
         String code = submittedDesignation.trim();
 
-        // 1. Look up in bank database by code
+        // 1. Look up in bank database by code ONLY
         BankLookupSubType subType = bankLookupSubTypeRepository
                 .findByLookupTypeCodeAndSubTypeCode("10002", code)
                 .orElse(null);
 
-        // 2. If not found by code, look up by description
-        if (subType == null) {
-            subType = bankLookupSubTypeRepository
-                    .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002")
-                    .stream()
-                    .filter(st -> st.getSubTypeDescription().equalsIgnoreCase(code))
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        // 3. Fallback to master DB
+        // 2. If not found in bank DB, check if it exists in master to return a clear syncing error
         if (subType == null) {
             String currentBank = BankContext.getCurrentBank();
             String currentOrg = OrganizationContext.getCurrentOrganization();
+            boolean existsInMaster = false;
             try {
                 BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
-                var masterSub = masterLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode("10002", code)
-                        .or(() -> masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002")
-                                .stream()
-                                .filter(st -> st.getSubTypeDescription().equalsIgnoreCase(code))
-                                .findFirst())
-                        .orElse(null);
-
-                if (masterSub != null) {
-                    if (!Boolean.TRUE.equals(masterSub.getIsActive())) {
-                        throw new BusinessException("INVALID_DESIGNATION", "Designation option code '" + code + "' is inactive in lookup 10002.");
-                    }
-                    return masterSub.getSubTypeCode();
-                }
+                existsInMaster = masterLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode("10002", code).isPresent();
             } finally {
                 BankContext.setCurrentBank(currentBank);
                 OrganizationContext.setCurrentOrganization(currentOrg);
             }
-        }
 
-        if (subType == null) {
-            throw new BusinessException("INVALID_DESIGNATION", "Invalid designation option code: '" + code + "'. Must be an active option in lookup 10002.");
+            if (existsInMaster) {
+                throw new BusinessException("INVALID_DESIGNATION", "Designation option code '" + code + "' is not synced in this bank's database. Master lookups need syncing.");
+            }
+            throw new BusinessException("INVALID_DESIGNATION", "Invalid designation option: '" + code + "'. Must be an active option code under lookup type 10002.");
         }
 
         if (!Boolean.TRUE.equals(subType.getIsActive())) {
-            throw new BusinessException("INVALID_DESIGNATION", "Designation option code '" + code + "' (" + subType.getSubTypeDescription() + ") is inactive in lookup 10002.");
+            throw new BusinessException("INVALID_DESIGNATION", "Designation option code '" + code + "' is inactive. Must be an active option code under lookup type 10002.");
         }
 
         return subType.getSubTypeCode();
@@ -756,55 +736,35 @@ public class UserService {
             roleInput = isInternalAdmin ? "3" : "6"; // default Admin (3) or Viewer (6)
         }
 
-        String trimmed = roleInput.trim();
+        String code = roleInput.trim();
 
-        // 1. Look up in bank database by code
+        // 1. Look up in bank database by code ONLY
         BankLookupSubType subType = bankLookupSubTypeRepository
-                .findByLookupTypeCodeAndSubTypeCode("10003", trimmed)
+                .findByLookupTypeCodeAndSubTypeCode("10003", code)
                 .orElse(null);
 
-        // 2. If not found by code, look up by description or normalized name
-        if (subType == null) {
-            subType = bankLookupSubTypeRepository
-                    .findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10003")
-                    .stream()
-                    .filter(st -> matchesRoleOption(st, trimmed))
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        // 3. Fallback to master DB
+        // 2. If not found in bank DB, check if it exists in master to return a clear syncing error
         if (subType == null) {
             String currentBank = BankContext.getCurrentBank();
             String currentOrg = OrganizationContext.getCurrentOrganization();
+            boolean existsInMaster = false;
             try {
                 BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
-                var masterSub = masterLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode("10003", trimmed)
-                        .or(() -> masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10003")
-                                .stream()
-                                .filter(st -> matchesMasterRoleOption(st, trimmed))
-                                .findFirst())
-                        .orElse(null);
-
-                if (masterSub != null) {
-                    if (!Boolean.TRUE.equals(masterSub.getIsActive())) {
-                        throw new BusinessException("INVALID_ROLE", "Role option code '" + trimmed + "' is inactive in lookup 10003.");
-                    }
-                    return mapRoleCodeToEntity(masterSub.getSubTypeCode(), masterSub.getSubTypeDescription());
-                }
+                existsInMaster = masterLookupSubTypeRepository.findByLookupTypeCodeAndSubTypeCode("10003", code).isPresent();
             } finally {
                 BankContext.setCurrentBank(currentBank);
                 OrganizationContext.setCurrentOrganization(currentOrg);
             }
-        }
 
-        if (subType == null) {
-            throw new BusinessException("INVALID_ROLE", "Invalid role option: '" + trimmed + "'. Must be an active option in lookup 10003.");
+            if (existsInMaster) {
+                throw new BusinessException("INVALID_ROLE", "Role option code '" + code + "' is not synced in this bank's database. Master lookups need syncing.");
+            }
+            throw new BusinessException("INVALID_ROLE", "Invalid role option: '" + code + "'. Must be an active option code under lookup type 10003.");
         }
 
         if (!Boolean.TRUE.equals(subType.getIsActive())) {
-            throw new BusinessException("INVALID_ROLE", "Role option code '" + trimmed + "' (" + subType.getSubTypeDescription() + ") is inactive in lookup 10003.");
+            throw new BusinessException("INVALID_ROLE", "Role option code '" + code + "' is inactive. Must be an active option code under lookup type 10003.");
         }
 
         return mapRoleCodeToEntity(subType.getSubTypeCode(), subType.getSubTypeDescription());
@@ -824,25 +784,17 @@ public class UserService {
                 .orElseGet(() -> autoSeedRole(roleName));
     }
 
-    private boolean matchesRoleOption(BankLookupSubType st, String input) {
-        String cleanInput = input.toUpperCase().replace("_", " ").trim();
-        String desc = st.getSubTypeDescription().toUpperCase().trim();
-        return desc.equalsIgnoreCase(cleanInput) || st.getSubTypeCode().equalsIgnoreCase(input);
-    }
-
-    private boolean matchesMasterRoleOption(MasterLookupSubType st, String input) {
-        String cleanInput = input.toUpperCase().replace("_", " ").trim();
-        String desc = st.getSubTypeDescription().toUpperCase().trim();
-        return desc.equalsIgnoreCase(cleanInput) || st.getSubTypeCode().equalsIgnoreCase(input);
-    }
-
     private void validateRoleNameInLookup(String roleName) {
+        String code = resolveRoleLookupCode(roleName);
+        if (code == null) {
+            throw new BusinessException("INVALID_ROLE", "Role '" + roleName + "' is not mapped to lookup 10003.");
+        }
         boolean existsAndActive = bankLookupSubTypeRepository
-                .findByLookupTypeCodeAndIsActiveTrueOrderByDisplayOrderAscIdAsc("10003")
-                .stream()
-                .anyMatch(st -> matchesRoleOption(st, roleName));
+                .findByLookupTypeCodeAndSubTypeCode("10003", code)
+                .map(st -> Boolean.TRUE.equals(st.getIsActive()))
+                .orElse(false);
         if (!existsAndActive) {
-            throw new BusinessException("INVALID_ROLE", "Role '" + roleName + "' is not active in lookup 10003.");
+            throw new BusinessException("INVALID_ROLE", "Role option code '" + code + "' is not active under lookup type 10003.");
         }
     }
 

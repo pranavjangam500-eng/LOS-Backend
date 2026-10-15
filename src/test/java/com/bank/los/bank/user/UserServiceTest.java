@@ -86,7 +86,7 @@ class UserServiceTest {
                 .username("icici_admin")
                 .email("admin@icicibank.com")
                 .password("Admin@123")
-                .roleName("ADMIN")
+                .roleName("3")
                 .designation("5")
                 .firstName("Aditya")
                 .lastName("Kapoor")
@@ -110,7 +110,7 @@ class UserServiceTest {
                 .username("invalid_desig_user")
                 .email("invalid_desig@icicibank.com")
                 .password("Admin@123")
-                .roleName("ADMIN")
+                .roleName("3")
                 .designation("99999")
                 .firstName("Test")
                 .lastName("User")
@@ -122,13 +122,50 @@ class UserServiceTest {
             userService.createUser(superAdminPrincipal, invalidDesigRequest);
         });
 
+        // Test invalid designation name "Manager" (name instead of code "5") in Internal Admin flow -> 400
+        CreateUserRequest nameDesigRequest = CreateUserRequest.builder()
+                .organizationId(orgResponse.getPkid())
+                .username("name_desig_user")
+                .email("name_desig@icicibank.com")
+                .password("Admin@123")
+                .roleName("3")
+                .designation("Manager")
+                .firstName("Test")
+                .lastName("User")
+                .mobile("+919811122299")
+                .status("OPERATIVE")
+                .build();
+
+        var exInternal = assertThrows(com.bank.los.common.exception.BusinessException.class, () -> {
+            userService.createUser(superAdminPrincipal, nameDesigRequest);
+        });
+        assertTrue(exInternal.getMessage().contains("Must be an active option code under lookup type 10002"));
+
+        // Test invalid designation name "Manager" in Bank-side flow -> 400
+        UserPrincipal bankAdminPrincipal = UserPrincipal.builder()
+                .id(userResponse.getId())
+                .email(userResponse.getEmail())
+                .userCode(userResponse.getEmpNo())
+                .role("ADMIN")
+                .userType("STAFF")
+                .organizationId(orgResponse.getPkid())
+                .organizationCode(orgResponse.getBankCode())
+                .organizationDbName(orgResponse.getDbName())
+                .active(true)
+                .build();
+
+        var exBank = assertThrows(com.bank.los.common.exception.BusinessException.class, () -> {
+            userService.createUser(bankAdminPrincipal, nameDesigRequest);
+        });
+        assertTrue(exBank.getMessage().contains("Must be an active option code under lookup type 10002"));
+
         // Test invalid role code should throw BusinessException (400)
         CreateUserRequest invalidRoleRequest = CreateUserRequest.builder()
                 .organizationId(orgResponse.getPkid())
                 .username("invalid_role_user")
                 .email("invalid_role@icicibank.com")
                 .password("Admin@123")
-                .roleName("INVALID_ROLE_999")
+                .roleName("99999")
                 .designation("5")
                 .firstName("Test")
                 .lastName("User")

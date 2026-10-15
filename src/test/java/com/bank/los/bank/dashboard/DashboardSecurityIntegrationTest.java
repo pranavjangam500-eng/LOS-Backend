@@ -28,6 +28,15 @@ class DashboardSecurityIntegrationTest {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.bank.los.otp.service.OtpEmailService otpEmailService;
+
+    private String captureLastOtp(String email) {
+        org.mockito.ArgumentCaptor<String> captor = org.mockito.ArgumentCaptor.forClass(String.class);
+        org.mockito.Mockito.verify(otpEmailService, org.mockito.Mockito.atLeastOnce()).sendOtpEmail(org.mockito.Mockito.eq(email), captor.capture());
+        return captor.getValue();
+    }
+
     private String internalAdminToken;
     private String tenantAdminToken;
     private String makerToken;
@@ -44,25 +53,28 @@ class DashboardSecurityIntegrationTest {
         // 2. Bank Admin (2FA)
         LoginResponse superAdminStep1 = authenticationService.login(LoginRequest.builder()
                 .email("admin@hdfcbank.com").password("Admin@123").build());
+        String adminOtp = captureLastOtp("admin@hdfcbank.com");
         LoginResponse superAdminStep2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
                 .tempSessionToken(superAdminStep1.getTempSessionToken())
-                .otp(superAdminStep1.getDevOtp()).build());
+                .otp(adminOtp).build());
         tenantAdminToken = superAdminStep2.getAccessToken();
 
         // 3. Bank Maker (2FA)
         LoginResponse makerStep1 = authenticationService.login(LoginRequest.builder()
                 .email("maker@hdfcbank.com").password("Maker@123").build());
+        String makerOtp = captureLastOtp("maker@hdfcbank.com");
         LoginResponse makerStep2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
                 .tempSessionToken(makerStep1.getTempSessionToken())
-                .otp(makerStep1.getDevOtp()).build());
+                .otp(makerOtp).build());
         makerToken = makerStep2.getAccessToken();
 
         // 4. Bank Checker (2FA)
         LoginResponse checkerStep1 = authenticationService.login(LoginRequest.builder()
                 .email("checker@hdfcbank.com").password("Checker@123").build());
+        String checkerOtp = captureLastOtp("checker@hdfcbank.com");
         LoginResponse checkerStep2 = authenticationService.verifyOtp(VerifyOtpRequest.builder()
                 .tempSessionToken(checkerStep1.getTempSessionToken())
-                .otp(checkerStep1.getDevOtp()).build());
+                .otp(checkerOtp).build());
         checkerToken = checkerStep2.getAccessToken();
 
         // 5. Customer (single-step)

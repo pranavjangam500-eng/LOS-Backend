@@ -115,10 +115,10 @@ class LeadControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Unauthenticated request to /api/leads should return 403 Forbidden")
+    @DisplayName("Unauthenticated request to /api/leads should return 401 Unauthorized")
     void testUnauthenticatedAccessFails() throws Exception {
         mockMvc.perform(get("/api/leads"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
