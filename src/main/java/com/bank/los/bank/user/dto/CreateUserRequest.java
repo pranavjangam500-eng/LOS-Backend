@@ -105,14 +105,15 @@ public class CreateUserRequest {
     private LocalDate dob;
 
     @JsonProperty("designation")
-    @JsonAlias({"Designation"})
-    @Schema(description = "Official job designation", example = "Bank Administrator")
+    @JsonAlias({"Designation", "designationCode", "designation_code"})
+    @Schema(description = "Official job designation option code from lookup 10002", example = "5")
     private String designation;
 
     @JsonProperty("role")
-    @JsonAlias({"Role", "roleName", "role_name"})
-    @Schema(description = "Role name in organization (ADMIN, MAKER, CHECKER, VIEWER)", example = "ADMIN")
+    @JsonAlias({"Role", "roleName", "role_name", "roleCode", "role_code"})
+    @Schema(description = "Role name in organization or option code from lookup 10003", example = "ADMIN")
     private String roleName;
+
 
     @JsonProperty("role_id")
     @JsonAlias({"roleId", "RoleId"})

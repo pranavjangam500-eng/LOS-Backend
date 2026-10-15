@@ -41,6 +41,15 @@ public class AdministrationLookupController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping("/{code}/options")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Get active dropdown options for a master lookup code (returns [{ code, description }])")
+    public ResponseEntity<ApiResponse<List<LookupOptionResponse>>> getMasterLookupOptions(@PathVariable String code) {
+        List<LookupOptionResponse> options = administrationLookupService.getActiveOptionsByLookupCode(code);
+        return ResponseEntity.ok(ApiResponse.ok(options));
+    }
+
+
     @PostMapping("/types")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
     @Operation(summary = "Create a new central master lookup type")

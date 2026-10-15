@@ -30,6 +30,21 @@ public class Lead extends LeadRequest {
         super(request);
     }
 
+    @jakarta.persistence.PrePersist
+    public void prePersist() {
+        if (getCreatedAt() == null) {
+            setCreatedAt(java.time.LocalDateTime.now());
+        }
+        if (getUpdatedAt() == null) {
+            setUpdatedAt(java.time.LocalDateTime.now());
+        }
+    }
+
+    @jakarta.persistence.PreUpdate
+    public void preUpdate() {
+        setUpdatedAt(java.time.LocalDateTime.now());
+    }
+
     @Override
     public String toString() {
         return "Lead{" +

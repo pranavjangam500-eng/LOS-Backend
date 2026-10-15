@@ -101,6 +101,8 @@ class LeadLifecycleTest {
         assertEquals("2032-05-19", created.getPassportExpiryDate());
         assertEquals(11.5, created.getInterestRate());
         assertEquals(244428.0, created.getTotalInterest());
+        assertNotNull(created.getCreatedAt());
+        assertNotNull(created.getUpdatedAt());
 
         // Step 4 Referral Details verification
         assertEquals("Website", created.getLeadAcquisitionChannel());

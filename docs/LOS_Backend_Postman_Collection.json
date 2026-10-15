@@ -1948,7 +1948,41 @@
           "response": []
         },
         {
+          "name": "2a. Get Master Lookup Options for Dropdowns",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/10002/options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "10002",
+                "options"
+              ]
+            },
+            "description": "Returns active options as [{ code, description }] for Internal Admin dropdowns (e.g. 10002 Designation, 10003 Role)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "3. Create Master Lookup Type",
+
           "request": {
             "method": "POST",
             "header": [

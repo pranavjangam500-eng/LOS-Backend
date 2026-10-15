@@ -59,6 +59,18 @@ public class LeadRequest {
     @JsonAlias({"assigned_by", "assignedByEmployeeId", "assignedByUserId", "assignedByAdmin", "Assigned By"})
     private String assignedBy;
 
+    @Column(name = "created_at", updatable = false)
+    @JsonProperty("createdAt")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonAlias({"created_at", "createdAt", "Created At"})
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    @JsonProperty("updatedAt")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonAlias({"updated_at", "updatedAt", "Updated At"})
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
     // ==========================================
     // 1. Personal Details
     // ==========================================
@@ -349,6 +361,8 @@ public class LeadRequest {
             this.assignedEmployeeId = request.assignedEmployeeId;
             this.assignmentTimestamp = request.assignmentTimestamp;
             this.assignedBy = request.assignedBy;
+            this.createdAt = request.createdAt != null ? request.createdAt : LocalDateTime.now();
+            this.updatedAt = request.updatedAt != null ? request.updatedAt : LocalDateTime.now();
 
             // 1. Personal Details
             this.customerName = request.customerName;
@@ -1033,5 +1047,21 @@ public class LeadRequest {
     @JsonIgnore
     public void setSourcingEmployeeName(String sourcingEmployeeName) {
         this.employeeName = sourcingEmployeeName;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

@@ -79,6 +79,7 @@ public class PersistenceConfig {
                 populator.populate(conn);
             }
             migrateLegacyInstitutionColumns(conn);
+            migrateLegacyLeadColumns(conn);
         } catch (Exception e) {
             // Ignore if already created or offline during build
         }
@@ -252,8 +253,34 @@ public class PersistenceConfig {
         }
     }
 
+    private void migrateLegacyLeadColumns(java.sql.Connection conn) {
+        try (java.sql.Statement stmt = conn.createStatement()) {
+            java.sql.DatabaseMetaData meta = conn.getMetaData();
+            if (columnExists(meta, "leads", "customer_name")) {
+                try { stmt.execute("ALTER TABLE customer.leads ALTER COLUMN customer_name DROP NOT NULL"); } catch (Exception ignored) {}
+            }
+            if (columnExists(meta, "leads", "phone")) {
+                try { stmt.execute("ALTER TABLE customer.leads ALTER COLUMN phone DROP NOT NULL"); } catch (Exception ignored) {}
+            }
+            if (columnExists(meta, "leads", "status")) {
+                try { stmt.execute("ALTER TABLE customer.leads ALTER COLUMN status DROP NOT NULL"); } catch (Exception ignored) {}
+            }
+            if (columnExists(meta, "leads", "created_at")) {
+                try { stmt.execute("ALTER TABLE customer.leads ALTER COLUMN created_at SET DEFAULT now()"); } catch (Exception ignored) {}
+            }
+            if (columnExists(meta, "leads", "updated_at")) {
+                try { stmt.execute("ALTER TABLE customer.leads ALTER COLUMN updated_at SET DEFAULT now()"); } catch (Exception ignored) {}
+            }
+        } catch (Exception e) {
+            log.debug("Legacy lead columns migration note: {}", e.getMessage());
+        }
+    }
+
     private boolean columnExists(java.sql.DatabaseMetaData meta, String tableName, String columnName) {
         try (java.sql.ResultSet rs = meta.getColumns(null, null, tableName, columnName)) {
+            if (rs.next()) return true;
+        } catch (Exception ignored) {}
+        try (java.sql.ResultSet rs = meta.getColumns(null, "customer", tableName, columnName)) {
             if (rs.next()) return true;
         } catch (Exception ignored) {}
         try (java.sql.ResultSet rs = meta.getColumns(null, "organization", tableName, columnName)) {

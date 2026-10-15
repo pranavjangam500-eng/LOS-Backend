@@ -76,8 +76,16 @@ public class UserResponse {
     private String gender;
 
     @JsonProperty("designation")
-    @Schema(description = "Designation", example = "Branch Manager")
+    @Schema(description = "Designation code or title", example = "5")
     private String designation;
+
+    @JsonProperty("designation_code")
+    @Schema(description = "Designation lookup option code", example = "5")
+    private String designationCode;
+
+    @JsonProperty("designation_name")
+    @Schema(description = "Designation lookup option description / title", example = "Manager")
+    private String designationName;
 
     @JsonProperty("role")
     @Schema(description = "Role name", example = "ADMIN")
@@ -90,6 +98,11 @@ public class UserResponse {
     @JsonProperty("role_name")
     @Schema(description = "Role name alias", example = "ADMIN")
     private String roleName;
+
+    @JsonProperty("role_code")
+    @Schema(description = "Role lookup option code", example = "3")
+    private String roleCode;
+
 
     @JsonProperty("2fA")
     @Schema(description = "Two-factor authentication enabled flag", example = "true")

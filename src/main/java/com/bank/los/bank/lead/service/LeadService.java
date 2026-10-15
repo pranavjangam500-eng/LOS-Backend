@@ -191,7 +191,12 @@ public class LeadService {
             }
         }
 
-        // 5. Save into database
+        // 5. Initialize timestamps and save into database
+        if (lead.getCreatedAt() == null) {
+            lead.setCreatedAt(LocalDateTime.now());
+        }
+        lead.setUpdatedAt(LocalDateTime.now());
+
         Lead saved = leadRepository.save(lead);
         log.info("Lead created successfully: leadId={}, status={}", saved.getLeadId(), saved.getLeadStatus());
         return saved;
@@ -570,6 +575,7 @@ public class LeadService {
             }
         }
 
+        existingLead.setUpdatedAt(LocalDateTime.now());
         return leadRepository.save(existingLead);
     }
 
