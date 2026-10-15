@@ -127,9 +127,9 @@ public class AuthenticationService {
             tenantResolutionService.cacheOrganization(org);
         }
 
-        // ── INTERNAL / SUPER_ADMIN ────────────────────────────────────────
+        // ── INTERNAL / ALLIANZA ADMIN REJECTION ON BANKING ENDPOINT ──────
         if (ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(uType)) {
-            return handleInternalLogin(identifier, request.getPassword());
+            throw new UnauthorizedException("Internal administrators cannot log in through the banking portal. Please use the Allianza Admin Login portal.");
         }
 
         // ── STAFF (ADMIN / CHECKER / MAKER / VIEWER) ─────────────────────
@@ -143,6 +143,27 @@ public class AuthenticationService {
         }
 
         throw new BusinessException("Unsupported user type: " + uType);
+    }
+
+    // =====================================================================
+    //  MASTER INTERNAL ADMIN LOGIN  (Allianza Panel — Platform Admins)
+    // =====================================================================
+
+    public LoginResponse internalAdminLogin(LoginRequest request) {
+        OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+
+        String identifier = request.getEmail().trim();
+        log.info("Master internal admin login attempt for identifier: {}", identifier);
+
+        // Check LoginDirectory: if this identifier belongs to a bank staff/customer, reject with helpful message
+        loginDirectoryRepository.findByEmailOrUserCodeOrPhone(identifier, identifier, identifier)
+                .ifPresent(dir -> {
+                    if (!ApplicationConstants.UserTypes.INTERNAL.equalsIgnoreCase(dir.getUserType())) {
+                        throw new UnauthorizedException("Banking users cannot log in through the Allianza Admin portal. Please use the banking login portal (/api/v1/auth/login).");
+                    }
+                });
+
+        return handleInternalLogin(identifier, request.getPassword());
     }
 
     private LoginResponse handleInternalLogin(String identifier, String rawPassword) {

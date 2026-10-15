@@ -51,11 +51,10 @@ The Lead Management Module handles end-to-end loan application intake, verificat
 
 ## 📬 Postman API Testing Guide & Collection
 
-A ready-to-use Postman Collection and comprehensive guide are included:
+A ready-to-import Postman collection named **los postman collection** and a comprehensive guide are included:
 
-- 📦 **Lead Management Postman Collection**: [LOS_Lead_Management_Postman_Collection.json](file:///c:/Users/Gourav%20Patil/Documents/LOS-Backend-main/LOS_Lead_Management_Postman_Collection.json)
-- 📄 **Postman Guide**: `docs/POSTMAN_API_TESTING_GUIDE.md`
-- 📦 **General Backend Postman Collection**: `docs/LOS_Backend_Postman_Collection.json`
+- 📦 **Postman Collection**: [docs/LOS_Backend_Postman_Collection.json](./docs/LOS_Backend_Postman_Collection.json)
+- 📄 **Postman Testing Guide**: [docs/POSTMAN_API_TESTING_GUIDE.md](./docs/POSTMAN_API_TESTING_GUIDE.md)
 
 ---
 
@@ -77,4 +76,3 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 
 Access Swagger UI documentation at: `http://localhost:8080/swagger-ui.html`  
 Access UI Dashboard at: `http://localhost:8080/index.html`
-

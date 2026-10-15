@@ -45,7 +45,7 @@ public class CreateUserRequest {
 
     @JsonProperty("emp_no")
     @JsonAlias({"empNo", "EmpNo", "employeeNumber", "employee_no", "employee_id", "employeeId", "emp_id", "empId"})
-    @Schema(description = "Manual Employee ID / Number (e.g. EMP-SBI-001)", example = "EMP-SBI-001")
+    @Schema(description = "Unique Manual Employee ID / Number (e.g. EMP-SBI-001)", example = "EMP-SBI-001")
     private String empNo;
 
     @NotBlank(message = "first_name is required")

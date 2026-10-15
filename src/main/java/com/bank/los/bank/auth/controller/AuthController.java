@@ -28,10 +28,17 @@ public class AuthController {
     private final TokenService tokenService;
 
     @PostMapping("/login")
-    @Operation(summary = "Authenticate user via email / user code and password with dynamic organization database routing")
+    @Operation(summary = "Authenticate banking user via email / user code and password with dynamic organization database routing")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authenticationService.login(request);
         return ResponseEntity.ok(ApiResponse.ok("Login successful", response));
+    }
+
+    @PostMapping({"/internal/login", "/admin/login"})
+    @Operation(summary = "Authenticate Master internal admin (Allianza panel) via email / username / empNo and password")
+    public ResponseEntity<ApiResponse<LoginResponse>> internalAdminLogin(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authenticationService.internalAdminLogin(request);
+        return ResponseEntity.ok(ApiResponse.ok("Internal admin login successful", response));
     }
 
     @PostMapping("/forgot-password")

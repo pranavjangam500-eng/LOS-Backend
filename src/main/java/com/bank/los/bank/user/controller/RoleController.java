@@ -30,7 +30,7 @@ public class RoleController {
     private final OrganizationRoleRepository organizationRoleRepository;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'MAKER', 'CHECKER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MAKER', 'CHECKER', 'VIEWER')")
     @Operation(summary = "List all roles available in the current bank organization")
     public ResponseEntity<ApiResponse<List<RoleResponse>>> getRoles(@AuthenticationPrincipal UserPrincipal principal) {
         OrganizationContext.setCurrentOrganization(principal.getOrganizationDbName());

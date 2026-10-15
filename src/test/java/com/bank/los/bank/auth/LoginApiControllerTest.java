@@ -108,4 +108,51 @@ class LoginApiControllerTest {
                 .andExpect(jsonPath("$.data.otpRequired").value(true))
                 .andExpect(jsonPath("$.data.devOtp").doesNotExist());
     }
+
+    @Test
+    @DisplayName("POST /api/v1/admin/auth/login and /api/v1/auth/internal/login should authenticate Master internal admin")
+    void testMasterInternalAdminEndpoints() throws Exception {
+        String internalPayload = """
+            {
+                "email": "admin@losplatform.com",
+                "password": "Admin@123"
+            }
+        """;
+
+        // Test 1: Dedicated administration endpoint
+        mockMvc.perform(post("/api/v1/admin/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(internalPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").isString())
+                .andExpect(jsonPath("$.data.user.role").value("INTERNAL_ADMIN"))
+                .andExpect(jsonPath("$.data.user.userType").value("INTERNAL"));
+
+        // Test 2: Dedicated /auth/internal/login endpoint
+        mockMvc.perform(post("/api/v1/auth/internal/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(internalPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").isString());
+
+        // Test 3: Banking endpoint rejects Master internal admin
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(internalPayload))
+                .andExpect(status().isUnauthorized());
+
+        // Test 4: Internal admin endpoint rejects banking staff user
+        String bankUserPayload = """
+            {
+                "email": "admin@hdfcbank.com",
+                "password": "Admin@123"
+            }
+        """;
+        mockMvc.perform(post("/api/v1/admin/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bankUserPayload))
+                .andExpect(status().isUnauthorized());
+    }
 }

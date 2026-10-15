@@ -243,6 +243,7 @@ CREATE TABLE IF NOT EXISTS identity.login_directory (
 );
 
 CREATE INDEX IF NOT EXISTS idx_login_directory_org ON identity.login_directory(organization_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_login_directory_user_code ON identity.login_directory(user_code);
 
 -- -----------------------------------------------------------------------
 -- identity.master_password_reset_tokens

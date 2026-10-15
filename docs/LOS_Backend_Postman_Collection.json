@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "los-backend-complete-api-suite-2026",
-    "name": "LOS Backend Multi-Tenant Complete API Collection",
-    "description": "Comprehensive Postman API Collection for Loan Origination System (LOS) Multi-Tenant Spring Boot Backend. Covers Platform Administration, Multi-Tenant Database Routing, Central & Tenant RBAC, User & Customer Management, Loan Origination & Maker-Checker Workflows, Lookups, and Third-Party Integrations.",
+    "name": "los postman collection",
+    "description": "Complete Postman API collection for the LOS multi-tenant backend, covering administration, authentication, users, customers, leads, loan origination, approvals, lookups, dashboards, and integrations.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -33,7 +33,17 @@
     },
     {
       "key": "leadId",
-      "value": "LD2026100001",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "otpEmail",
+      "value": "demo@allianzapay.com",
+      "type": "string"
+    },
+    {
+      "key": "otp",
+      "value": "123456",
       "type": "string"
     }
   ],
@@ -95,18 +105,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "raw": "{{baseUrl}}/api/v1/admin/auth/login",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "v1",
+                "admin",
                 "auth",
                 "login"
               ]
             },
-            "description": "Authenticates Master Platform Administrator",
+            "description": "Authenticates Master Platform Administrator (Allianza Panel). Also accessible via /api/v1/auth/internal/login.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@losplatform.com\",\n  \"password\": \"Admin@123\"\n}"
@@ -3427,7 +3438,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/1",
+              "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -3435,7 +3446,7 @@
                 "api",
                 "v1",
                 "leads",
-                "1"
+                "{{leadId}}"
               ]
             },
             "description": "Fetches lead information",
@@ -3486,10 +3497,195 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerName\": \"Pooja Hegde\",\n  \"email\": \"pooja.hegde@gmail.com\",\n  \"phone\": \"+919833445566\",\n  \"loanProductType\": \"HOME_LOAN\",\n  \"requestedAmount\": 4500000.0,\n  \"branchId\": 1,\n  \"remarks\": \"Interested in 20-year fixed home loan for 3BHK in Thane\"\n}"
+              "raw": "{\n  \"customerName\": \"Pooja Hegde\",\n  \"customerType\": \"Individual\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"emailAddress\": \"pooja.hegde+postman@example.com\",\n  \"pinCode\": \"400001\",\n  \"loanProductType\": \"HOME_LOAN\",\n  \"loanAmount\": 4500000.0,\n  \"purposeOfLoan\": \"Apartment Purchase\",\n  \"tenure\": 240,\n  \"leadAcquisitionChannel\": \"Website\"\n}"
             }
           },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lead created', function () { pm.response.to.have.status(201); });",
+                  "const lead = pm.response.json();",
+                  "if (lead.leadId) pm.collectionVariables.set('leadId', lead.leadId);"
+                ]
+              }
+            }
+          ],
           "response": []
+        },
+        {
+          "name": "4. Preview Next Lead ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads/next-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "leads", "next-id"]
+            },
+            "description": "Preview the next generated lead ID.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "5. Update Lead",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "leads", "{{leadId}}"]
+            },
+            "description": "Update an existing lead. Create a lead first or set leadId to an existing lead.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Pooja Hegde\",\n  \"customerType\": \"Individual\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"emailAddress\": \"pooja.hegde+postman@example.com\",\n  \"pinCode\": \"400001\",\n  \"loanProductType\": \"HOME_LOAN\",\n  \"loanAmount\": 4500000.0,\n  \"purposeOfLoan\": \"Apartment Purchase\",\n  \"tenure\": 240,\n  \"leadAcquisitionChannel\": \"Website\"\n}"
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "6. Assign Lead to Maker",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "leads", "{{leadId}}", "assign"]
+            },
+            "description": "Assign a lead to an active Maker user. Set employeeId to the Maker user's ID.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"EMP102\"\n}"
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "7. Import Leads from CSV",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads/import",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "leads", "import"]
+            },
+            "description": "Upload a CSV with the current lead template. Download it with the Sample Lead CSV request first, then select it in the file field.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "8. Export Leads to CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "leads", "export"]
+            },
+            "description": "Download all leads as an RFC-4180 CSV file.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "response": []
+          }
+        },
+        {
+          "name": "9. Download Sample Lead CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/leads/sample-csv",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "leads", "sample-csv"]
+            },
+            "description": "Download the valid sample template for CSV import.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "response": []
+          }
         }
       ]
     },
@@ -4502,301 +4698,53 @@
       ]
     },
     {
-      "name": "11. Lead Management",
-      "description": "Comprehensive Lead Management APIs covering multi-step lead origination (4 sections), lead assignment to Makers, lookup by ID, listing, next ID generation, and bulk CSV operations.",
+      "name": "21. Standalone Email OTP",
       "item": [
         {
-          "name": "1. Preview Next Lead ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/next-id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads",
-                "next-id"
-              ]
-            },
-            "description": "Generates and previews the next sequential Lead ID (format: LDYYYYMM####) without saving."
-          },
-          "response": []
-        },
-        {
-          "name": "2. Create Lead (Unified 4-Section Submission)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.leadId) {",
-                  "        pm.collectionVariables.set('leadId', jsonData.leadId);",
-                  "        console.log('Saved leadId: ' + jsonData.leadId);",
-                  "    }",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "1. Send Email OTP",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/otp/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "otp", "send"]
+            },
+            "description": "Send a one-time six-digit code to otpEmail. Configure email delivery before testing.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerName\": \"Siddharth Rao\",\n  \"dateOfBirth\": \"1990-05-20\",\n  \"age\": 36,\n  \"customerType\": \"Individual\",\n  \"panNumber\": \"ABCDE1234F\",\n  \"panValidationStatus\": \"VERIFIED\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"aadhaarValidationStatus\": \"VERIFIED\",\n  \"residentialStatus\": \"Resident\",\n  \"gender\": \"Male\",\n  \"maritalStatus\": \"Married\",\n  \"passportNumber\": \"P9876543\",\n  \"passportExpiryDate\": \"2032-05-19\",\n  \"email\": \"siddharth.rao@example.com\",\n  \"loanProductType\": \"Personal Loan\",\n  \"loanAmount\": 1200000.0,\n  \"purposeOfLoan\": \"Home Renovation\",\n  \"tenure\": 36,\n  \"numberOfInstalments\": 36,\n  \"emi\": 40123.0,\n  \"interestRate\": 11.5,\n  \"totalInterest\": 244428.0,\n  \"securityAmount\": 0.0,\n  \"employmentType\": \"Salaried\",\n  \"annualIncome\": 1800000.0,\n  \"designation\": \"Senior Engineer\",\n  \"employerName\": \"Infosys Technologies\",\n  \"location\": \"Pune\",\n  \"state\": \"Maharashtra\",\n  \"takeHomePay\": 120000.0,\n  \"deductionsEmisPayable\": 15000.0,\n  \"bankName\": \"HDFC Bank\",\n  \"accountNumber\": \"50100234567890\",\n  \"accountStatementConsent\": true,\n  \"leadAcquisitionChannel\": \"Website\",\n  \"date\": \"2026-10-13\",\n  \"sourcingAgentPartnerId\": \"AGT-555\",\n  \"agentPartnerName\": \"Apex Partners\",\n  \"employeeId\": \"EMP101\",\n  \"employeeName\": \"Anita Roy\"\n}"
+              "raw": "{\n  \"email\": \"{{otpEmail}}\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads"
-              ]
-            },
-            "description": "Unified single endpoint saving all 4 sections in a single transaction. Sets leadStatus = NEW."
-          },
-          "response": []
+            "response": []
+          }
         },
         {
-          "name": "3. Get Lead by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads",
-                "{{leadId}}"
-              ]
-            },
-            "description": "Fetches complete lead details by leadId."
-          },
-          "response": []
-        },
-        {
-          "name": "4. Get All Leads",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads"
-              ]
-            },
-            "description": "Returns all leads stored in the bank's database."
-          },
-          "response": []
-        },
-        {
-          "name": "5. Update Lead Details",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"customerName\": \"Siddharth Rao Updated\",\n  \"loanAmount\": 1500000.0,\n  \"tenure\": 48,\n  \"numberOfInstalments\": 48,\n  \"emi\": 39200.0,\n  \"annualIncome\": 2100000.0,\n  \"designation\": \"Lead Architect\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads",
-                "{{leadId}}"
-              ]
-            },
-            "description": "Updates editable attributes of an existing lead while keeping system identifiers intact."
-          },
-          "response": []
-        },
-        {
-          "name": "6. Assign Lead to Maker User",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"employeeId\": \"EMP102\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}/assign",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads",
-                "{{leadId}}",
-                "assign"
-              ]
-            },
-            "description": "Assigns lead to an active Maker user (e.g. EMP102). Sets leadStatus = ASSIGNED."
-          },
-          "response": []
-        },
-        {
-          "name": "7. Bulk Import Leads (CSV)",
+          "name": "2. Verify Email OTP",
           "request": {
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/otp/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "otp", "verify"]
+            },
+            "description": "Replace otp with the six-digit code received at otpEmail. Codes are single-use.",
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "description": "Attach a CSV file formatted as sample_leads.csv"
-                }
-              ]
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{otpEmail}}\",\n  \"otp\": \"{{otp}}\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/import",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads",
-                "import"
-              ]
-            },
-            "description": "Bulk import leads from CSV attachment. Returns summary count and row-level errors."
-          },
-          "response": []
-        },
-        {
-          "name": "8. Export All Leads (CSV)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/export",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads",
-                "export"
-              ]
-            },
-            "description": "Exports all leads to CSV attachment leads.csv."
-          },
-          "response": []
-        },
-        {
-          "name": "9. Download Sample CSV Template",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/leads/sample-csv",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "leads",
-                "sample-csv"
-              ]
-            },
-            "description": "Downloads sample CSV template sample_leads.csv."
-          },
-          "response": []
+            "response": []
+          }
         }
       ]
     }
