@@ -15,7 +15,10 @@ import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
 import com.bank.los.bank.master.repository.BankLookupTypePermissionRepository;
 import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.common.exception.BusinessException;
+import com.bank.los.common.exception.ConflictException;
 import com.bank.los.security.UserPrincipal;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,14 +26,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,6 +67,9 @@ class AdministrationLookupServiceTest {
     @Mock
     private AdminAuditService adminAuditService;
 
+    @Mock
+    private EntityManager entityManager;
+
     @InjectMocks
     private AdministrationLookupService lookupService;
 
@@ -75,16 +85,19 @@ class AdministrationLookupServiceTest {
     }
 
     @Test
-    @DisplayName("Admin should create master lookup type successfully")
+    @DisplayName("Admin should create master lookup type with server-generated sequence code (10010)")
     void testCreateLookupType_Success() {
         CreateLookupTypeRequest request = CreateLookupTypeRequest.builder()
-                .code("10008")
-                .description("Collateral Type")
+                .name("Collateral Type")
                 .isFixed(false)
-                .isActive(true)
+                .status("ACTIVE")
                 .build();
 
-        when(masterLookupTypeRepository.existsByCode("10008")).thenReturn(false);
+        Query nextValQuery = mock(Query.class);
+        when(entityManager.createNativeQuery("SELECT nextval('identity.master_lookup_type_code_seq')")).thenReturn(nextValQuery);
+        when(nextValQuery.getSingleResult()).thenReturn(10010L);
+
+        when(masterLookupTypeRepository.existsByDescriptionIgnoreCase("Collateral Type")).thenReturn(false);
         when(masterLookupTypeRepository.save(any(MasterLookupType.class))).thenAnswer(i -> {
             MasterLookupType t = i.getArgument(0);
             t.setId(10L);
@@ -94,23 +107,42 @@ class AdministrationLookupServiceTest {
         LookupTypeResponse response = lookupService.createLookupType(request, adminPrincipal);
 
         assertNotNull(response);
-        assertEquals("10008", response.getCode());
+        assertEquals("10010", response.getCode());
+        assertEquals("Collateral Type", response.getName());
         assertEquals("Collateral Type", response.getDescription());
+        assertEquals("ACTIVE", response.getStatus());
+        assertTrue(response.getIsActive());
         assertFalse(response.getIsFixed());
+    }
+
+    @Test
+    @DisplayName("Admin creating duplicate lookup type name throws ConflictException (409)")
+    void testCreateLookupType_DuplicateNameThrowsConflict() {
+        CreateLookupTypeRequest request = CreateLookupTypeRequest.builder()
+                .name("Collateral Type")
+                .build();
+
+        when(masterLookupTypeRepository.existsByDescriptionIgnoreCase("Collateral Type")).thenReturn(true);
+
+        ConflictException ex = assertThrows(ConflictException.class, () -> lookupService.createLookupType(request, adminPrincipal));
+        assertTrue(ex.getMessage().contains("Lookup type already exists with name"));
     }
 
     @Test
     @DisplayName("Admin creates master lookup type with custom permission codes (101, 102, 103)")
     void testCreateLookupType_WithPermissions() {
         CreateLookupTypeRequest request = CreateLookupTypeRequest.builder()
-                .code("10010")
-                .description("Custom Lookup")
+                .name("Custom Lookup")
                 .isFixed(false)
-                .isActive(true)
+                .status("ACTIVE")
                 .permissions(List.of("101", "102", "103"))
                 .build();
 
-        when(masterLookupTypeRepository.existsByCode("10010")).thenReturn(false);
+        Query nextValQuery = mock(Query.class);
+        when(entityManager.createNativeQuery("SELECT nextval('identity.master_lookup_type_code_seq')")).thenReturn(nextValQuery);
+        when(nextValQuery.getSingleResult()).thenReturn(10011L);
+
+        when(masterLookupTypeRepository.existsByDescriptionIgnoreCase("Custom Lookup")).thenReturn(false);
         when(masterLookupTypeRepository.save(any(MasterLookupType.class))).thenAnswer(i -> {
             MasterLookupType t = i.getArgument(0);
             t.setId(11L);
@@ -120,25 +152,12 @@ class AdministrationLookupServiceTest {
         LookupTypeResponse response = lookupService.createLookupType(request, adminPrincipal);
 
         assertNotNull(response);
-        assertEquals("10010", response.getCode());
+        assertEquals("10011", response.getCode());
         verify(masterLookupTypePermissionRepository, times(3)).save(any());
     }
 
     @Test
-    @DisplayName("Admin creating duplicate lookup type code throws BusinessException")
-    void testCreateLookupType_DuplicateCode() {
-        CreateLookupTypeRequest request = CreateLookupTypeRequest.builder()
-                .code("10001")
-                .description("Duplicate")
-                .build();
-
-        when(masterLookupTypeRepository.existsByCode("10001")).thenReturn(true);
-
-        assertThrows(BusinessException.class, () -> lookupService.createLookupType(request, adminPrincipal));
-    }
-
-    @Test
-    @DisplayName("Deleting system fixed master lookup type throws BusinessException")
+    @DisplayName("Deleting system fixed master lookup type throws BusinessException (400)")
     void testDeleteLookupType_SystemFixed_ThrowsException() {
         MasterLookupType fixedType = MasterLookupType.builder()
                 .id(1L)
@@ -149,11 +168,28 @@ class AdministrationLookupServiceTest {
 
         when(masterLookupTypeRepository.findByCode("10001")).thenReturn(Optional.of(fixedType));
 
-        assertThrows(BusinessException.class, () -> lookupService.deleteLookupType("10001"));
+        BusinessException ex = assertThrows(BusinessException.class, () -> lookupService.deleteLookupType("10001"));
+        assertTrue(ex.getMessage().contains("Cannot delete system fixed"));
     }
 
     @Test
-    @DisplayName("Admin should add sub type / option to master lookup")
+    @DisplayName("Deactivating system fixed master lookup type throws BusinessException (400)")
+    void testDeactivateLookupType_SystemFixed_ThrowsException() {
+        MasterLookupType fixedType = MasterLookupType.builder()
+                .id(1L)
+                .code("10001")
+                .description("Bank User Status")
+                .isFixed(true)
+                .build();
+
+        when(masterLookupTypeRepository.findByCode("10001")).thenReturn(Optional.of(fixedType));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> lookupService.deactivateLookupType("10001", adminPrincipal));
+        assertTrue(ex.getMessage().contains("Cannot deactivate system-fixed"));
+    }
+
+    @Test
+    @DisplayName("Admin should add sub type with generated code = max numeric + 1 under pessimistic lock")
     void testAddSubType_Success() {
         MasterLookupType type = MasterLookupType.builder()
                 .id(2L)
@@ -163,14 +199,21 @@ class AdministrationLookupServiceTest {
                 .build();
 
         CreateLookupSubTypeRequest subTypeRequest = CreateLookupSubTypeRequest.builder()
-                .subTypeCode("10")
-                .subTypeDescription("Managing Director")
+                .name("Managing Director")
                 .isFixed(false)
                 .displayOrder(10)
                 .build();
 
-        when(masterLookupTypeRepository.findByCode("10002")).thenReturn(Optional.of(type));
-        when(masterLookupSubTypeRepository.existsByLookupTypeCodeAndSubTypeCode("10002", "10")).thenReturn(false);
+        when(masterLookupTypeRepository.findByCodeForUpdate("10002")).thenReturn(Optional.of(type));
+        when(masterLookupSubTypeRepository.existsByLookupTypeCodeAndSubTypeDescriptionIgnoreCase("10002", "Managing Director")).thenReturn(false);
+
+        MasterLookupSubType existingOpt9 = MasterLookupSubType.builder()
+                .lookupTypeCode("10002")
+                .subTypeCode("9")
+                .displayOrder(9)
+                .build();
+        when(masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc("10002")).thenReturn(List.of(existingOpt9));
+
         when(masterLookupSubTypeRepository.save(any(MasterLookupSubType.class))).thenAnswer(i -> {
             MasterLookupSubType st = i.getArgument(0);
             st.setId(50L);
@@ -180,9 +223,71 @@ class AdministrationLookupServiceTest {
         LookupSubTypeResponse response = lookupService.addSubType("10002", subTypeRequest, adminPrincipal);
 
         assertNotNull(response);
+        assertEquals("10", response.getCode());
         assertEquals("10", response.getSubTypeCode());
+        assertEquals("Managing Director", response.getName());
+        assertEquals("Managing Director", response.getDescription());
         assertEquals("Managing Director", response.getSubTypeDescription());
         assertEquals("10002", response.getLookupTypeCode());
+        assertEquals("10002", response.getTypeCode());
+    }
+
+    @Test
+    @DisplayName("Admin adding duplicate sub type name under same type throws ConflictException (409)")
+    void testAddSubType_DuplicateNameThrowsConflict() {
+        MasterLookupType type = MasterLookupType.builder()
+                .id(2L)
+                .code("10002")
+                .description("Designation")
+                .isFixed(false)
+                .build();
+
+        CreateLookupSubTypeRequest subTypeRequest = CreateLookupSubTypeRequest.builder()
+                .name("Manager")
+                .build();
+
+        when(masterLookupTypeRepository.findByCodeForUpdate("10002")).thenReturn(Optional.of(type));
+        when(masterLookupSubTypeRepository.existsByLookupTypeCodeAndSubTypeDescriptionIgnoreCase("10002", "Manager")).thenReturn(true);
+
+        ConflictException ex = assertThrows(ConflictException.class, () -> lookupService.addSubType("10002", subTypeRequest, adminPrincipal));
+        assertTrue(ex.getMessage().contains("Lookup sub-type already exists with name 'Manager'"));
+    }
+
+    @Test
+    @DisplayName("Deactivating system fixed sub type throws BusinessException (400)")
+    void testDeactivateSubType_SystemFixed_ThrowsException() {
+        MasterLookupSubType subType = MasterLookupSubType.builder()
+                .id(1L)
+                .lookupTypeCode("10001")
+                .subTypeCode("1")
+                .subTypeDescription("Entered")
+                .isFixed(true)
+                .build();
+
+        when(masterLookupSubTypeRepository.findById(1L)).thenReturn(Optional.of(subType));
+        when(masterLookupTypeRepository.findByCode("10001")).thenReturn(Optional.of(MasterLookupType.builder().code("10001").isFixed(true).build()));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> lookupService.deactivateSubType(1L, adminPrincipal));
+        assertTrue(ex.getMessage().contains("Cannot deactivate option under system-fixed"));
+    }
+
+    @Test
+    @DisplayName("Search master lookup types with pagination returns PagedLookupResponse")
+    void testSearchLookupTypes() {
+        MasterLookupType t1 = MasterLookupType.builder().id(1L).code("10004").description("Loan Type").isActive(true).isFixed(false).build();
+        Page<MasterLookupType> page = new PageImpl<>(List.of(t1), Pageable.ofSize(10), 1);
+
+        when(masterLookupTypeRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        when(masterLookupSubTypeRepository.countByLookupTypeCode("10004")).thenReturn(10L);
+
+        PagedLookupResponse<LookupTypeResponse> result = lookupService.searchLookupTypes("Loan", "ACTIVE", 0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getItems().size());
+        assertEquals("10004", result.getItems().get(0).getCode());
+        assertEquals("Loan Type", result.getItems().get(0).getName());
+        assertEquals(10L, result.getItems().get(0).getSubTypeCount());
+        assertNull(result.getItems().get(0).getSubTypes(), "subTypes list should be omitted in list/search view");
     }
 
     @Test
@@ -307,4 +412,3 @@ class AdministrationLookupServiceTest {
         });
     }
 }
-

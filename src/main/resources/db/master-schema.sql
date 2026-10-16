@@ -312,6 +312,25 @@ CREATE TABLE IF NOT EXISTS identity.lookup_sub_types (
 CREATE INDEX IF NOT EXISTS idx_master_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
 
 -- -----------------------------------------------------------------------
+-- identity.master_lookup_type_code_seq (Sequence for Server-Generated Type Codes)
+-- Starts at 10010 so initial generated type code is 10010 (leaving 10001-10009 for system seeds)
+-- -----------------------------------------------------------------------
+CREATE SEQUENCE IF NOT EXISTS identity.master_lookup_type_code_seq START WITH 10010;
+
+-- -----------------------------------------------------------------------
+-- identity.master_lookup_type_permissions (Lookup Permissions Mapping in Master DB)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS identity.master_lookup_type_permissions (
+    id                  BIGSERIAL    PRIMARY KEY,
+    lookup_type_code    VARCHAR(50)  NOT NULL,
+    permission_code     VARCHAR(50)  NOT NULL,
+    created_at          TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT uk_master_lt_permission UNIQUE (lookup_type_code, permission_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_master_ltp_code ON identity.master_lookup_type_permissions(lookup_type_code);
+
+-- -----------------------------------------------------------------------
 -- customer.leads
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS customer.leads (

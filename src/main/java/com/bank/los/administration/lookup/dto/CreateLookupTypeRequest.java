@@ -1,8 +1,12 @@
 package com.bank.los.administration.lookup.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,19 +15,48 @@ import lombok.*;
 @Builder
 public class CreateLookupTypeRequest {
 
-    @NotBlank(message = "Lookup code is required (e.g. 10001, 10008)")
-    @Size(max = 50, message = "Lookup code must not exceed 50 characters")
+    // Optional/ignored input; server sequence generates the unique code
     private String code;
 
-    @NotBlank(message = "Description is required")
-    @Size(max = 255, message = "Description must not exceed 255 characters")
-    private String description;
+    @JsonProperty("name")
+    @JsonAlias({"description"})
+    @NotBlank(message = "Lookup type name is required")
+    @Size(max = 255, message = "Lookup type name must not exceed 255 characters")
+    private String name;
+
+    @Builder.Default
+    private String status = "ACTIVE";
 
     @Builder.Default
     private Boolean isFixed = false;
 
-    @Builder.Default
-    private Boolean isActive = true;
+    private List<String> permissions;
 
-    private java.util.List<String> permissions;
+    public static class CreateLookupTypeRequestBuilder {
+        public CreateLookupTypeRequestBuilder description(String description) {
+            this.name = description;
+            return this;
+        }
+    }
+
+    // Backward-compatibility accessors
+    public String getDescription() {
+        return name;
+    }
+
+    public void setDescription(String description) {
+        if (this.name == null || this.name.isBlank()) {
+            this.name = description;
+        }
+    }
+
+    public Boolean getIsActive() {
+        return !"INACTIVE".equalsIgnoreCase(status);
+    }
+
+    public void setIsActive(Boolean isActive) {
+        if (isActive != null) {
+            this.status = isActive ? "ACTIVE" : "INACTIVE";
+        }
+    }
 }

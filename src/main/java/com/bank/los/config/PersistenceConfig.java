@@ -78,6 +78,7 @@ public class PersistenceConfig {
                 populator.setIgnoreFailedDrops(true);
                 populator.populate(conn);
             }
+            ensureMasterLookupSequence(conn);
             migrateLegacyInstitutionColumns(conn);
             migrateLegacyLeadColumns(conn);
         } catch (Exception e) {
@@ -250,6 +251,59 @@ public class PersistenceConfig {
             }
         } catch (Exception e) {
             log.debug("Institution to bank column migration note: {}", e.getMessage());
+        }
+    }
+
+    private void ensureMasterLookupSequence(java.sql.Connection conn) {
+        try (java.sql.Statement stmt = conn.createStatement()) {
+            stmt.execute("CREATE SEQUENCE IF NOT EXISTS identity.master_lookup_type_code_seq START WITH 10010");
+
+            long maxCode = 10009;
+            try (java.sql.ResultSet rs = stmt.executeQuery("SELECT code FROM identity.lookup_types WHERE code IS NOT NULL")) {
+                while (rs.next()) {
+                    String c = rs.getString(1);
+                    if (c != null && c.matches("^\\d+$")) {
+                        try {
+                            long val = Long.parseLong(c.trim());
+                            if (val > maxCode) {
+                                maxCode = val;
+                            }
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+
+            String dbProduct = conn.getMetaData().getDatabaseProductName().toLowerCase();
+            if (dbProduct.contains("postgres")) {
+                long currentVal = 0;
+                boolean isCalled = false;
+                try (java.sql.ResultSet rsSeq = stmt.executeQuery(
+                        "SELECT last_value, is_called FROM identity.master_lookup_type_code_seq")) {
+                    if (rsSeq.next()) {
+                        currentVal = rsSeq.getLong(1);
+                        isCalled = rsSeq.getBoolean(2);
+                    }
+                }
+                if (!isCalled) {
+                    if (maxCode >= 10010) {
+                        stmt.execute("SELECT setval('identity.master_lookup_type_code_seq', " + maxCode + ", true)");
+                    }
+                } else if (currentVal < maxCode) {
+                    stmt.execute("SELECT setval('identity.master_lookup_type_code_seq', " + maxCode + ", true)");
+                }
+            } else if (dbProduct.contains("h2")) {
+                try (java.sql.ResultSet rsH2 = stmt.executeQuery(
+                        "SELECT CURRENT_VALUE FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_NAME = 'MASTER_LOOKUP_TYPE_CODE_SEQ'")) {
+                    if (rsH2.next()) {
+                        long currentH2 = rsH2.getLong(1);
+                        if (currentH2 <= maxCode && maxCode >= 10010) {
+                            stmt.execute("ALTER SEQUENCE identity.master_lookup_type_code_seq RESTART WITH " + (maxCode + 1));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Notice in ensureMasterLookupSequence startup migration: {}", e.getMessage());
         }
     }
 

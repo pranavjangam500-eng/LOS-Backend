@@ -27,18 +27,49 @@ public class AdministrationLookupController {
 
     @GetMapping("/types")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "List all central master lookup types")
-    public ResponseEntity<ApiResponse<List<LookupTypeResponse>>> getAllLookupTypes() {
-        List<LookupTypeResponse> types = administrationLookupService.getAllLookupTypes();
-        return ResponseEntity.ok(ApiResponse.ok(types));
+    @Operation(summary = "List all central master lookup types (supports optional search, status, and pagination)")
+    public ResponseEntity<?> getLookupTypes(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (search == null && status == null && page == null && size == null) {
+            List<LookupTypeResponse> types = administrationLookupService.getAllLookupTypes();
+            return ResponseEntity.ok(ApiResponse.ok(types));
+        }
+
+        int pageNum = (page != null && page >= 0) ? page : 0;
+        int pageSize = (size != null && size > 0) ? Math.min(size, 100) : 10;
+        PagedLookupResponse<LookupTypeResponse> paged = administrationLookupService.searchLookupTypes(search, status, pageNum, pageSize);
+        return ResponseEntity.ok(ApiResponse.ok(paged));
     }
 
     @GetMapping("/types/{code}")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Get central master lookup type with its options by code")
+    @Operation(summary = "Get central master lookup type with its options by code (detail view)")
     public ResponseEntity<ApiResponse<LookupTypeResponse>> getLookupTypeByCode(@PathVariable String code) {
         LookupTypeResponse response = administrationLookupService.getLookupTypeByCode(code);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/types/{code}/sub-types")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "List or search options/sub-types under a master lookup type")
+    public ResponseEntity<?> getLookupSubTypes(
+            @PathVariable String code,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (search == null && status == null && page == null && size == null) {
+            List<LookupSubTypeResponse> subTypes = administrationLookupService.getSubTypesByLookupTypeCode(code);
+            return ResponseEntity.ok(ApiResponse.ok(subTypes));
+        }
+
+        int pageNum = (page != null && page >= 0) ? page : 0;
+        int pageSize = (size != null && size > 0) ? Math.min(size, 100) : 10;
+        PagedLookupResponse<LookupSubTypeResponse> paged = administrationLookupService.searchLookupSubTypes(code, search, status, pageNum, pageSize);
+        return ResponseEntity.ok(ApiResponse.ok(paged));
     }
 
     @GetMapping("/{code}/options")
@@ -49,10 +80,9 @@ public class AdministrationLookupController {
         return ResponseEntity.ok(ApiResponse.ok(options));
     }
 
-
     @PostMapping("/types")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Create a new central master lookup type")
+    @Operation(summary = "Create a new central master lookup type (server generates unique code)")
     public ResponseEntity<ApiResponse<LookupTypeResponse>> createLookupType(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreateLookupTypeRequest request) {
@@ -62,13 +92,33 @@ public class AdministrationLookupController {
 
     @PutMapping("/types/{code}")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Update central master lookup type")
+    @Operation(summary = "Update central master lookup type (name and status only; code immutable)")
     public ResponseEntity<ApiResponse<LookupTypeResponse>> updateLookupType(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable String code,
             @Valid @RequestBody UpdateLookupTypeRequest request) {
         LookupTypeResponse updated = administrationLookupService.updateLookupType(code, request, principal);
         return ResponseEntity.ok(ApiResponse.ok("Lookup type updated successfully in Master DB", updated));
+    }
+
+    @PatchMapping("/types/{code}/activate")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Activate a central master lookup type")
+    public ResponseEntity<ApiResponse<LookupTypeResponse>> activateLookupType(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable String code) {
+        LookupTypeResponse updated = administrationLookupService.activateLookupType(code, principal);
+        return ResponseEntity.ok(ApiResponse.ok("Lookup type activated successfully", updated));
+    }
+
+    @PatchMapping("/types/{code}/deactivate")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Deactivate a central master lookup type (system-fixed types cannot be deactivated)")
+    public ResponseEntity<ApiResponse<LookupTypeResponse>> deactivateLookupType(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable String code) {
+        LookupTypeResponse updated = administrationLookupService.deactivateLookupType(code, principal);
+        return ResponseEntity.ok(ApiResponse.ok("Lookup type deactivated successfully", updated));
     }
 
     @DeleteMapping("/types/{code}")
@@ -81,7 +131,7 @@ public class AdministrationLookupController {
 
     @PostMapping("/types/{typeCode}/sub-types")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Add an option / sub-type to a master lookup type")
+    @Operation(summary = "Add an option / sub-type to a master lookup type (server generates incremental code)")
     public ResponseEntity<ApiResponse<LookupSubTypeResponse>> addSubType(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable String typeCode,
@@ -92,7 +142,7 @@ public class AdministrationLookupController {
 
     @PutMapping("/sub-types/{id}")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Update an option / sub-type in master DB")
+    @Operation(summary = "Update an option / sub-type in master DB (name and status only; code immutable)")
     public ResponseEntity<ApiResponse<LookupSubTypeResponse>> updateSubType(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long id,
@@ -101,9 +151,29 @@ public class AdministrationLookupController {
         return ResponseEntity.ok(ApiResponse.ok("Lookup sub-type updated successfully in Master DB", updated));
     }
 
+    @PatchMapping("/sub-types/{id}/activate")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Activate a master lookup sub-type / option")
+    public ResponseEntity<ApiResponse<LookupSubTypeResponse>> activateSubType(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        LookupSubTypeResponse updated = administrationLookupService.activateSubType(id, principal);
+        return ResponseEntity.ok(ApiResponse.ok("Lookup sub-type activated successfully", updated));
+    }
+
+    @PatchMapping("/sub-types/{id}/deactivate")
+    @PreAuthorize("hasRole('INTERNAL_ADMIN')")
+    @Operation(summary = "Deactivate a master lookup sub-type / option (system-fixed options cannot be deactivated)")
+    public ResponseEntity<ApiResponse<LookupSubTypeResponse>> deactivateSubType(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id) {
+        LookupSubTypeResponse updated = administrationLookupService.deactivateSubType(id, principal);
+        return ResponseEntity.ok(ApiResponse.ok("Lookup sub-type deactivated successfully", updated));
+    }
+
     @DeleteMapping("/sub-types/{id}")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Delete an option / sub-type from master DB")
+    @Operation(summary = "Delete an option / sub-type from master DB (system-fixed options cannot be deleted)")
     public ResponseEntity<ApiResponse<Void>> deleteSubType(@PathVariable Long id) {
         administrationLookupService.deleteSubType(id);
         return ResponseEntity.ok(ApiResponse.ok("Lookup sub-type deleted successfully from Master DB", null));
@@ -119,7 +189,7 @@ public class AdministrationLookupController {
 
     @PutMapping("/banks/{bankCode}/types/{code}/permissions")
     @PreAuthorize("hasRole('INTERNAL_ADMIN')")
-    @Operation(summary = "Configure allowed permissions (e.g. VIEW, ADD, EDIT, DELETE, ADD_FROM_MASTER, ACTIVATE, DEACTIVATE) for a specific lookup type in a bank")
+    @Operation(summary = "Configure allowed permissions for a specific lookup type in a bank")
     public ResponseEntity<ApiResponse<LookupTypeResponse>> updateBankLookupPermissions(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable String bankCode,

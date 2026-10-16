@@ -1915,6 +1915,56 @@
           "response": []
         },
         {
+          "name": "1a. Search & Paginate Master Lookup Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types?search=Loan&status=ACTIVE&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Loan"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Search and paginate master lookup types. Code or name case-insensitive contains. Returns { items, page, size, totalElements, totalPages }.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "2. Get Master Lookup Type by Code",
           "request": {
             "method": "GET",
@@ -1934,6 +1984,58 @@
               ]
             },
             "description": "Retrieves a master lookup type and its sub-types (e.g. 10004 Loan Types)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2b. List & Paginate Sub-Types of a Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/10004/sub-types?search=Personal&status=ACTIVE&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types",
+                "10004",
+                "sub-types"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Personal"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "List and paginate sub-types for a specific type. Returns { items, page, size, totalElements, totalPages }. If no params passed, returns plain list.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1982,7 +2084,6 @@
         },
         {
           "name": "3. Create Master Lookup Type",
-
           "request": {
             "method": "POST",
             "header": [
@@ -2004,7 +2105,7 @@
                 "types"
               ]
             },
-            "description": "Creates a new central lookup dictionary",
+            "description": "Creates a new central lookup dictionary. Code is server-generated from sequence starting at 10010.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2017,7 +2118,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"10009\",\n  \"description\": \"Collateral Property Types\",\n  \"isFixed\": false,\n  \"isActive\": true,\n  \"permissions\": [\n    \"VIEW\",\n    \"ADD\",\n    \"EDIT\",\n    \"ACTIVATE\",\n    \"DEACTIVATE\"\n  ]\n}"
+              "raw": "{\n  \"name\": \"Collateral Property Types\",\n  \"status\": \"ACTIVE\",\n  \"isFixed\": false,\n  \"permissions\": [\n    \"VIEW\",\n    \"ADD\",\n    \"EDIT\",\n    \"ACTIVATE\",\n    \"DEACTIVATE\",\n    \"DELETE\",\n    \"ADD_FROM_MASTER\"\n  ]\n}"
             }
           },
           "response": []
@@ -2059,7 +2160,75 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Collateral Asset & Property Types\",\n  \"isFixed\": false,\n  \"isActive\": true\n}"
+              "raw": "{\n  \"name\": \"Collateral Asset & Property Types\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4a. Activate Master Lookup Type",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/10010/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types",
+                "10010",
+                "activate"
+              ]
+            },
+            "description": "Activates a master lookup type (cannot be fixed).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4b. Deactivate Master Lookup Type",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/10010/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "types",
+                "10010",
+                "deactivate"
+              ]
+            },
+            "description": "Deactivates a master lookup type (cannot be fixed).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
           "response": []
@@ -2122,7 +2291,7 @@
                 "sub-types"
               ]
             },
-            "description": "Adds an option to a master lookup dictionary",
+            "description": "Adds an option to a master lookup dictionary. Code is server-generated sequentially under pessimistic write lock on parent type.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -2135,7 +2304,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"subTypeCode\": \"GREEN_ENERGY_LOAN\",\n  \"subTypeDescription\": \"Green Energy & Solar Installation Loan\",\n  \"isFixed\": false,\n  \"isActive\": true,\n  \"displayOrder\": 6\n}"
+              "raw": "{\n  \"name\": \"Green Energy & Solar Installation Loan\",\n  \"status\": \"ACTIVE\",\n  \"displayOrder\": 1\n}"
             }
           },
           "response": []
@@ -2177,7 +2346,75 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"subTypeDescription\": \"Updated Sub-Type Description\",\n  \"isActive\": true,\n  \"displayOrder\": 1\n}"
+              "raw": "{\n  \"name\": \"Updated Sub-Type Description\",\n  \"status\": \"ACTIVE\",\n  \"displayOrder\": 1\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7a. Activate Master Lookup Sub-Type",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/1/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "sub-types",
+                "1",
+                "activate"
+              ]
+            },
+            "description": "Activates a master lookup sub-type (cannot be under fixed parent type or fixed sub-type).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7b. Deactivate Master Lookup Sub-Type",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/1/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "administration",
+                "lookups",
+                "sub-types",
+                "1",
+                "deactivate"
+              ]
+            },
+            "description": "Deactivates a master lookup sub-type (cannot be under fixed parent type or fixed sub-type).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
             }
           },
           "response": []

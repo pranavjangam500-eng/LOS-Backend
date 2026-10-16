@@ -1,5 +1,7 @@
 package com.bank.los.administration.lookup.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -11,20 +13,53 @@ import lombok.*;
 @Builder
 public class CreateLookupSubTypeRequest {
 
-    @NotBlank(message = "Sub-type code is required (e.g. 1, 2, PERSONAL_LOAN)")
-    @Size(max = 50, message = "Sub-type code must not exceed 50 characters")
+    // Optional/ignored input; server generates code = highest numeric sub_type_code + 1
     private String subTypeCode;
 
-    @NotBlank(message = "Sub-type description is required")
-    @Size(max = 255, message = "Sub-type description must not exceed 255 characters")
-    private String subTypeDescription;
+    @JsonProperty("name")
+    @JsonAlias({"subTypeDescription", "description"})
+    @NotBlank(message = "Lookup sub-type name is required")
+    @Size(max = 255, message = "Lookup sub-type name must not exceed 255 characters")
+    private String name;
+
+    @Builder.Default
+    private String status = "ACTIVE";
 
     @Builder.Default
     private Boolean isFixed = false;
 
-    @Builder.Default
-    private Boolean isActive = true;
+    private Integer displayOrder;
 
-    @Builder.Default
-    private Integer displayOrder = 0;
+    public static class CreateLookupSubTypeRequestBuilder {
+        public CreateLookupSubTypeRequestBuilder subTypeDescription(String subTypeDescription) {
+            this.name = subTypeDescription;
+            return this;
+        }
+
+        public CreateLookupSubTypeRequestBuilder description(String description) {
+            this.name = description;
+            return this;
+        }
+    }
+
+    // Backward-compatibility accessors
+    public String getSubTypeDescription() {
+        return name;
+    }
+
+    public void setSubTypeDescription(String subTypeDescription) {
+        if (this.name == null || this.name.isBlank()) {
+            this.name = subTypeDescription;
+        }
+    }
+
+    public Boolean getIsActive() {
+        return !"INACTIVE".equalsIgnoreCase(status);
+    }
+
+    public void setIsActive(Boolean isActive) {
+        if (isActive != null) {
+            this.status = isActive ? "ACTIVE" : "INACTIVE";
+        }
+    }
 }

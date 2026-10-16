@@ -47,6 +47,33 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .success(false)
+                .status(HttpStatus.CONFLICT.value())
+                .error(ex.getErrorCode() != null ? ex.getErrorCode() : "CONFLICT")
+                .message(ex.getMessage())
+                .path(request != null ? request.getRequestURI() : null)
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation on {}: {}", request != null ? request.getRequestURI() : "", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .success(false)
+                .status(HttpStatus.CONFLICT.value())
+                .error("CONFLICT")
+                .message("Unique constraint violation: a record with the same code or name already exists.")
+                .path(request != null ? request.getRequestURI() : null)
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex, HttpServletRequest request) {
         ErrorResponse error = ErrorResponse.builder()
