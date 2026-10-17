@@ -2,13 +2,28 @@
   "info": {
     "_postman_id": "los-leads-management-api-suite-2026",
     "name": "LOS - Leads Management API Suite",
-    "description": "Comprehensive Postman collection for LOS Lead Management covering Lead Capture across 4 sections (Personal, Loan, Income, Referral), Lead Assignment to Makers, Retrieval, Next ID generation, and Bulk CSV Import / Export.",
+    "description": "Comprehensive, standalone Postman collection for LOS Lead Management. Includes automated Bank Admin login & 2FA OTP verification, multi-step Lead Capture across 4 sections (Personal, Loan, Income, Referral), Lead Retrieval, Assignment, Status Updates, CSV Bulk Import, and CSV Export.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "https://los-backend-355v.onrender.com",
+      "type": "string"
+    },
+    {
+      "key": "identifier",
+      "value": "EMP-HDFC01-47AA80",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "Password@123",
+      "type": "string"
+    },
+    {
+      "key": "tempSessionToken",
+      "value": "",
       "type": "string"
     },
     {
@@ -23,6 +38,108 @@
     }
   ],
   "item": [
+    {
+      "name": "0. Authentication",
+      "item": [
+        {
+          "name": "0.1 Bank Admin Login (Step 1: Credentials)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.tempSessionToken) {",
+                  "        pm.collectionVariables.set('tempSessionToken', json.data.tempSessionToken);",
+                  "        console.log('Saved tempSessionToken');",
+                  "    } else if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "        console.log('Direct accessToken obtained');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{identifier}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates bank staff / admin using identifier (email, employee code, or phone) and password. Returns tempSessionToken for 2FA OTP verification."
+          },
+          "response": []
+        },
+        {
+          "name": "0.2 Verify 2FA OTP (Step 2: Access Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "        console.log('Saved accessToken for subsequent Lead API calls');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tempSessionToken\": \"{{tempSessionToken}}\",\n  \"otp\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Exchanges tempSessionToken and OTP for a full multi-tenant JWT Bearer access token."
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "1. Preview Next Lead ID",
       "request": {
@@ -84,7 +201,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"customerName\": \"Siddharth Rao\",\n  \"dateOfBirth\": \"1990-05-20\",\n  \"age\": 36,\n  \"customerType\": \"Individual\",\n  \"panNumber\": \"ABCDE1234F\",\n  \"panValidationStatus\": \"VERIFIED\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"aadhaarValidationStatus\": \"VERIFIED\",\n  \"residentialStatus\": \"Resident\",\n  \"gender\": \"Male\",\n  \"maritalStatus\": \"Married\",\n  \"passportNumber\": \"P9876543\",\n  \"passportExpiryDate\": \"2032-05-19\",\n  \"email\": \"siddharth.rao@example.com\",\n  \"loanProductType\": \"Personal Loan\",\n  \"loanAmount\": 1200000.0,\n  \"purposeOfLoan\": \"Home Renovation\",\n  \"tenure\": 36,\n  \"numberOfInstalments\": 36,\n  \"emi\": 40123.0,\n  \"interestRate\": 11.5,\n  \"totalInterest\": 244428.0,\n  \"securityAmount\": 0.0,\n  \"employmentType\": \"Salaried\",\n  \"annualIncome\": 1800000.0,\n  \"designation\": \"Senior Engineer\",\n  \"employerName\": \"Infosys Technologies\",\n  \"location\": \"Pune\",\n  \"state\": \"Maharashtra\",\n  \"takeHomePay\": 120000.0,\n  \"deductionsEmisPayable\": 15000.0,\n  \"bankName\": \"HDFC Bank\",\n  \"accountNumber\": \"50100234567890\",\n  \"accountStatementConsent\": true,\n  \"leadAcquisitionChannel\": \"Website\",\n  \"date\": \"2026-10-13\",\n  \"sourcingAgentPartnerId\": \"AGT-555\",\n  \"agentPartnerName\": \"Apex Partners\",\n  \"employeeId\": \"EMP101\",\n  \"employeeName\": \"Anita Roy\"\n}"
+          "raw": "{\n  \"customerName\": \"Aarav Singhania\",\n  \"dateOfBirth\": \"1992-07-25\",\n  \"age\": 34,\n  \"customerType\": \"Individual\",\n  \"panNumber\": \"ABCDE1234F\",\n  \"panValidationStatus\": \"VERIFIED\",\n  \"aadhaarNumber\": \"123456789012\",\n  \"aadhaarValidationStatus\": \"VERIFIED\",\n  \"residentialStatus\": \"Resident\",\n  \"gender\": \"Male\",\n  \"maritalStatus\": \"Married\",\n  \"passportNumber\": \"P9876543\",\n  \"passportExpiryDate\": \"2032-05-19\",\n  \"emailAddress\": \"aarav.singhania@example.com\",\n  \"pinCode\": \"400001\",\n  \"numberOfDependents\": 2,\n  \"loanProductType\": \"Personal Loan\",\n  \"loanAmount\": 1200000.0,\n  \"purposeOfLoan\": \"Home Renovation\",\n  \"tenure\": 36,\n  \"numberOfInstalments\": 36,\n  \"emi\": 40123.0,\n  \"interestRate\": 11.5,\n  \"totalInterest\": 244428.0,\n  \"securityAmount\": 0.0,\n  \"downPaymentCollateral\": \"50000.00\",\n  \"employmentType\": \"Salaried\",\n  \"annualIncome\": 1800000.0,\n  \"designation\": \"Senior Engineer\",\n  \"employerName\": \"Infosys Technologies\",\n  \"location\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"takeHomePay\": 120000.0,\n  \"deductionsOrEmisPayable\": 15000.0,\n  \"bankName\": \"HDFC Bank\",\n  \"accountNumber\": \"50100234567890\",\n  \"accountStatementConsent\": true,\n  \"cibilLiabilityCheck\": \"CLEAR\",\n  \"debtToIncomeRatio\": 0.35,\n  \"loanToValueRatio\": 0.70,\n  \"debtServiceCoverageRatio\": 1.45,\n  \"netDisposableIncome\": 85000.0,\n  \"leadAcquisitionChannel\": \"Website\",\n  \"date\": \"2026-10-17\",\n  \"sourcingAgentPartnerId\": \"AGT-555\",\n  \"agentPartnerName\": \"Apex Partners\",\n  \"employeeId\": \"EMP-HDFC-001\",\n  \"employeeName\": \"Bank Admin\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/v1/leads",
@@ -97,7 +214,7 @@
             "leads"
           ]
         },
-        "description": "Unified single endpoint saving all 4 sections in a single transaction. Sets leadStatus = NEW."
+        "description": "Unified single REST endpoint saving all 4 sections (Personal, Loan, Income, Referral) in a single transaction. Automatically assigns next sequential leadId (format: LDYYYYMM####) and sets leadStatus = NEW."
       },
       "response": []
     },
@@ -150,7 +267,7 @@
             "leads"
           ]
         },
-        "description": "Returns all leads stored in the bank's database."
+        "description": "Returns all leads stored in the bank tenant's database."
       },
       "response": []
     },
@@ -171,7 +288,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"customerName\": \"Siddharth Rao Updated\",\n  \"loanAmount\": 1500000.0,\n  \"tenure\": 48,\n  \"numberOfInstalments\": 48,\n  \"emi\": 39200.0,\n  \"annualIncome\": 2100000.0,\n  \"designation\": \"Lead Architect\"\n}"
+          "raw": "{\n  \"loanAmount\": 1500000.0,\n  \"tenure\": 48,\n  \"numberOfInstalments\": 48,\n  \"emi\": 39200.0,\n  \"annualIncome\": 2100000.0,\n  \"designation\": \"Lead Architect\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}",
@@ -206,7 +323,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"employeeId\": \"EMP102\"\n}"
+          "raw": "{\n  \"employeeId\": \"EMP-HDFC-002\",\n  \"assignedBy\": \"EMP-HDFC01-47AA80\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/v1/leads/{{leadId}}/assign",
@@ -221,7 +338,7 @@
             "assign"
           ]
         },
-        "description": "Assigns lead to an active Maker user (e.g. EMP102). Sets leadStatus = ASSIGNED."
+        "description": "Assigns lead to an active Maker user (e.g. EMP-HDFC-002). Sets leadStatus = ASSIGNED."
       },
       "response": []
     },

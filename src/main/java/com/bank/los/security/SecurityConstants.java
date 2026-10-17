@@ -47,8 +47,6 @@ public final class SecurityConstants {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/actuator/**",
-            "/api/leads/**",
-            "/api/v1/leads/**",
             "/api/otp/**",
             "/api/v1/otp/**",
             "/index.html",

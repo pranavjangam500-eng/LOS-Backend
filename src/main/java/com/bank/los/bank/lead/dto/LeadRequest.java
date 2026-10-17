@@ -221,7 +221,7 @@ public class LeadRequest {
     @Column(name = "down_payment_collateral")
     @JsonProperty("downPaymentCollateral")
     @JsonAlias({"down_payment_collateral", "downPayment", "collateral", "Down Payment/Collateral", "downPaymentOrCollateral"})
-    private Double downPaymentCollateral;
+    private String downPaymentCollateral;
 
     // ==========================================
     // 3. Income Profile

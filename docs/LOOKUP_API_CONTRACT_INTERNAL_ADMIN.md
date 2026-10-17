@@ -52,8 +52,8 @@
     "isActive" : true,
     "subTypeCount" : 5,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 2,
     "code" : "10002",
@@ -62,10 +62,10 @@
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
-    "subTypeCount" : 9,
+    "subTypeCount" : 12,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 3,
     "code" : "10003",
@@ -76,8 +76,8 @@
     "isActive" : true,
     "subTypeCount" : 6,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 4,
     "code" : "10004",
@@ -88,8 +88,8 @@
     "isActive" : true,
     "subTypeCount" : 10,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 5,
     "code" : "10005",
@@ -100,8 +100,8 @@
     "isActive" : true,
     "subTypeCount" : 2,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 6,
     "code" : "10006",
@@ -112,8 +112,8 @@
     "isActive" : true,
     "subTypeCount" : 2,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 7,
     "code" : "10007",
@@ -124,8 +124,8 @@
     "isActive" : true,
     "subTypeCount" : 8,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 8,
     "code" : "10008",
@@ -136,8 +136,8 @@
     "isActive" : true,
     "subTypeCount" : 7,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 9,
     "code" : "10009",
@@ -148,333 +148,333 @@
     "isActive" : true,
     "subTypeCount" : 21,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
     "id" : 10,
     "code" : "10010",
-    "name" : "Toggleable Type 1761e50c-9985-4d4b-b64f-14e9d77d5d27",
-    "description" : "Toggleable Type 1761e50c-9985-4d4b-b64f-14e9d77d5d27",
+    "name" : "Toggleable Type 3b636241-2910-4db0-9790-3042e9a004e4",
+    "description" : "Toggleable Type 3b636241-2910-4db0-9790-3042e9a004e4",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 1,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 11,
     "code" : "10011",
-    "name" : "Server Generated Test Type 1792140407297",
-    "description" : "Server Generated Test Type 1792140407297",
+    "name" : "Server Generated Test Type 1792231891507",
+    "description" : "Server Generated Test Type 1792231891507",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 2,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 12,
     "code" : "10012",
-    "name" : "Parent For Concurrent SubTypes c9379fa7-af96-454c-b370-c069b7f0e998",
-    "description" : "Parent For Concurrent SubTypes c9379fa7-af96-454c-b370-c069b7f0e998",
+    "name" : "Parent For Concurrent SubTypes a96a067f-1565-4518-952e-f625ad92aadf",
+    "description" : "Parent For Concurrent SubTypes a96a067f-1565-4518-952e-f625ad92aadf",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 20,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
-  }, {
-    "id" : 14,
-    "code" : "10013",
-    "name" : "Parallel Lookup Type 1_93dba1ff-7adf-4e9e-af28-c65abc94c156",
-    "description" : "Parallel Lookup Type 1_93dba1ff-7adf-4e9e-af28-c65abc94c156",
-    "status" : "ACTIVE",
-    "isFixed" : false,
-    "isActive" : true,
-    "subTypeCount" : 0,
-    "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 13,
-    "code" : "10014",
-    "name" : "Parallel Lookup Type 2_05df1285-3e00-4a42-813d-3b6096aeeb4c",
-    "description" : "Parallel Lookup Type 2_05df1285-3e00-4a42-813d-3b6096aeeb4c",
+    "code" : "10013",
+    "name" : "Parallel Lookup Type 1_585fab7b-532e-495f-a8bd-c10c1a68f11c",
+    "description" : "Parallel Lookup Type 1_585fab7b-532e-495f-a8bd-c10c1a68f11c",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
+  }, {
+    "id" : 14,
+    "code" : "10014",
+    "name" : "Parallel Lookup Type 2_d55c9588-732a-438b-b933-f9eb9092cdfe",
+    "description" : "Parallel Lookup Type 2_d55c9588-732a-438b-b933-f9eb9092cdfe",
+    "status" : "ACTIVE",
+    "isFixed" : false,
+    "isActive" : true,
+    "subTypeCount" : 0,
+    "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
+    "createdBy" : 1,
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 15,
     "code" : "10015",
-    "name" : "Parallel Lookup Type 3_7fc87934-2cf6-48ef-84db-af5121a559e3",
-    "description" : "Parallel Lookup Type 3_7fc87934-2cf6-48ef-84db-af5121a559e3",
+    "name" : "Parallel Lookup Type 3_afbf9866-c801-4508-915a-961cbe79fc49",
+    "description" : "Parallel Lookup Type 3_afbf9866-c801-4508-915a-961cbe79fc49",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 16,
     "code" : "10016",
-    "name" : "Parallel Lookup Type 4_6afa8ce7-b730-4132-ba8f-69a78bca0c61",
-    "description" : "Parallel Lookup Type 4_6afa8ce7-b730-4132-ba8f-69a78bca0c61",
+    "name" : "Parallel Lookup Type 4_2bd42474-5967-4d30-ade3-1c084ba60b95",
+    "description" : "Parallel Lookup Type 4_2bd42474-5967-4d30-ade3-1c084ba60b95",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 17,
     "code" : "10017",
-    "name" : "Parallel Lookup Type 6_d7ebef1f-8b18-4948-afcb-d7b7a30e6b54",
-    "description" : "Parallel Lookup Type 6_d7ebef1f-8b18-4948-afcb-d7b7a30e6b54",
+    "name" : "Parallel Lookup Type 5_66c19759-e2f1-4050-8b1b-f08968173eda",
+    "description" : "Parallel Lookup Type 5_66c19759-e2f1-4050-8b1b-f08968173eda",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 18,
     "code" : "10018",
-    "name" : "Parallel Lookup Type 5_0c06b77f-f109-4971-addf-e31010405387",
-    "description" : "Parallel Lookup Type 5_0c06b77f-f109-4971-addf-e31010405387",
+    "name" : "Parallel Lookup Type 6_407343dc-7d6e-4e53-9a7a-f11d2f0b327b",
+    "description" : "Parallel Lookup Type 6_407343dc-7d6e-4e53-9a7a-f11d2f0b327b",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:31",
+    "updatedAt" : "2026-10-17T15:41:31"
   }, {
     "id" : 19,
     "code" : "10019",
-    "name" : "Parallel Lookup Type 7_4b5c65fa-8f83-4e87-a6f7-34c122b921fd",
-    "description" : "Parallel Lookup Type 7_4b5c65fa-8f83-4e87-a6f7-34c122b921fd",
+    "name" : "Parallel Lookup Type 7_b1305640-2e5c-4ed4-b1d6-913d50cbc849",
+    "description" : "Parallel Lookup Type 7_b1305640-2e5c-4ed4-b1d6-913d50cbc849",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 20,
     "code" : "10020",
-    "name" : "Parallel Lookup Type 8_743e7805-d1f9-4b0a-a4fc-55c19f185e08",
-    "description" : "Parallel Lookup Type 8_743e7805-d1f9-4b0a-a4fc-55c19f185e08",
+    "name" : "Parallel Lookup Type 8_19db4031-2e58-44e6-a09a-a74a099c6649",
+    "description" : "Parallel Lookup Type 8_19db4031-2e58-44e6-a09a-a74a099c6649",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 21,
     "code" : "10021",
-    "name" : "Parallel Lookup Type 9_60a93558-3bbf-448e-b639-9fbb40aa80d4",
-    "description" : "Parallel Lookup Type 9_60a93558-3bbf-448e-b639-9fbb40aa80d4",
+    "name" : "Parallel Lookup Type 10_644de031-d58b-492c-bd57-9eabdb082b97",
+    "description" : "Parallel Lookup Type 10_644de031-d58b-492c-bd57-9eabdb082b97",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 22,
     "code" : "10022",
-    "name" : "Parallel Lookup Type 10_e2336cad-e236-416d-ae3c-d8315b9fe049",
-    "description" : "Parallel Lookup Type 10_e2336cad-e236-416d-ae3c-d8315b9fe049",
+    "name" : "Parallel Lookup Type 9_bc743a4c-fde4-4857-9033-569ef611f1db",
+    "description" : "Parallel Lookup Type 9_bc743a4c-fde4-4857-9033-569ef611f1db",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 23,
     "code" : "10023",
-    "name" : "Parallel Lookup Type 11_e271fded-0d70-487a-be14-33f9994ba221",
-    "description" : "Parallel Lookup Type 11_e271fded-0d70-487a-be14-33f9994ba221",
+    "name" : "Parallel Lookup Type 11_6a2f4b06-dce7-4941-9460-a95f408e3f22",
+    "description" : "Parallel Lookup Type 11_6a2f4b06-dce7-4941-9460-a95f408e3f22",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 24,
     "code" : "10024",
-    "name" : "Parallel Lookup Type 12_7b95c057-d03b-405b-9a43-5f5de89cb059",
-    "description" : "Parallel Lookup Type 12_7b95c057-d03b-405b-9a43-5f5de89cb059",
+    "name" : "Parallel Lookup Type 12_7440db71-1a6d-413d-8993-a896f3a0cf2d",
+    "description" : "Parallel Lookup Type 12_7440db71-1a6d-413d-8993-a896f3a0cf2d",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 25,
     "code" : "10025",
-    "name" : "Parallel Lookup Type 13_a3a2c5b1-f481-4d19-96e6-6f0a01952d79",
-    "description" : "Parallel Lookup Type 13_a3a2c5b1-f481-4d19-96e6-6f0a01952d79",
+    "name" : "Parallel Lookup Type 14_75a6ec8f-6a98-4e24-a71e-17a7cf7b0990",
+    "description" : "Parallel Lookup Type 14_75a6ec8f-6a98-4e24-a71e-17a7cf7b0990",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 26,
     "code" : "10026",
-    "name" : "Parallel Lookup Type 14_e70688c1-7053-46c0-a985-759382de74eb",
-    "description" : "Parallel Lookup Type 14_e70688c1-7053-46c0-a985-759382de74eb",
+    "name" : "Parallel Lookup Type 15_879aed46-c9a4-4142-bac6-b0fc16133f87",
+    "description" : "Parallel Lookup Type 15_879aed46-c9a4-4142-bac6-b0fc16133f87",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 27,
     "code" : "10027",
-    "name" : "Parallel Lookup Type 15_6dd0ae3e-21f9-4632-ba6e-b277966f624c",
-    "description" : "Parallel Lookup Type 15_6dd0ae3e-21f9-4632-ba6e-b277966f624c",
+    "name" : "Parallel Lookup Type 13_dcb94093-d5ec-4046-999f-d1dc6009d8bb",
+    "description" : "Parallel Lookup Type 13_dcb94093-d5ec-4046-999f-d1dc6009d8bb",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
-  }, {
-    "id" : 30,
-    "code" : "10028",
-    "name" : "Parallel Lookup Type 17_0d9b6cc1-950b-4da8-a3b5-10bc727c2f58",
-    "description" : "Parallel Lookup Type 17_0d9b6cc1-950b-4da8-a3b5-10bc727c2f58",
-    "status" : "ACTIVE",
-    "isFixed" : false,
-    "isActive" : true,
-    "subTypeCount" : 0,
-    "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 28,
-    "code" : "10029",
-    "name" : "Parallel Lookup Type 18_43cd9db0-91ae-498d-b604-6e03f2ea3864",
-    "description" : "Parallel Lookup Type 18_43cd9db0-91ae-498d-b604-6e03f2ea3864",
+    "code" : "10028",
+    "name" : "Parallel Lookup Type 16_22045310-49a1-41d3-9587-d40c73d76b7f",
+    "description" : "Parallel Lookup Type 16_22045310-49a1-41d3-9587-d40c73d76b7f",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 29,
-    "code" : "10030",
-    "name" : "Parallel Lookup Type 16_a57285ae-0613-41f4-be98-0971c8f78068",
-    "description" : "Parallel Lookup Type 16_a57285ae-0613-41f4-be98-0971c8f78068",
+    "code" : "10029",
+    "name" : "Parallel Lookup Type 17_cd5da14c-5213-4750-86b6-b138b4723b34",
+    "description" : "Parallel Lookup Type 17_cd5da14c-5213-4750-86b6-b138b4723b34",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
-    "id" : 31,
-    "code" : "10031",
-    "name" : "Parallel Lookup Type 19_02cce3a3-a44a-4ff5-ade5-aa36fcfa6602",
-    "description" : "Parallel Lookup Type 19_02cce3a3-a44a-4ff5-ade5-aa36fcfa6602",
+    "id" : 30,
+    "code" : "10030",
+    "name" : "Parallel Lookup Type 18_45618bcd-82e1-4068-ba3b-3f27d2fc5409",
+    "description" : "Parallel Lookup Type 18_45618bcd-82e1-4068-ba3b-3f27d2fc5409",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 32,
-    "code" : "10032",
-    "name" : "Parallel Lookup Type 20_d4195486-a5e4-4bd8-8a2f-a3d972f3c0a1",
-    "description" : "Parallel Lookup Type 20_d4195486-a5e4-4bd8-8a2f-a3d972f3c0a1",
+    "code" : "10031",
+    "name" : "Parallel Lookup Type 19_79ab66cb-3029-4539-b89f-b506023af10f",
+    "description" : "Parallel Lookup Type 19_79ab66cb-3029-4539-b89f-b506023af10f",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:47",
-    "updatedAt" : "2026-10-16T14:16:47"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
+  }, {
+    "id" : 31,
+    "code" : "10032",
+    "name" : "Parallel Lookup Type 20_485f162b-48dd-4441-bd43-5d040ebfb9a8",
+    "description" : "Parallel Lookup Type 20_485f162b-48dd-4441-bd43-5d040ebfb9a8",
+    "status" : "ACTIVE",
+    "isFixed" : false,
+    "isActive" : true,
+    "subTypeCount" : 0,
+    "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
+    "createdBy" : 1,
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 33,
     "code" : "10033",
-    "name" : "Unique Type Name 01229cbb-eeb0-4b21-9813-3c7cd4ff9365",
-    "description" : "Unique Type Name 01229cbb-eeb0-4b21-9813-3c7cd4ff9365",
+    "name" : "Unique Type Name 4e70ed9d-1210-46bd-9dcd-212a9d95b7f9",
+    "description" : "Unique Type Name 4e70ed9d-1210-46bd-9dcd-212a9d95b7f9",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:48",
-    "updatedAt" : "2026-10-16T14:16:48"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   }, {
     "id" : 34,
     "code" : "10034",
-    "name" : "Parent For Dup Option 30130f5b-9ae0-468d-b14a-b98eb6ff6889",
-    "description" : "Parent For Dup Option 30130f5b-9ae0-468d-b14a-b98eb6ff6889",
+    "name" : "Parent For Dup Option 850e236f-92ef-42a4-8af8-13d332ae7086",
+    "description" : "Parent For Dup Option 850e236f-92ef-42a4-8af8-13d332ae7086",
     "status" : "ACTIVE",
     "isFixed" : false,
     "isActive" : true,
     "subTypeCount" : 1,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
     "createdBy" : 1,
-    "createdAt" : "2026-10-16T14:16:48",
-    "updatedAt" : "2026-10-16T14:16:48"
+    "createdAt" : "2026-10-17T15:41:32",
+    "updatedAt" : "2026-10-17T15:41:32"
   } ],
-  "timestamp" : "2026-10-16T14:16:48.9931619"
+  "timestamp" : "2026-10-17T15:41:33.6147723"
 }
 ```
 
@@ -507,8 +507,8 @@
       "isActive" : true,
       "subTypeCount" : 2,
       "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
       "id" : 6,
       "code" : "10006",
@@ -519,15 +519,15 @@
       "isActive" : true,
       "subTypeCount" : 2,
       "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     } ],
     "page" : 0,
     "size" : 2,
     "totalElements" : 3,
     "totalPages" : 2
   },
-  "timestamp" : "2026-10-16T14:16:49.0305332"
+  "timestamp" : "2026-10-17T15:41:33.6476727"
 }
 ```
 
@@ -554,10 +554,10 @@
     "isActive" : true,
     "subTypeCount" : 10,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36",
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19",
     "subTypes" : [ {
-      "id" : 21,
+      "id" : 24,
       "code" : "1",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -570,10 +570,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 1,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 22,
+      "id" : 25,
       "code" : "2",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -586,10 +586,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 2,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 23,
+      "id" : 26,
       "code" : "3",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -602,10 +602,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 3,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 24,
+      "id" : 27,
       "code" : "4",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -618,10 +618,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 4,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 25,
+      "id" : 28,
       "code" : "5",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -634,10 +634,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 5,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 26,
+      "id" : 29,
       "code" : "6",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -650,10 +650,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 6,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 27,
+      "id" : 30,
       "code" : "7",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -666,10 +666,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 7,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 28,
+      "id" : 31,
       "code" : "8",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -682,10 +682,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 8,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 29,
+      "id" : 32,
       "code" : "9",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -698,10 +698,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 9,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 30,
+      "id" : 33,
       "code" : "10",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -714,11 +714,11 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 10,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     } ]
   },
-  "timestamp" : "2026-10-16T14:16:49.0402452"
+  "timestamp" : "2026-10-17T15:41:33.6606774"
 }
 ```
 
@@ -762,8 +762,17 @@
   }, {
     "code" : "9",
     "description" : "Chairman"
+  }, {
+    "code" : "10",
+    "description" : "Relationship Manager"
+  }, {
+    "code" : "11",
+    "description" : "Compliance Officer"
+  }, {
+    "code" : "12",
+    "description" : "Branch Manager"
   } ],
-  "timestamp" : "2026-10-16T14:16:49.0648793"
+  "timestamp" : "2026-10-17T15:41:33.6730622"
 }
 ```
 
@@ -779,8 +788,8 @@
 {
   "status" : "ACTIVE",
   "isFixed" : false,
-  "description" : "Real Seeded Collateral Asset Type",
   "isActive" : true,
+  "description" : "Real Seeded Collateral Asset Type",
   "name" : "Real Seeded Collateral Asset Type"
 }
 ```
@@ -800,11 +809,11 @@
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49",
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33",
     "subTypes" : [ ]
   },
-  "timestamp" : "2026-10-16T14:16:49.085902"
+  "timestamp" : "2026-10-17T15:41:33.690272"
 }
 ```
 
@@ -820,8 +829,8 @@
 {
   "status" : "ACTIVE",
   "isFixed" : false,
-  "description" : "Real Seeded Collateral Asset Type",
   "isActive" : true,
+  "description" : "Real Seeded Collateral Asset Type",
   "name" : "Real Seeded Collateral Asset Type"
 }
 ```
@@ -834,7 +843,7 @@
   "error" : "CONFLICT",
   "message" : "Lookup type already exists with name: Real Seeded Collateral Asset Type",
   "path" : "/api/v1/administration/lookups/types",
-  "timestamp" : "2026-10-16T14:16:49.0938975"
+  "timestamp" : "2026-10-17T15:41:33.7012675"
 }
 ```
 
@@ -869,11 +878,11 @@
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49",
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33",
     "subTypes" : [ ]
   },
-  "timestamp" : "2026-10-16T14:16:49.1203105"
+  "timestamp" : "2026-10-17T15:41:33.7463688"
 }
 ```
 
@@ -900,11 +909,11 @@
     "isActive" : false,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49",
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33",
     "subTypes" : [ ]
   },
-  "timestamp" : "2026-10-16T14:16:49.1322992"
+  "timestamp" : "2026-10-17T15:41:33.7923427"
 }
 ```
 
@@ -931,11 +940,11 @@
     "isActive" : true,
     "subTypeCount" : 0,
     "permissions" : [ "101", "102", "103", "104", "105", "106", "107" ],
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49",
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33",
     "subTypes" : [ ]
   },
-  "timestamp" : "2026-10-16T14:16:49.1515555"
+  "timestamp" : "2026-10-17T15:41:33.8078482"
 }
 ```
 
@@ -955,7 +964,7 @@
   "error" : "CANNOT_DEACTIVATE_FIXED",
   "message" : "Cannot deactivate system-fixed lookup type: 10001",
   "path" : "/api/v1/administration/lookups/types/10001/deactivate",
-  "timestamp" : "2026-10-16T14:16:49.1655199"
+  "timestamp" : "2026-10-17T15:41:33.8128461"
 }
 ```
 
@@ -973,7 +982,7 @@
   "success" : true,
   "message" : "Operation completed successfully",
   "data" : [ {
-    "id" : 21,
+    "id" : 24,
     "code" : "1",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -986,10 +995,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 1,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 22,
+    "id" : 25,
     "code" : "2",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1002,10 +1011,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 2,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 23,
+    "id" : 26,
     "code" : "3",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1018,10 +1027,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 3,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 24,
+    "id" : 27,
     "code" : "4",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1034,10 +1043,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 4,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 25,
+    "id" : 28,
     "code" : "5",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1050,10 +1059,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 5,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 26,
+    "id" : 29,
     "code" : "6",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1066,10 +1075,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 6,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 27,
+    "id" : 30,
     "code" : "7",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1082,10 +1091,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 7,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 28,
+    "id" : 31,
     "code" : "8",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1098,10 +1107,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 8,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 29,
+    "id" : 32,
     "code" : "9",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1114,10 +1123,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 9,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   }, {
-    "id" : 30,
+    "id" : 33,
     "code" : "10",
     "typeCode" : "10004",
     "lookupTypeCode" : "10004",
@@ -1130,10 +1139,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 10,
-    "createdAt" : "2026-10-16T14:16:36",
-    "updatedAt" : "2026-10-16T14:16:36"
+    "createdAt" : "2026-10-17T15:41:19",
+    "updatedAt" : "2026-10-17T15:41:19"
   } ],
-  "timestamp" : "2026-10-16T14:16:49.1851102"
+  "timestamp" : "2026-10-17T15:41:33.8260638"
 }
 ```
 
@@ -1152,7 +1161,7 @@
   "message" : "Operation completed successfully",
   "data" : {
     "items" : [ {
-      "id" : 21,
+      "id" : 24,
       "code" : "1",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -1165,10 +1174,10 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 1,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     }, {
-      "id" : 22,
+      "id" : 25,
       "code" : "2",
       "typeCode" : "10004",
       "lookupTypeCode" : "10004",
@@ -1181,15 +1190,15 @@
       "isFixed" : false,
       "isActive" : true,
       "displayOrder" : 2,
-      "createdAt" : "2026-10-16T14:16:36",
-      "updatedAt" : "2026-10-16T14:16:36"
+      "createdAt" : "2026-10-17T15:41:19",
+      "updatedAt" : "2026-10-17T15:41:19"
     } ],
     "page" : 0,
     "size" : 2,
     "totalElements" : 10,
     "totalPages" : 5
   },
-  "timestamp" : "2026-10-16T14:16:49.2001008"
+  "timestamp" : "2026-10-17T15:41:33.838062"
 }
 ```
 
@@ -1218,7 +1227,7 @@
   "success" : true,
   "message" : "Lookup sub-type created successfully in Master DB",
   "data" : {
-    "id" : 95,
+    "id" : 98,
     "code" : "1",
     "typeCode" : "10035",
     "lookupTypeCode" : "10035",
@@ -1231,10 +1240,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 1,
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49"
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33"
   },
-  "timestamp" : "2026-10-16T14:16:49.2712766"
+  "timestamp" : "2026-10-17T15:41:33.8560461"
 }
 ```
 
@@ -1264,7 +1273,7 @@
   "error" : "CONFLICT",
   "message" : "Lookup sub-type already exists with name 'Residential Real Estate' under type 10035",
   "path" : "/api/v1/administration/lookups/types/10035/sub-types",
-  "timestamp" : "2026-10-16T14:16:49.2857518"
+  "timestamp" : "2026-10-17T15:41:33.8777411"
 }
 ```
 
@@ -1273,7 +1282,7 @@
 ## 15. Update Sub-Type
 
 - **Method**: `PUT`
-- **Path**: `/api/v1/administration/lookups/sub-types/95`
+- **Path**: `/api/v1/administration/lookups/sub-types/98`
 - **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
 - **Request Body**:
 ```json
@@ -1291,7 +1300,7 @@
   "success" : true,
   "message" : "Lookup sub-type updated successfully in Master DB",
   "data" : {
-    "id" : 95,
+    "id" : 98,
     "code" : "1",
     "typeCode" : "10035",
     "lookupTypeCode" : "10035",
@@ -1304,10 +1313,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 2,
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49"
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33"
   },
-  "timestamp" : "2026-10-16T14:16:49.3241137"
+  "timestamp" : "2026-10-17T15:41:33.8960457"
 }
 ```
 
@@ -1316,7 +1325,7 @@
 ## 16. Deactivate Sub-Type
 
 - **Method**: `PATCH`
-- **Path**: `/api/v1/administration/lookups/sub-types/95/deactivate`
+- **Path**: `/api/v1/administration/lookups/sub-types/98/deactivate`
 - **Headers**: `Authorization: Bearer <token>`
 - **Status Code**: `200 OK`
 - **Real Raw Response Body**:
@@ -1325,7 +1334,7 @@
   "success" : true,
   "message" : "Lookup sub-type deactivated successfully",
   "data" : {
-    "id" : 95,
+    "id" : 98,
     "code" : "1",
     "typeCode" : "10035",
     "lookupTypeCode" : "10035",
@@ -1338,10 +1347,10 @@
     "isFixed" : false,
     "isActive" : false,
     "displayOrder" : 2,
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49"
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33"
   },
-  "timestamp" : "2026-10-16T14:16:49.333109"
+  "timestamp" : "2026-10-17T15:41:33.9100404"
 }
 ```
 
@@ -1350,7 +1359,7 @@
 ## 17. Activate Sub-Type
 
 - **Method**: `PATCH`
-- **Path**: `/api/v1/administration/lookups/sub-types/95/activate`
+- **Path**: `/api/v1/administration/lookups/sub-types/98/activate`
 - **Headers**: `Authorization: Bearer <token>`
 - **Status Code**: `200 OK`
 - **Real Raw Response Body**:
@@ -1359,7 +1368,7 @@
   "success" : true,
   "message" : "Lookup sub-type activated successfully",
   "data" : {
-    "id" : 95,
+    "id" : 98,
     "code" : "1",
     "typeCode" : "10035",
     "lookupTypeCode" : "10035",
@@ -1372,10 +1381,10 @@
     "isFixed" : false,
     "isActive" : true,
     "displayOrder" : 2,
-    "createdAt" : "2026-10-16T14:16:49",
-    "updatedAt" : "2026-10-16T14:16:49"
+    "createdAt" : "2026-10-17T15:41:33",
+    "updatedAt" : "2026-10-17T15:41:33"
   },
-  "timestamp" : "2026-10-16T14:16:49.3401033"
+  "timestamp" : "2026-10-17T15:41:33.975999"
 }
 ```
 
@@ -1384,7 +1393,7 @@
 ## 18. Delete Sub-Type
 
 - **Method**: `DELETE`
-- **Path**: `/api/v1/administration/lookups/sub-types/95`
+- **Path**: `/api/v1/administration/lookups/sub-types/98`
 - **Headers**: `Authorization: Bearer <token>`
 - **Status Code**: `200 OK`
 - **Real Raw Response Body**:
@@ -1392,7 +1401,7 @@
 {
   "success" : true,
   "message" : "Lookup sub-type deleted successfully from Master DB",
-  "timestamp" : "2026-10-16T14:16:49.3842108"
+  "timestamp" : "2026-10-17T15:41:34.005982"
 }
 ```
 
@@ -1409,7 +1418,7 @@
 {
   "success" : true,
   "message" : "Lookup type deleted successfully from Master DB",
-  "timestamp" : "2026-10-16T14:16:49.4029134"
+  "timestamp" : "2026-10-17T15:41:34.028445"
 }
 ```
 
@@ -1429,7 +1438,7 @@
   "error" : "Not Found",
   "message" : "Master lookup type not found with code: 99999",
   "path" : "/api/v1/administration/lookups/types/99999",
-  "timestamp" : "2026-10-16T14:16:49.4079119"
+  "timestamp" : "2026-10-17T15:41:34.0354113"
 }
 ```
 
@@ -1445,8 +1454,8 @@
 {
   "status" : "ACTIVE",
   "isFixed" : false,
-  "description" : "",
   "isActive" : true,
+  "description" : "",
   "name" : ""
 }
 ```
@@ -1462,7 +1471,7 @@
   "validationErrors" : {
     "name" : "Lookup type name is required"
   },
-  "timestamp" : "2026-10-16T14:16:49.4342883"
+  "timestamp" : "2026-10-17T15:41:34.0440464"
 }
 ```
 

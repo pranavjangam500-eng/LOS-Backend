@@ -390,7 +390,7 @@ CREATE TABLE IF NOT EXISTS customer.leads (
     email_address                   VARCHAR(150),
     pin_code                        VARCHAR(20),
     number_of_dependents            INT,
-    down_payment_collateral         DOUBLE PRECISION,
+    down_payment_collateral         VARCHAR(255),
     created_at                      TIMESTAMP NOT NULL DEFAULT now(),
     updated_at                      TIMESTAMP NOT NULL DEFAULT now()
 );

@@ -508,7 +508,11 @@ public class DatabaseSeeder implements CommandLineRunner {
         mapDesignation("Sr. Officer", makerRole);
         mapDesignation("Officer", makerRole);
         mapDesignation("Clerk", makerRole);
+        mapDesignation("Relationship Manager", makerRole);
+        mapDesignation("Compliance Officer", checkerRole);
+        mapDesignation("Branch Manager", adminRole);
     }
+
 
     private void mapDesignation(String designation, OrganizationRole role) {
         if (designationRoleMappingRepository.findByDesignationIgnoreCase(designation).isEmpty()) {
@@ -624,6 +628,10 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedMasterLookupSubType("10002", "Designation", "7", "Gen. Manager", false, 7);
         seedMasterLookupSubType("10002", "Designation", "8", "CEO", false, 8);
         seedMasterLookupSubType("10002", "Designation", "9", "Chairman", false, 9);
+        seedMasterLookupSubType("10002", "Designation", "10", "Relationship Manager", false, 10);
+        seedMasterLookupSubType("10002", "Designation", "11", "Compliance Officer", false, 11);
+        seedMasterLookupSubType("10002", "Designation", "12", "Branch Manager", false, 12);
+
 
         // 10003: Role (Fixed)
         seedMasterLookupType("10003", "Role", true);

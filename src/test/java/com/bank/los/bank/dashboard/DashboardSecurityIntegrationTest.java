@@ -46,7 +46,7 @@ class DashboardSecurityIntegrationTest {
     @BeforeEach
     void setUp() {
         // 1. Internal Super Admin (single-step)
-        LoginResponse adminRes = authenticationService.login(LoginRequest.builder()
+        LoginResponse adminRes = authenticationService.internalAdminLogin(LoginRequest.builder()
                 .email("admin@losplatform.com").password("Admin@123").build());
         internalAdminToken = adminRes.getAccessToken();
 

@@ -135,11 +135,13 @@ public class CreateUserRequest {
     @JsonAlias({"mBrAccess", "M_Br_access", "multiBranchAccess", "multi_branch_access", "allow_multibranch", "allow_multi_branch", "allowMultibranch", "allowMultiBranch"})
     @Schema(description = "Allow multi-branch access (1/0 or true/false)", example = "1", defaultValue = "0")
     @Builder.Default
+    @lombok.Setter(lombok.AccessLevel.NONE)
     private Boolean multiBranchAccess = false;
 
     @JsonProperty("login_branch")
     @JsonAlias({"loginBranch", "Login_Branch", "loginBranchName", "login_branch_name", "branch_name", "branchName"})
     @Schema(description = "Primary login branch ID or Name", example = "1")
+    @lombok.Setter(lombok.AccessLevel.NONE)
     private String loginBranch;
 
     @JsonProperty("login_branch_id")
@@ -151,6 +153,7 @@ public class CreateUserRequest {
     @JsonAlias({"holidayLogin", "Holiday_Login", "loginOnHolidays", "login_on_holidays", "allow_login_in_holidays", "allow_login_on_holidays", "allowLoginInHolidays", "allowLoginOnHolidays"})
     @Schema(description = "Allow login on weekends/bank holidays (1/0 or true/false)", example = "false", defaultValue = "false")
     @Builder.Default
+    @lombok.Setter(lombok.AccessLevel.NONE)
     private Boolean loginOnHolidays = false;
 
     @JsonProperty("login_time")
@@ -206,45 +209,24 @@ public class CreateUserRequest {
     @JsonAlias({"modifiedDate", "ModifiedDate", "updatedAt", "updated_at"})
     private LocalDateTime modifiedDate;
 
-    // Custom setters for 0/1 coercion
-    @JsonSetter("m_br_access")
-    public void setMBrAccess(Object val) {
+    // Custom setters for 0/1 coercion without conflicting definitions
+    public void setMultiBranchAccess(Object val) {
         this.multiBranchAccess = parseBooleanFlag(val);
     }
 
-    @JsonSetter("allow_multibranch")
-    public void setAllowMultiBranch(Object val) {
-        this.multiBranchAccess = parseBooleanFlag(val);
-    }
-
-    @JsonSetter("multi_branch_access")
-    public void setMultiBranchAccessProp(Object val) {
-        this.multiBranchAccess = parseBooleanFlag(val);
-    }
-
-    @JsonSetter("holiday_login")
-    public void setHolidayLoginProp(Object val) {
+    public void setLoginOnHolidays(Object val) {
         this.loginOnHolidays = parseBooleanFlag(val);
     }
 
-    @JsonSetter("allow_login_in_holidays")
-    public void setAllowLoginInHolidays(Object val) {
-        this.loginOnHolidays = parseBooleanFlag(val);
-    }
-
-    @JsonSetter("login_on_holidays")
-    public void setLoginOnHolidaysProp(Object val) {
-        this.loginOnHolidays = parseBooleanFlag(val);
-    }
-
-    @JsonSetter("login_branch")
-    public void setLoginBranchProp(Object val) {
+    public void setLoginBranch(Object val) {
         if (val != null) {
             String str = val.toString().trim();
             this.loginBranch = str;
             try {
                 this.loginBranchId = Long.parseLong(str);
             } catch (NumberFormatException ignored) {}
+        } else {
+            this.loginBranch = null;
         }
     }
 

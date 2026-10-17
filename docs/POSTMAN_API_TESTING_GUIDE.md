@@ -1,6 +1,6 @@
 # Loan Origination System (LOS) Backend - Security & Postman API Testing Guide
 
-This guide covers testing the **LOS Multi-Tenant Spring Boot Backend** with the complete Postman collection of **123 requests** across **22 functional folders**.
+This guide covers testing the **LOS Multi-Tenant Spring Boot Backend** with the complete Postman collection of **130 requests** across **22 functional folders**.
 
 ---
 
@@ -10,7 +10,7 @@ The importable Postman Collection (v2.1.0), displayed in Postman as **los postma
 - **File**: [`LOS_Backend_Postman_Collection.json`](./LOS_Backend_Postman_Collection.json)
 
 ### Collection Summary
-- **Total Requests**: 123
+- **Total Requests**: 130
 - **Total Modules / Folders**: 22
 - **Pre-configured Variables**: `baseUrl`, `accessToken`, `refreshToken`, `preAuthToken`, `organizationId`, `leadId`, `otpEmail`, `otp`
 - **Dynamic Token Automation**: Login scripts automatically extract and inject the JWT Bearer token into all subsequent authenticated requests.
@@ -313,19 +313,28 @@ To test and operate the LOS system properly, follow this end-to-end workflow seq
 - `POST /api/v1/administration/rbac/sync/{bankCode}` - Push master permissions to target bank
 - `POST /api/v1/administration/rbac/sync-all` - Push master permissions to ALL active bank databases
 
-### `07. Administration - Master Lookups` (12 endpoints)
+### `07. Administration - Master Lookups` (19 requests covering 18 routes)
 - `GET /api/v1/administration/lookups/types` - List all central lookup types
+- `GET /api/v1/administration/lookups/types?search=...&status=...&page=...&size=...` - Search and paginate central lookup types
 - `GET /api/v1/administration/lookups/types/{code}` - Fetch lookup type with sub-types
+- `GET /api/v1/administration/lookups/types/{code}/sub-types` - List/search/paginate options under a lookup type
+- `GET /api/v1/administration/lookups/{code}/options` - Fetch active dropdown options
 - `POST /api/v1/administration/lookups/types` - Create central master lookup type
 - `PUT /api/v1/administration/lookups/types/{code}` - Update master lookup type
+- `PATCH /api/v1/administration/lookups/types/{code}/activate` - Activate master lookup type
+- `PATCH /api/v1/administration/lookups/types/{code}/deactivate` - Deactivate master lookup type
 - `DELETE /api/v1/administration/lookups/types/{code}` - Delete non-fixed lookup type
 - `POST /api/v1/administration/lookups/types/{typeCode}/sub-types` - Add option to central lookup
 - `PUT /api/v1/administration/lookups/sub-types/{id}` - Update central lookup option
+- `PATCH /api/v1/administration/lookups/sub-types/{id}/activate` - Activate master lookup option
+- `PATCH /api/v1/administration/lookups/sub-types/{id}/deactivate` - Deactivate master lookup option
 - `DELETE /api/v1/administration/lookups/sub-types/{id}` - Delete central lookup option
 - `GET /api/v1/administration/lookups/banks/{bankCode}` - Inspect bank-customized lookups
 - `PUT /api/v1/administration/lookups/banks/{bankCode}/types/{code}/permissions` - Set allowed modification permissions
 - `POST /api/v1/administration/lookups/sync/{bankCode}` - Sync master lookups to target bank
 - `POST /api/v1/administration/lookups/sync-all` - Sync master lookups to ALL bank databases
+
+The administration lookup controller also accepts the `/api/v1/admin/lookups` base path as an alias; the collection uses `/api/v1/administration/lookups`.
 
 ### `08. Administration - Dashboards, Metrics & Audits` (3 endpoints)
 - `GET /api/v1/administration/dashboard` - Platform Master Admin Dashboard
