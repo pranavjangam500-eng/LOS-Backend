@@ -29,14 +29,9 @@ import com.bank.los.common.constant.ApplicationConstants;
 import com.bank.los.common.exception.BusinessException;
 import com.bank.los.common.exception.ResourceNotFoundException;
 import com.bank.los.common.validation.PasswordPolicy;
-import com.bank.los.administration.master.entity.MasterLookupSubType;
-import com.bank.los.administration.master.entity.MasterLookupType;
 import com.bank.los.administration.master.repository.MasterLookupSubTypeRepository;
-import com.bank.los.administration.master.repository.MasterLookupTypeRepository;
 import com.bank.los.bank.master.entity.BankLookupSubType;
-import com.bank.los.bank.master.entity.BankLookupType;
 import com.bank.los.bank.master.repository.BankLookupSubTypeRepository;
-import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.config.BankContext;
 import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.UserPrincipal;
@@ -57,9 +52,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final com.bank.los.config.BankDataSourceProvider bankDataSourceProvider;
     private final BankLookupSubTypeRepository bankLookupSubTypeRepository;
-    private final BankLookupTypeRepository bankLookupTypeRepository;
     private final MasterLookupSubTypeRepository masterLookupSubTypeRepository;
-    private final MasterLookupTypeRepository masterLookupTypeRepository;
 
 
     public List<UserResponse> getAllUsers(UserPrincipal principal, Long organizationId) {
@@ -865,8 +858,8 @@ public class UserService {
         }
         boolean existsAndActive = bankLookupSubTypeRepository
                 .findByLookupTypeCodeAndSubTypeCode("10003", code)
-                .map(st -> Boolean.TRUE.equals(st.getIsActive()))
-                .orElse(false);
+                .filter(st -> Boolean.TRUE.equals(st.getIsActive()))
+                .isPresent();
         if (!existsAndActive) {
             throw new BusinessException("INVALID_ROLE", "Role option code '" + code + "' is not active under lookup type 10003.");
         }
