@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface LoanApplicationRepository extends JpaRepository<LoanApplication, Long> {
     Optional<LoanApplication> findByApplicationNumber(String applicationNumber);
     Page<LoanApplication> findByCustomerId(Long customerId, Pageable pageable);
+    Page<LoanApplication> findByCustomerNumber(String customerNumber, Pageable pageable);
+    Page<LoanApplication> findByProductCode(String productCode, Pageable pageable);
     Page<LoanApplication> findByStatus(String status, Pageable pageable);
     Page<LoanApplication> findByBranchId(Long branchId, Pageable pageable);
 }

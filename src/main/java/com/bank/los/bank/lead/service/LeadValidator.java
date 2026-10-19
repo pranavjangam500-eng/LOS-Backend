@@ -274,6 +274,11 @@ public class LeadValidator {
             errors.add("Security Amount must be a non-negative amount");
         }
 
+        Double downPayment = lead.getDownPaymentCollateral();
+        if (downPayment != null && downPayment < 0) {
+            errors.add("Down Payment / Collateral must be a non-negative amount");
+        }
+
         Double takeHomePay = lead.getTakeHomePay();
         if (takeHomePay != null && takeHomePay < 0) {
             errors.add("Take Home Pay must be a non-negative amount");
@@ -329,7 +334,6 @@ public class LeadValidator {
 
         if (lead.getLoanProductType() != null) lead.setLoanProductType(lead.getLoanProductType().trim());
         if (lead.getPurposeOfLoan() != null) lead.setPurposeOfLoan(lead.getPurposeOfLoan().trim());
-        if (lead.getDownPaymentCollateral() != null) lead.setDownPaymentCollateral(lead.getDownPaymentCollateral().trim());
 
         if (lead.getEmploymentType() != null) lead.setEmploymentType(lead.getEmploymentType().trim());
         if (lead.getDesignation() != null) lead.setDesignation(lead.getDesignation().trim());

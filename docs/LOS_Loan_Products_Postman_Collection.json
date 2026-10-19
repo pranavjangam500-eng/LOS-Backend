@@ -1,0 +1,434 @@
+{
+  "info": {
+    "_postman_id": "los-loan-products-management-2026",
+    "name": "LOS - Loan Products Management API Suite",
+    "description": "Postman collection for LOS Loan Product Management: Create (Add), List, Get by ID / Code, Edit (Update), Bulk CSV Import, CSV Export, and Download Sample CSV Template.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "productCode",
+      "value": "HOME_LOAN_PREMIER",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create Loan Product (Add)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"HOME_LOAN_PREMIER\",\n  \"name\": \"Premier Home Loan\",\n  \"description\": \"Prime residential property loan with flexible tenure and low interest\",\n  \"emi\": 43391.13,\n  \"emiType\": \"REDUCING_BALANCE\",\n  \"minAmount\": 500000.0,\n  \"maxAmount\": 15000000.0,\n  \"interestRatePercent\": 8.75,\n  \"minTenureMonths\": 12,\n  \"maxTenureMonths\": 360,\n  \"penalty\": 500.0,\n  \"penaltyPercent\": 2.0,\n  \"interestCalculationFrequency\": \"MONTHLY\",\n  \"interestCalculationMode\": \"REDUCING\",\n  \"processingFeePercent\": 0.5,\n  \"status\": \"ACTIVE\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products"
+          ]
+        },
+        "description": "Create / configure a new loan product with all underwriting and calculation parameters."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK",
+          "originalRequest": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Loan product created successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"code\": \"HOME_LOAN_PREMIER\",\n    \"name\": \"Premier Home Loan\",\n    \"description\": \"Prime residential property loan with flexible tenure and low interest\",\n    \"emi\": 43391.13,\n    \"emiType\": \"REDUCING_BALANCE\",\n    \"minAmount\": 500000.0,\n    \"maxAmount\": 15000000.0,\n    \"interestRatePercent\": 8.75,\n    \"minTenureMonths\": 12,\n    \"maxTenureMonths\": 360,\n    \"penalty\": 500.0,\n    \"penaltyPercent\": 2.0,\n    \"interestCalculationFrequency\": \"MONTHLY\",\n    \"interestCalculationMode\": \"REDUCING\",\n    \"processingFeePercent\": 0.5,\n    \"status\": \"ACTIVE\",\n    \"createdAt\": \"2026-10-15T12:00:00\",\n    \"updatedAt\": \"2026-10-15T12:00:00\"\n  },\n  \"timestamp\": \"2026-10-15T12:00:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "2. List All Loan Products (List)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products"
+          ]
+        },
+        "description": "List all configured loan products for current bank/organization."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Operation completed successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"code\": \"HOME_LOAN_PREMIER\",\n      \"name\": \"Premier Home Loan\",\n      \"description\": \"Prime residential property loan with flexible tenure and low interest\",\n      \"emi\": 43391.13,\n      \"emiType\": \"REDUCING_BALANCE\",\n      \"minAmount\": 500000.0,\n      \"maxAmount\": 15000000.0,\n      \"interestRatePercent\": 8.75,\n      \"minTenureMonths\": 12,\n      \"maxTenureMonths\": 360,\n      \"penalty\": 500.0,\n      \"penaltyPercent\": 2.0,\n      \"interestCalculationFrequency\": \"MONTHLY\",\n      \"interestCalculationMode\": \"REDUCING\",\n      \"processingFeePercent\": 0.5,\n      \"status\": \"ACTIVE\",\n      \"createdAt\": \"2026-10-15T12:00:00\",\n      \"updatedAt\": \"2026-10-15T12:00:00\"\n    }\n  ],\n  \"timestamp\": \"2026-10-15T12:00:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "3. Get Product By ID (Get)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products",
+            "{{productId}}"
+          ]
+        },
+        "description": "Retrieve loan product details by primary key ID."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products/1"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Operation completed successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"code\": \"HOME_LOAN_PREMIER\",\n    \"name\": \"Premier Home Loan\",\n    \"description\": \"Prime residential property loan with flexible tenure and low interest\",\n    \"emi\": 43391.13,\n    \"emiType\": \"REDUCING_BALANCE\",\n    \"minAmount\": 500000.0,\n    \"maxAmount\": 15000000.0,\n    \"interestRatePercent\": 8.75,\n    \"minTenureMonths\": 12,\n    \"maxTenureMonths\": 360,\n    \"penalty\": 500.0,\n    \"penaltyPercent\": 2.0,\n    \"interestCalculationFrequency\": \"MONTHLY\",\n    \"interestCalculationMode\": \"REDUCING\",\n    \"processingFeePercent\": 0.5,\n    \"status\": \"ACTIVE\",\n    \"createdAt\": \"2026-10-15T12:00:00\",\n    \"updatedAt\": \"2026-10-15T12:00:00\"\n  },\n  \"timestamp\": \"2026-10-15T12:00:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "4. Get Product By Code (Get)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products/code/{{productCode}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products",
+            "code",
+            "{{productCode}}"
+          ]
+        },
+        "description": "Retrieve loan product details by unique product code (e.g. HOME_LOAN_PREMIER)."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK",
+          "originalRequest": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products/code/HOME_LOAN_PREMIER"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Operation completed successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"code\": \"HOME_LOAN_PREMIER\",\n    \"name\": \"Premier Home Loan\",\n    \"description\": \"Prime residential property loan with flexible tenure and low interest\",\n    \"emi\": 43391.13,\n    \"emiType\": \"REDUCING_BALANCE\",\n    \"minAmount\": 500000.0,\n    \"maxAmount\": 15000000.0,\n    \"interestRatePercent\": 8.75,\n    \"minTenureMonths\": 12,\n    \"maxTenureMonths\": 360,\n    \"penalty\": 500.0,\n    \"penaltyPercent\": 2.0,\n    \"interestCalculationFrequency\": \"MONTHLY\",\n    \"interestCalculationMode\": \"REDUCING\",\n    \"processingFeePercent\": 0.5,\n    \"status\": \"ACTIVE\",\n    \"createdAt\": \"2026-10-15T12:00:00\",\n    \"updatedAt\": \"2026-10-15T12:00:00\"\n  },\n  \"timestamp\": \"2026-10-15T12:00:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "5. Update Loan Product (Edit)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"HOME_LOAN_PREMIER\",\n  \"name\": \"Premier Home Loan (Updated)\",\n  \"description\": \"Updated prime housing loan with special festival interest rate\",\n  \"emi\": 41500.0,\n  \"emiType\": \"REDUCING_BALANCE\",\n  \"minAmount\": 500000.0,\n  \"maxAmount\": 20000000.0,\n  \"interestRatePercent\": 8.25,\n  \"minTenureMonths\": 12,\n  \"maxTenureMonths\": 360,\n  \"penalty\": 600.0,\n  \"penaltyPercent\": 2.0,\n  \"interestCalculationFrequency\": \"MONTHLY\",\n  \"interestCalculationMode\": \"REDUCING\",\n  \"processingFeePercent\": 0.4,\n  \"status\": \"ACTIVE\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products",
+            "{{productId}}"
+          ]
+        },
+        "description": "Update an existing loan product's terms, interest rate, amounts, or parameters."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK",
+          "originalRequest": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products/1"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Loan product updated successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"code\": \"HOME_LOAN_PREMIER\",\n    \"name\": \"Premier Home Loan (Updated)\",\n    \"description\": \"Updated prime housing loan with special festival interest rate\",\n    \"emi\": 41500.0,\n    \"emiType\": \"REDUCING_BALANCE\",\n    \"minAmount\": 500000.0,\n    \"maxAmount\": 20000000.0,\n    \"interestRatePercent\": 8.25,\n    \"minTenureMonths\": 12,\n    \"maxTenureMonths\": 360,\n    \"penalty\": 600.0,\n    \"penaltyPercent\": 2.0,\n    \"interestCalculationFrequency\": \"MONTHLY\",\n    \"interestCalculationMode\": \"REDUCING\",\n    \"processingFeePercent\": 0.4,\n    \"status\": \"ACTIVE\",\n    \"createdAt\": \"2026-10-15T12:00:00\",\n    \"updatedAt\": \"2026-10-15T12:05:00\"\n  },\n  \"timestamp\": \"2026-10-15T12:05:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "6. Bulk CSV Import (Import)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "loan_products.csv",
+              "description": "CSV file containing columns: Product Code, Product Name, Description, EMI, EMI Type, Min Amount, Max Amount, Interest Rate %, Min Tenure Months, Max Tenure Months, Penalty, Penalty %, Interest Calculation Frequency, Interest Calculation Mode, Processing Fee %, Status"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products/import",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products",
+            "import"
+          ]
+        },
+        "description": "Bulk import loan products from CSV file (multipart/form-data or binary stream)."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK",
+          "originalRequest": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products/import"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Bulk CSV import completed\",\n  \"data\": {\n    \"totalRows\": 2,\n    \"successCount\": 2,\n    \"failureCount\": 0,\n    \"importedProducts\": [\n      {\n        \"id\": 2,\n        \"code\": \"HOME_LOAN\",\n        \"name\": \"Prime Housing Loan\",\n        \"description\": \"Standard retail home loan with flexible tenure\",\n        \"emi\": 43391.13,\n        \"emiType\": \"REDUCING_BALANCE\",\n        \"minAmount\": 500000.0,\n        \"maxAmount\": 10000000.0,\n        \"interestRatePercent\": 8.5,\n        \"minTenureMonths\": 12,\n        \"maxTenureMonths\": 360,\n        \"penalty\": 500.0,\n        \"penaltyPercent\": 2.0,\n        \"interestCalculationFrequency\": \"MONTHLY\",\n        \"interestCalculationMode\": \"REDUCING\",\n        \"processingFeePercent\": 0.5,\n        \"status\": \"ACTIVE\"\n      },\n      {\n        \"id\": 3,\n        \"code\": \"PERSONAL_LOAN\",\n        \"name\": \"Express Personal Loan\",\n        \"description\": \"Unsecured instant personal loan for salaried applicants\",\n        \"emi\": 26333.84,\n        \"emiType\": \"FLAT_RATE\",\n        \"minAmount\": 50000.0,\n        \"maxAmount\": 2000000.0,\n        \"interestRatePercent\": 12.0,\n        \"minTenureMonths\": 6,\n        \"maxTenureMonths\": 60,\n        \"penalty\": 300.0,\n        \"penaltyPercent\": 3.0,\n        \"interestCalculationFrequency\": \"MONTHLY\",\n        \"interestCalculationMode\": \"FLAT\",\n        \"processingFeePercent\": 1.5,\n        \"status\": \"ACTIVE\"\n      }\n    ],\n    \"errors\": [],\n    \"message\": \"Imported 2 products successfully (0 failed)\"\n  },\n  \"timestamp\": \"2026-10-15T12:00:00\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "7. Export Loan Products to CSV (Export)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products/export",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products",
+            "export"
+          ]
+        },
+        "description": "Exports all configured loan products for current organization to RFC-4180 CSV attachment."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK (CSV)",
+          "originalRequest": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products/export"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "text",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/csv; charset=UTF-8"
+            },
+            {
+              "key": "Content-Disposition",
+              "value": "attachment; filename=\"loan_products.csv\""
+            }
+          ],
+          "body": "Product Code,Product Name,Description,EMI,EMI Type,Min Amount,Max Amount,Interest Rate %,Min Tenure Months,Max Tenure Months,Penalty,Penalty %,Interest Calculation Frequency,Interest Calculation Mode,Processing Fee %,Status\r\nHOME_LOAN_PREMIER,Premier Home Loan,Prime residential property loan with flexible tenure,43391.13,REDUCING_BALANCE,500000.0,15000000.0,8.75,12,360,500.0,2.0,MONTHLY,REDUCING,0.5,ACTIVE"
+        }
+      ]
+    },
+    {
+      "name": "8. Download Sample CSV Template",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/loan-products/sample-csv",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "loan-products",
+            "sample-csv"
+          ]
+        },
+        "description": "Download pre-configured CSV template with headers and demo rows for bulk import."
+      },
+      "response": [
+        {
+          "name": "Success Response - 200 OK (CSV)",
+          "originalRequest": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/loan-products/sample-csv"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "text",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "text/csv; charset=UTF-8"
+            },
+            {
+              "key": "Content-Disposition",
+              "value": "attachment; filename=\"sample_loan_products.csv\""
+            }
+          ],
+          "body": "Product Code,Product Name,Description,EMI,EMI Type,Min Amount,Max Amount,Interest Rate %,Min Tenure Months,Max Tenure Months,Penalty,Penalty %,Interest Calculation Frequency,Interest Calculation Mode,Processing Fee %,Status\r\nHOME_LOAN,Prime Housing Loan,Standard retail home loan with flexible tenure,43391.13,REDUCING_BALANCE,500000.0,10000000.0,8.5,12,360,500.0,2.0,MONTHLY,REDUCING,0.5,ACTIVE\r\nPERSONAL_LOAN,Express Personal Loan,Unsecured instant personal loan for salaried applicants,26333.84,FLAT_RATE,50000.0,2000000.0,12.0,6,60,300.0,3.0,MONTHLY,FLAT,1.5,ACTIVE"
+        }
+      ]
+    }
+  ]
+}

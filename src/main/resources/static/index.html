@@ -1344,6 +1344,15 @@
                   <input type="number" id="securityAmount" name="securityAmount" min="0" step="10000" placeholder="e.g. 500000" oninput="calculateLoanMetrics()" />
                   <p class="field-hint">Cash margin or FD pledge</p>
                 </div>
+
+                <div class="form-group">
+                  <label for="downPaymentCollateral">
+                    <span>Down Payment / Collateral (₹)</span>
+                    <span class="badge badge-optional">Optional</span>
+                  </label>
+                  <input type="number" id="downPaymentCollateral" name="downPaymentCollateral" min="0" step="10000" placeholder="e.g. 1000000" oninput="calculateLoanMetrics()" />
+                  <p class="field-hint">Down payment or collateral value</p>
+                </div>
               </div>
 
               <!-- Real-time facility calculation widget -->
@@ -1995,6 +2004,10 @@
           <div class="form-group">
             <label for="editSecurityAmount"><span>Security Amount (₹)</span></label>
             <input type="number" id="editSecurityAmount" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="editDownPaymentCollateral"><span>Down Payment / Collateral (₹)</span></label>
+            <input type="number" id="editDownPaymentCollateral" min="0" />
           </div>
         </div>
 
@@ -2739,7 +2752,10 @@
       const intVal = parseFloat(document.getElementById("totalInterest").value || 0);
       document.getElementById("revInterest").textContent = `${rateVal}% (₹ ${intVal.toLocaleString('en-IN')})`;
       const secVal = parseFloat(document.getElementById("securityAmount").value || 0);
-      document.getElementById("revSecurity").textContent = secVal > 0 ? `₹ ${secVal.toLocaleString('en-IN')}` : "None";
+      const dpVal = parseFloat(document.getElementById("downPaymentCollateral") ? document.getElementById("downPaymentCollateral").value : 0) || 0;
+      let secText = secVal > 0 ? `Sec: ₹ ${secVal.toLocaleString('en-IN')}` : "";
+      let dpText = dpVal > 0 ? `DP: ₹ ${dpVal.toLocaleString('en-IN')}` : "";
+      document.getElementById("revSecurity").textContent = (secText && dpText) ? `${secText} | ${dpText}` : (secText || dpText || "None");
 
       // 3. Income Profile
       document.getElementById("revEmp").textContent = document.getElementById("employmentType").value;
@@ -2815,6 +2831,7 @@
         interestRate: parseFloat(document.getElementById("interestRate").value) || null,
         totalInterest: parseFloat(document.getElementById("totalInterest").value) || null,
         securityAmount: parseFloat(document.getElementById("securityAmount").value) || null,
+        downPaymentCollateral: parseFloat(document.getElementById("downPaymentCollateral").value) || null,
 
         // Section 3: Income Profile
         employmentType: document.getElementById("employmentType").value,
@@ -3067,6 +3084,7 @@
       document.getElementById("editInterestRate").value = lead.interestRate != null ? lead.interestRate : "";
       document.getElementById("editTotalInterest").value = lead.totalInterest != null ? lead.totalInterest : "";
       document.getElementById("editSecurityAmount").value = lead.securityAmount != null ? lead.securityAmount : "";
+      document.getElementById("editDownPaymentCollateral").value = lead.downPaymentCollateral != null ? lead.downPaymentCollateral : "";
 
       // 3. Income Profile
       document.getElementById("editEmploymentType").value = lead.employmentType || "Salaried";
@@ -3132,6 +3150,7 @@
         interestRate: parseFloat(document.getElementById("editInterestRate").value) || null,
         totalInterest: parseFloat(document.getElementById("editTotalInterest").value) || null,
         securityAmount: parseFloat(document.getElementById("editSecurityAmount").value) || null,
+        downPaymentCollateral: parseFloat(document.getElementById("editDownPaymentCollateral").value) || null,
 
         // Section 3: Income Profile
         employmentType: document.getElementById("editEmploymentType").value,

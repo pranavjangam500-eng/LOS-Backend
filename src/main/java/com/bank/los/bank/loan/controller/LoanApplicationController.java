@@ -19,9 +19,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/loan-applications")
+@RequestMapping({"/api/v1/loan-applications", "/api/v1/loan-eligibility", "/api/loan-eligibility"})
 @RequiredArgsConstructor
-@Tag(name = "Loan Applications", description = "Endpoints for creating and viewing loan applications")
+@Tag(name = "Loan Applications & Eligibility", description = "Endpoints for Loan Eligibility assessment, origination, and updating")
 @SecurityRequirement(name = "BearerAuth")
 public class LoanApplicationController {
 
@@ -29,7 +29,7 @@ public class LoanApplicationController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'MAKER', 'CHECKER', 'VIEWER', 'CUSTOMER')")
-    @Operation(summary = "Get paginated loan applications for the organization")
+    @Operation(summary = "Get paginated loan applications / eligibility assessments for current organization")
     public ResponseEntity<ApiResponse<PageResponse<LoanApplicationResponse>>> getApplications(
             @AuthenticationPrincipal UserPrincipal principal,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -39,7 +39,7 @@ public class LoanApplicationController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'MAKER', 'CHECKER', 'VIEWER', 'CUSTOMER')")
-    @Operation(summary = "Get loan application details by ID")
+    @Operation(summary = "Get loan application / eligibility assessment details by ID")
     public ResponseEntity<ApiResponse<LoanApplicationResponse>> getApplicationById(
             @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable Long id) {
@@ -47,13 +47,34 @@ public class LoanApplicationController {
         return ResponseEntity.ok(ApiResponse.ok(app));
     }
 
+    @GetMapping("/number/{applicationNumber}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'MAKER', 'CHECKER', 'VIEWER', 'CUSTOMER')")
+    @Operation(summary = "Get loan application / eligibility assessment by unique application number")
+    public ResponseEntity<ApiResponse<LoanApplicationResponse>> getApplicationByNumber(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable String applicationNumber) {
+        LoanApplicationResponse app = loanApplicationService.getApplicationByNumber(principal, applicationNumber);
+        return ResponseEntity.ok(ApiResponse.ok(app));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'MAKER')")
-    @Operation(summary = "Initiate a new loan application (Maker action)")
+    @Operation(summary = "Assess eligibility and create a new loan application (Section 1, Section 2, Section 3)")
     public ResponseEntity<ApiResponse<LoanApplicationResponse>> createApplication(
             @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreateLoanApplicationRequest request) {
         LoanApplicationResponse app = loanApplicationService.createApplication(principal, request);
-        return ResponseEntity.ok(ApiResponse.ok("Loan application created successfully", app));
+        return ResponseEntity.ok(ApiResponse.ok("Loan eligibility assessed and application created successfully", app));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'MAKER')")
+    @Operation(summary = "Update an existing loan application and re-assess eligibility")
+    public ResponseEntity<ApiResponse<LoanApplicationResponse>> updateApplication(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @Valid @RequestBody CreateLoanApplicationRequest request) {
+        LoanApplicationResponse app = loanApplicationService.updateApplication(principal, id, request);
+        return ResponseEntity.ok(ApiResponse.ok("Loan application updated and eligibility re-assessed successfully", app));
     }
 }

@@ -220,8 +220,8 @@ public class LeadRequest {
 
     @Column(name = "down_payment_collateral")
     @JsonProperty("downPaymentCollateral")
-    @JsonAlias({"down_payment_collateral", "downPayment", "collateral", "Down Payment/Collateral", "downPaymentOrCollateral"})
-    private String downPaymentCollateral;
+    @JsonAlias({"down_payment_collateral", "downPayment", "collateral", "Down Payment/Collateral", "downPaymentOrCollateral", "down_payment"})
+    private Double downPaymentCollateral;
 
     // ==========================================
     // 3. Income Profile
@@ -789,11 +789,11 @@ public class LeadRequest {
         this.securityAmount = securityAmount;
     }
 
-    public String getDownPaymentCollateral() {
+    public Double getDownPaymentCollateral() {
         return downPaymentCollateral;
     }
 
-    public void setDownPaymentCollateral(String downPaymentCollateral) {
+    public void setDownPaymentCollateral(Double downPaymentCollateral) {
         this.downPaymentCollateral = downPaymentCollateral;
     }
 

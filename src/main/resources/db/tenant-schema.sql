@@ -408,4 +408,87 @@ CREATE TABLE IF NOT EXISTS customer.leads (
 CREATE INDEX IF NOT EXISTS idx_leads_status ON customer.leads(lead_status);
 CREATE INDEX IF NOT EXISTS idx_leads_assigned ON customer.leads(assigned_employee_id);
 
+-- -----------------------------------------------------------------------
+-- customer.loan_products (Product Management)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS customer.loan_products (
+    id                             BIGSERIAL PRIMARY KEY,
+    code                           VARCHAR(50)  NOT NULL UNIQUE,
+    name                           VARCHAR(150) NOT NULL,
+    description                    VARCHAR(500),
+    emi                            DOUBLE PRECISION,
+    emi_type                       VARCHAR(50),
+    min_amount                     DOUBLE PRECISION NOT NULL,
+    max_amount                     DOUBLE PRECISION NOT NULL,
+    interest_rate_percent          DOUBLE PRECISION NOT NULL,
+    min_tenure_months              INT NOT NULL,
+    max_tenure_months              INT NOT NULL,
+    penalty                        DOUBLE PRECISION DEFAULT 0.0,
+    penalty_percent                DOUBLE PRECISION DEFAULT 2.0,
+    interest_calculation_frequency VARCHAR(50) DEFAULT 'MONTHLY',
+    interest_calculation_mode      VARCHAR(50) DEFAULT 'REDUCING',
+    processing_fee_percent         DOUBLE PRECISION DEFAULT 1.0,
+    status                         VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at                     TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at                     TIMESTAMP NOT NULL DEFAULT now(),
+    created_by                     VARCHAR(100),
+    updated_by                     VARCHAR(100)
+);
+
+CREATE INDEX IF NOT EXISTS idx_loan_products_code ON customer.loan_products(code);
+
+-- -----------------------------------------------------------------------
+-- customer.loan_applications (Loan Eligibility & Applications)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS customer.loan_applications (
+    id                      BIGSERIAL PRIMARY KEY,
+    application_number      VARCHAR(40) UNIQUE,
+    customer_number         VARCHAR(50),
+    applicant_name          VARCHAR(150),
+    customer_id             BIGINT,
+    branch_id               BIGINT,
+    product_code            VARCHAR(50) NOT NULL,
+    applied_amount          DOUBLE PRECISION NOT NULL,
+    interest_rate           DOUBLE PRECISION DEFAULT 12.0,
+    tenure_months           INT NOT NULL DEFAULT 60,
+    total_monthly_income    DOUBLE PRECISION DEFAULT 0.0,
+    total_monthly_expenses  DOUBLE PRECISION DEFAULT 0.0,
+    net_monthly_income      DOUBLE PRECISION DEFAULT 0.0,
+    existing_monthly_debt   DOUBLE PRECISION DEFAULT 0.0,
+    cibil_score             INT DEFAULT 750,
+    collateral_value        DOUBLE PRECISION,
+    emi                     DOUBLE PRECISION,
+    dti_ratio               DOUBLE PRECISION,
+    max_eligible_amount     DOUBLE PRECISION,
+    eligibility_status      VARCHAR(40) DEFAULT 'ELIGIBLE',
+    sanctioned_amount       DOUBLE PRECISION,
+    kyc_status              VARCHAR(30) DEFAULT 'VERIFIED',
+    maker_user_id           BIGINT,
+    checker_user_id         BIGINT,
+    status                  VARCHAR(40) NOT NULL DEFAULT 'SUBMITTED_TO_CHECKER',
+    checker_remarks         VARCHAR(500),
+    approved_at             TIMESTAMP,
+    created_at              TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMP NOT NULL DEFAULT now(),
+    created_by              VARCHAR(100),
+    updated_by              VARCHAR(100)
+);
+
+CREATE INDEX IF NOT EXISTS idx_loan_app_num ON customer.loan_applications(application_number);
+CREATE INDEX IF NOT EXISTS idx_loan_app_cust_no ON customer.loan_applications(customer_number);
+CREATE INDEX IF NOT EXISTS idx_loan_app_status ON customer.loan_applications(status);
+
+-- -----------------------------------------------------------------------
+-- customer.loan_income_expenses (Section 2 Repeatable Rows)
+-- -----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS customer.loan_income_expenses (
+    loan_application_id     BIGINT NOT NULL REFERENCES customer.loan_applications(id) ON DELETE CASCADE,
+    item_type               VARCHAR(20) NOT NULL,
+    source                  VARCHAR(100) NOT NULL,
+    monthly_amount          DOUBLE PRECISION NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_loan_inc_exp_app_id ON customer.loan_income_expenses(loan_application_id);
+
+
 

@@ -7,15 +7,20 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -189,15 +194,59 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log.warn("Malformed JSON or invalid field format on path {}: {}", request != null ? request.getRequestURI() : "", ex.getMessage());
+
+        String message = "Invalid input format in request body";
+        if (ex.getCause() instanceof InvalidFormatException ife) {
+            String fieldPath = ife.getPath().stream()
+                    .map(ref -> ref.getFieldName() != null ? ref.getFieldName() : "")
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining("."));
+            String targetType = ife.getTargetType() != null ? ife.getTargetType().getSimpleName() : "valid numeric type";
+            message = String.format("Invalid value '%s' for field '%s'. Expected %s.",
+                    ife.getValue(), fieldPath, targetType);
+        }
+
+        ErrorResponse error = ErrorResponse.builder()
+                .success(false)
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("INVALID_INPUT")
+                .message(message)
+                .errors(java.util.Collections.singletonList(message))
+                .path(request != null ? request.getRequestURI() : null)
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String requiredType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "valid type";
+        String message = String.format("Parameter '%s' should be of type %s", ex.getName(), requiredType);
+        ErrorResponse error = ErrorResponse.builder()
+                .success(false)
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("TYPE_MISMATCH")
+                .message(message)
+                .errors(java.util.Collections.singletonList(message))
+                .path(request != null ? request.getRequestURI() : null)
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
-        log.error("Unhandled exception occurred on path {}: ", request.getRequestURI(), ex);
+        log.error("Unhandled exception occurred on path {}: ", request != null ? request.getRequestURI() : "", ex);
         ErrorResponse error = ErrorResponse.builder()
                 .success(false)
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("ERROR DEBUG: " + ex.getMessage())
-                .path(request.getRequestURI())
+                .message("An unexpected error occurred. Please contact support.")
+                .path(request != null ? request.getRequestURI() : null)
                 .timestamp(LocalDateTime.now())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);

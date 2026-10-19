@@ -373,7 +373,19 @@ public class LeadService {
                 }
             }
             if (indices.downPaymentCollateralCol >= 0 && indices.downPaymentCollateralCol < row.size()) {
-                lead.setDownPaymentCollateral(row.get(indices.downPaymentCollateralCol));
+                String val = row.get(indices.downPaymentCollateralCol).trim();
+                if (!val.isEmpty()) {
+                    try {
+                        lead.setDownPaymentCollateral(Double.valueOf(val));
+                    } catch (NumberFormatException e) {
+                        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^([0-9]+(?:\\.[0-9]+)?)").matcher(val);
+                        if (m.find()) {
+                            try {
+                                lead.setDownPaymentCollateral(Double.valueOf(m.group(1)));
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                }
             }
 
             // 3. Income Profile
@@ -696,7 +708,7 @@ public class LeadService {
                     lead.getInterestRate() != null ? String.valueOf(lead.getInterestRate()) : "",
                     lead.getTotalInterest() != null ? String.valueOf(lead.getTotalInterest()) : "",
                     lead.getSecurityAmount() != null ? String.valueOf(lead.getSecurityAmount()) : "",
-                    lead.getDownPaymentCollateral() != null ? lead.getDownPaymentCollateral() : "",
+                    lead.getDownPaymentCollateral() != null ? String.valueOf(lead.getDownPaymentCollateral()) : "",
                     // 3. Income Profile
                     lead.getEmploymentType() != null ? lead.getEmploymentType() : "",
                     lead.getAnnualIncome() != null ? String.valueOf(lead.getAnnualIncome()) : "",

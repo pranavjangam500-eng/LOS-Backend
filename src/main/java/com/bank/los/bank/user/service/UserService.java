@@ -1,5 +1,16 @@
 package com.bank.los.bank.user.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.bank.los.administration.master.entity.LoginDirectory;
 import com.bank.los.administration.master.entity.Organization;
 import com.bank.los.administration.master.repository.LoginDirectoryRepository;
@@ -29,17 +40,9 @@ import com.bank.los.bank.master.repository.BankLookupTypeRepository;
 import com.bank.los.config.BankContext;
 import com.bank.los.config.OrganizationContext;
 import com.bank.los.security.UserPrincipal;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -60,6 +63,9 @@ public class UserService {
 
 
     public List<UserResponse> getAllUsers(UserPrincipal principal, Long organizationId) {
+        if (principal == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
+        }
         boolean isInternalAdmin = isInternalAdmin(principal);
 
         if (isInternalAdmin) {
@@ -101,7 +107,7 @@ public class UserService {
                 );
             }
             Organization org = null;
-            if (principal != null && principal.getOrganizationId() != null) {
+            if (principal.getOrganizationId() != null) {
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
                 org = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
             }
@@ -115,6 +121,9 @@ public class UserService {
     }
 
     public UserResponse getUserById(UserPrincipal principal, Long id, Long organizationId) {
+        if (principal == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
+        }
         boolean isInternalAdmin = isInternalAdmin(principal);
         Organization targetOrg = null;
 
@@ -135,7 +144,7 @@ public class UserService {
                         "Access denied: You cannot access users of another organization"
                 );
             }
-            if (principal != null && principal.getOrganizationId() != null) {
+            if (principal.getOrganizationId() != null) {
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
                 targetOrg = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
             }
@@ -196,7 +205,8 @@ public class UserService {
         }
         if (request.getEmpNo() != null && !request.getEmpNo().isBlank()) {
             String candidateEmpNo = request.getEmpNo().trim();
-            if (loginDirectoryRepository.findByUserCode(candidateEmpNo).isPresent()) {
+            if (loginDirectoryRepository.findByUserCode(candidateEmpNo).isPresent()
+                    || loginDirectoryRepository.existsByUserCode(candidateEmpNo)) {
                 throw new BusinessException("EMP_NO_EXISTS", "User with employee number '" + candidateEmpNo + "' is already registered in the platform");
             }
         }
@@ -215,21 +225,27 @@ public class UserService {
 
         if ((firstName == null || firstName.isBlank()) && request.getName() != null && !request.getName().isBlank()) {
             String[] parts = request.getName().trim().split("\\s+");
-            if (parts.length == 1) {
-                firstName = parts[0];
-                lastName = parts[0];
-            } else if (parts.length == 2) {
-                firstName = parts[0];
-                lastName = parts[1];
-            } else {
-                firstName = parts[0];
-                middleName = parts[1];
-                StringBuilder sb = new StringBuilder();
-                for (int i = 2; i < parts.length; i++) {
-                    if (i > 2) sb.append(" ");
-                    sb.append(parts[i]);
+            switch (parts.length) {
+                case 1 -> {
+                    firstName = parts[0];
+                    lastName = parts[0];
                 }
-                lastName = sb.toString();
+                case 2 -> {
+                    firstName = parts[0];
+                    lastName = parts[1];
+                }
+                default -> {
+                    firstName = parts[0];
+                    middleName = parts[1];
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 2; i < parts.length; i++) {
+                        if (i > 2) {
+                            sb.append(" ");
+                        }
+                        sb.append(parts[i]);
+                    }
+                    lastName = sb.toString();
+                }
             }
         }
 
@@ -261,16 +277,16 @@ public class UserService {
         // 4. Validate and resolve Designation against lookup 10002
         String designationCode = validateAndResolveDesignation(request.getDesignation());
 
-
-        // 4. Resolve Branch in organization DB
+        // 5. Resolve Branch in organization DB
         Branch loginBranch = null;
         Long targetBranchId = request.getLoginBranchId();
         String branchIdentifier = request.getLoginBranch();
 
         if (targetBranchId == null && branchIdentifier != null && !branchIdentifier.isBlank()) {
             try {
-                targetBranchId = Long.parseLong(branchIdentifier.trim());
-            } catch (NumberFormatException ignored) {}
+                targetBranchId = Long.valueOf(branchIdentifier.trim());
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         if (targetBranchId != null) {
@@ -299,14 +315,15 @@ public class UserService {
         if (empNo == null || empNo.isBlank()) {
             do {
                 empNo = "EMP-" + orgCode + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-            } while (organizationUserRepository.existsByEmpNo(empNo) || organizationUserRepository.existsByEmpNoIgnoreCase(empNo));
+            } while (organizationUserRepository.existsByEmpNo(empNo)
+                    || organizationUserRepository.existsByEmpNoIgnoreCase(empNo));
         } else {
             empNo = empNo.trim();
-            if (organizationUserRepository.existsByEmpNo(empNo) || organizationUserRepository.existsByEmpNoIgnoreCase(empNo)) {
+            if (organizationUserRepository.existsByEmpNo(empNo)
+                    || organizationUserRepository.existsByEmpNoIgnoreCase(empNo)) {
                 throw new BusinessException("EMP_NO_EXISTS", "User with employee number '" + empNo + "' already exists in " + org.getName());
             }
         }
-
         String initialStatus = request.getStatus();
         if (initialStatus == null || initialStatus.isBlank()) {
             boolean isStaffSuperAdmin = principal != null && ApplicationConstants.Roles.SUPER_ADMIN.equalsIgnoreCase(principal.getRole());
@@ -318,7 +335,23 @@ public class UserService {
             twoFa = true;
         }
 
-        Long creatorId = principal != null ? principal.getId() : (request.getCreatedBy() != null ? request.getCreatedBy() : 1L);
+        Long creatorId;
+        if (principal != null && principal.getId() != null) {
+            creatorId = principal.getId();
+        } else if (request.getCreatedBy() != null) {
+            creatorId = request.getCreatedBy();
+        } else {
+            creatorId = 1L;
+        }
+
+        Integer timeout = request.getInactiveSessionTimeout();
+        if (timeout == null) {
+            timeout = 1800;
+        }
+        Integer badLogins = request.getNoOfBadLogins();
+        if (badLogins == null) {
+            badLogins = 0;
+        }
 
         OrganizationUser user = OrganizationUser.builder()
                 .empNo(empNo)
@@ -342,16 +375,25 @@ public class UserService {
 
                 .loginTime(request.getLoginTime())
                 .logoutTime(request.getLogoutTime())
-                .inactiveSessionTimeout(request.getInactiveSessionTimeout() != null ? request.getInactiveSessionTimeout() : 1800)
+                .inactiveSessionTimeout(timeout)
                 .lastLoginDate(request.getLastLoginDate())
-                .noOfBadLogins(request.getNoOfBadLogins() != null ? request.getNoOfBadLogins() : 0)
+                .noOfBadLogins(badLogins)
                 .verifiedBy(request.getVerifiedBy())
                 .verifiedDate(request.getVerifiedDate())
                 .modifiedBy(request.getModifiedBy())
                 .build();
         user.setCreatedBy(creatorId);
 
-        OrganizationUser savedUser = organizationUserRepository.save(user);
+        OrganizationUser savedUser;
+        try {
+            savedUser = organizationUserRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            String msg = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+            if (msg.contains("emp_no") || msg.contains("empno") || msg.contains("users_emp_no")) {
+                throw new BusinessException("EMP_NO_EXISTS", "User with Employee Number '" + empNo + "' already exists in " + org.getName());
+            }
+            throw ex;
+        }
 
         // 5. Register in Master Login Directory for dynamic routing
         try {
@@ -365,6 +407,12 @@ public class UserService {
                     .build();
 
             loginDirectoryRepository.save(loginDirectory);
+        } catch (DataIntegrityViolationException ex) {
+            String msg = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+            if (msg.contains("user_code") || msg.contains("usercode") || msg.contains("emp_no")) {
+                throw new BusinessException("EMP_NO_EXISTS", "User with Employee Number '" + savedUser.getEmpNo() + "' is already registered in the platform");
+            }
+            throw ex;
         } finally {
             OrganizationContext.setCurrentOrganization(orgDb);
             OrganizationContext.setCurrentOrgCode(orgCode);
@@ -396,7 +444,7 @@ public class UserService {
         OrganizationUser updated = organizationUserRepository.save(user);
         log.info("User id={} verified and marked OPERATIVE by verifier={}", userId, principal.getId());
         Organization org = null;
-        if (principal != null && principal.getOrganizationId() != null) {
+        if (principal.getOrganizationId() != null) {
             OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
             org = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
             OrganizationContext.setCurrentOrganization(orgDb);
@@ -423,6 +471,9 @@ public class UserService {
     }
 
     public UserResponse updateUser(UserPrincipal principal, Long userId, UpdateUserRequest request, Long organizationId) {
+        if (principal == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
+        }
         boolean isInternalAdmin = isInternalAdmin(principal);
         Organization targetOrg = null;
 
@@ -447,7 +498,8 @@ public class UserService {
                             targetOrg = candidate;
                             break;
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
                 if (targetOrg == null) {
                     throw new ResourceNotFoundException("User", "id", userId);
@@ -459,7 +511,7 @@ public class UserService {
                         "Access denied: You cannot modify users of another organization"
                 );
             }
-            if (principal != null && principal.getOrganizationId() != null) {
+            if (principal.getOrganizationId() != null) {
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
                 targetOrg = organizationRepository.findById(principal.getOrganizationId()).orElse(null);
             }
@@ -474,20 +526,24 @@ public class UserService {
         // Name
         if (request.getName() != null && !request.getName().isBlank()) {
             String[] parts = request.getName().trim().split("\\s+");
-            if (parts.length == 1) {
-                user.setFirstName(parts[0]);
-            } else if (parts.length == 2) {
-                user.setFirstName(parts[0]);
-                user.setLastName(parts[1]);
-            } else {
-                user.setFirstName(parts[0]);
-                user.setMiddleName(parts[1]);
-                StringBuilder sb = new StringBuilder();
-                for (int i = 2; i < parts.length; i++) {
-                    if (i > 2) sb.append(" ");
-                    sb.append(parts[i]);
+            switch (parts.length) {
+                case 1 -> user.setFirstName(parts[0]);
+                case 2 -> {
+                    user.setFirstName(parts[0]);
+                    user.setLastName(parts[1]);
                 }
-                user.setLastName(sb.toString());
+                default -> {
+                    user.setFirstName(parts[0]);
+                    user.setMiddleName(parts[1]);
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 2; i < parts.length; i++) {
+                        if (i > 2) {
+                            sb.append(" ");
+                        }
+                        sb.append(parts[i]);
+                    }
+                    user.setLastName(sb.toString());
+                }
             }
         }
         if (request.getFirstName() != null && !request.getFirstName().isBlank()) {
@@ -544,17 +600,22 @@ public class UserService {
         String branchIdentifier = request.getLoginBranch();
         if (targetBranchId == null && branchIdentifier != null && !branchIdentifier.isBlank()) {
             try {
-                targetBranchId = Long.parseLong(branchIdentifier.trim());
-            } catch (NumberFormatException ignored) {}
+                targetBranchId = Long.valueOf(branchIdentifier.trim());
+            } catch (NumberFormatException ignored) {
+            }
         }
         if (targetBranchId != null) {
             Branch branch = branchRepository.findById(targetBranchId).orElse(null);
-            if (branch != null) user.setLoginBranch(branch);
+            if (branch != null) {
+                user.setLoginBranch(branch);
+            }
         } else if (branchIdentifier != null && !branchIdentifier.isBlank()) {
             Branch branch = branchRepository.findByName(branchIdentifier.trim())
                     .or(() -> branchRepository.findByCode(branchIdentifier.trim()))
                     .orElse(null);
-            if (branch != null) user.setLoginBranch(branch);
+            if (branch != null) {
+                user.setLoginBranch(branch);
+            }
         }
 
         if (request.getTwoFaEnabled() != null) {
@@ -582,9 +643,7 @@ public class UserService {
             user.setInactiveSessionTimeout(request.getInactiveSessionTimeout());
         }
 
-        if (principal != null) {
-            user.setModifiedBy(principal.getId());
-        }
+        user.setModifiedBy(principal.getId());
         user.setUpdatedAt(LocalDateTime.now());
 
         OrganizationUser updatedUser = organizationUserRepository.save(user);
@@ -606,7 +665,7 @@ public class UserService {
         }
 
         log.info("Successfully updated user id={} username={} by principal={}",
-                updatedUser.getId(), updatedUser.getUsername(), principal != null ? principal.getId() : null);
+                updatedUser.getId(), updatedUser.getUsername(), principal.getId());
 
         return mapToResponse(updatedUser, finalOrg);
     }
@@ -748,6 +807,10 @@ public class UserService {
         }
 
         String code = roleInput.trim();
+        String resolvedCode = resolveRoleLookupCode(code);
+        if (resolvedCode != null) {
+            code = resolvedCode;
+        }
 
         // 1. Look up in bank database by code ONLY
         BankLookupSubType subType = bankLookupSubTypeRepository
@@ -821,7 +884,6 @@ public class UserService {
             default -> null;
         };
     }
-
     private boolean isInternalAdmin(UserPrincipal principal) {
         return principal != null && principal.isPlatformAdmin();
     }
@@ -830,13 +892,20 @@ public class UserService {
         String name = roleName != null ? roleName.trim().toUpperCase() : "ADMIN";
         String panel = "CUSTOMER".equalsIgnoreCase(name) ? "CUSTOMER" : "BANK_NBFC";
         String description = switch (name) {
-            case "SUPER_ADMIN" -> "Bank/NBFC Super Admin — full control within this Bank/NBFC";
-            case "ADMIN" -> "Bank/NBFC internal admin — configures org and manages users";
-            case "MAKER" -> "Creates and initiates loan records for Checker approval";
-            case "CHECKER" -> "Reviews and approves Maker actions";
-            case "VIEWER" -> "Read-only access";
-            case "CUSTOMER" -> "Loan applicant";
-            default -> name + " role";
+            case "SUPER_ADMIN" ->
+                "Bank/NBFC Super Admin — full control within this Bank/NBFC";
+            case "ADMIN" ->
+                "Bank/NBFC internal admin — configures org and manages users";
+            case "MAKER" ->
+                "Creates and initiates loan records for Checker approval";
+            case "CHECKER" ->
+                "Reviews and approves Maker actions";
+            case "VIEWER" ->
+                "Read-only access";
+            case "CUSTOMER" ->
+                "Loan applicant";
+            default ->
+                name + " role";
         };
         return organizationRoleRepository.save(OrganizationRole.builder()
                 .name(name)
