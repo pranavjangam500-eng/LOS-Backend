@@ -34,9 +34,6 @@ class LeadControllerIntegrationTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private LeadRepository leadRepository;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     private String adminToken;

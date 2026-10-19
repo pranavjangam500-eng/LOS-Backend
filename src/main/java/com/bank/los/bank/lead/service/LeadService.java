@@ -203,14 +203,6 @@ public class LeadService {
     }
 
     /**
-     * Overload for direct Lead entity calls.
-     */
-    @Transactional
-    public Lead createLead(Lead lead) {
-        return createLead((LeadRequest) lead);
-    }
-
-    /**
      * Imports multiple leads in bulk from an uploaded CSV input stream.
      * Validates each row against business rules, auto-generates IDs if omitted,
      * persists valid leads into the database, and reports row-level errors for invalid rows.
@@ -589,14 +581,6 @@ public class LeadService {
 
         existingLead.setUpdatedAt(LocalDateTime.now());
         return leadRepository.save(existingLead);
-    }
-
-    /**
-     * Overload for direct Lead entity calls.
-     */
-    @Transactional
-    public Lead updateLead(String leadId, Lead lead) {
-        return updateLead(leadId, (LeadRequest) lead);
     }
 
     /**
