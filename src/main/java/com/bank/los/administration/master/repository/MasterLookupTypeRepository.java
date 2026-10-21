@@ -26,5 +26,8 @@ public interface MasterLookupTypeRepository extends JpaRepository<MasterLookupTy
 
     boolean existsByDescriptionIgnoreCaseAndCodeNot(String description, String code);
 
+    @Query("SELECT t FROM MasterLookupType t WHERE t.ownerType = 'INTERNAL_ADMIN' OR t.ownerBankId = :bankId ORDER BY t.code ASC")
+    java.util.List<MasterLookupType> findAllVisibleToBank(@Param("bankId") Long bankId);
+
     void deleteByCode(String code);
 }

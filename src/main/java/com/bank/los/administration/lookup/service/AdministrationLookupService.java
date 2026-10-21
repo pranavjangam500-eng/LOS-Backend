@@ -133,25 +133,59 @@ public class AdministrationLookupService {
     }
 
     // =========================================================================
-    //  MASTER LOOKUP TYPES (CENTRAL ADMIN)
+    //  MASTER LOOKUP TYPES (CENTRAL ADMIN & BANK VISIBILITY)
     // =========================================================================
 
+    private void validateModificationAccess(String ownerType, Long ownerBankId, UserPrincipal principal) {
+        if (principal == null || principal.isPlatformAdmin()) {
+            return; // Platform admin can modify all
+        }
+        if (ownerType == null || "INTERNAL_ADMIN".equalsIgnoreCase(ownerType)) {
+            throw new org.springframework.security.access.AccessDeniedException("This lookup is managed by the platform and cannot be modified.");
+        }
+        if ("BANK".equalsIgnoreCase(ownerType)) {
+            Long userBankId = principal.getOrganizationId();
+            if (userBankId == null || !userBankId.equals(ownerBankId)) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You do not have permission to modify this bank lookup.");
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
-    public List<LookupTypeResponse> getAllLookupTypes() {
+    public List<LookupTypeResponse> getAllLookupTypes(UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        if (principal != null && !principal.isPlatformAdmin()) {
+            Long bankId = principal.getOrganizationId();
+            return masterLookupTypeRepository.findAllVisibleToBank(bankId).stream()
+                    .map(t -> mapToResponse(t, false, principal))
+                    .collect(Collectors.toList());
+        }
         return masterLookupTypeRepository.findAll(Sort.by(Sort.Direction.ASC, "code")).stream()
-                .map(t -> mapToResponse(t, false))
+                .map(t -> mapToResponse(t, false, principal))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public PagedLookupResponse<LookupTypeResponse> searchLookupTypes(String search, String status, int page, int size) {
+    public List<LookupTypeResponse> getAllLookupTypes() {
+        return getAllLookupTypes(null);
+    }
+
+    @Transactional(readOnly = true)
+    public PagedLookupResponse<LookupTypeResponse> searchLookupTypes(String search, String status, int page, int size, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
         Specification<MasterLookupType> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            if (principal != null && !principal.isPlatformAdmin()) {
+                Long bankId = principal.getOrganizationId();
+                predicates.add(cb.or(
+                        cb.equal(root.get("ownerType"), "INTERNAL_ADMIN"),
+                        cb.isNull(root.get("ownerType")),
+                        cb.equal(root.get("ownerBankId"), bankId)
+                ));
+            }
             if (search != null && !search.isBlank()) {
                 String pattern = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
@@ -170,7 +204,7 @@ public class AdministrationLookupService {
         Page<MasterLookupType> pagedResult = masterLookupTypeRepository.findAll(spec, pageable);
 
         List<LookupTypeResponse> items = pagedResult.getContent().stream()
-                .map(t -> mapToResponse(t, false))
+                .map(t -> mapToResponse(t, false, principal))
                 .collect(Collectors.toList());
 
         return PagedLookupResponse.<LookupTypeResponse>builder()
@@ -183,12 +217,32 @@ public class AdministrationLookupService {
     }
 
     @Transactional(readOnly = true)
-    public LookupTypeResponse getLookupTypeByCode(String code) {
+    public PagedLookupResponse<LookupTypeResponse> searchLookupTypes(String search, String status, int page, int size) {
+        return searchLookupTypes(search, status, page, size, null);
+    }
+
+    @Transactional(readOnly = true)
+    public LookupTypeResponse getLookupTypeByCode(String code, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         MasterLookupType type = masterLookupTypeRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + code));
-        return mapToResponse(type, true);
+
+        if (principal != null && !principal.isPlatformAdmin()) {
+            Long bankId = principal.getOrganizationId();
+            boolean isVisible = "INTERNAL_ADMIN".equalsIgnoreCase(type.getOwnerType()) ||
+                    type.getOwnerType() == null ||
+                    (bankId != null && bankId.equals(type.getOwnerBankId()));
+            if (!isVisible) {
+                throw new ResourceNotFoundException("Master lookup type not found with code: " + code);
+            }
+        }
+        return mapToResponse(type, true, principal);
+    }
+
+    @Transactional(readOnly = true)
+    public LookupTypeResponse getLookupTypeByCode(String code) {
+        return getLookupTypeByCode(code, null);
     }
 
     @Transactional
@@ -213,12 +267,17 @@ public class AdministrationLookupService {
         String generatedCode = generateNextLookupTypeCode();
 
         boolean isActive = !"INACTIVE".equalsIgnoreCase(request.getStatus());
+        boolean isPlatformAdmin = principal == null || principal.isPlatformAdmin();
+        String ownerType = isPlatformAdmin ? "INTERNAL_ADMIN" : "BANK";
+        Long ownerBankId = isPlatformAdmin ? null : principal.getOrganizationId();
 
         MasterLookupType lookupType = MasterLookupType.builder()
                 .code(generatedCode)
                 .description(typeName)
                 .isFixed(Boolean.TRUE.equals(request.getIsFixed()))
                 .isActive(isActive)
+                .ownerType(ownerType)
+                .ownerBankId(ownerBankId)
                 .createdBy(principal != null ? principal.getId() : null)
                 .build();
 
@@ -238,9 +297,9 @@ public class AdministrationLookupService {
             }
         }
 
-        log.info("Created new Master Lookup Type code={} name='{}' by admin={}",
-                saved.getCode(), saved.getDescription(), principal != null ? principal.getEmail() : "SYSTEM");
-        return mapToResponse(saved, true);
+        log.info("Created new Master Lookup Type code={} name='{}' ownerType={} by user={}",
+                saved.getCode(), saved.getDescription(), ownerType, principal != null ? principal.getEmail() : "SYSTEM");
+        return mapToResponse(saved, true, principal);
     }
 
     @Transactional
@@ -250,6 +309,8 @@ public class AdministrationLookupService {
 
         MasterLookupType type = masterLookupTypeRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + code));
+
+        validateModificationAccess(type.getOwnerType(), type.getOwnerBankId(), principal);
 
         String newName = request.getName() != null ? request.getName().trim() : "";
         if (newName.isEmpty() && request.getDescription() != null) {
@@ -290,8 +351,8 @@ public class AdministrationLookupService {
             }
         }
 
-        log.info("Updated Master Lookup Type code={} by admin={}", saved.getCode(), principal != null ? principal.getEmail() : "SYSTEM");
-        return mapToResponse(saved, true);
+        log.info("Updated Master Lookup Type code={} by user={}", saved.getCode(), principal != null ? principal.getEmail() : "SYSTEM");
+        return mapToResponse(saved, true, principal);
     }
 
     @Transactional
@@ -302,11 +363,13 @@ public class AdministrationLookupService {
         MasterLookupType type = masterLookupTypeRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + code));
 
+        validateModificationAccess(type.getOwnerType(), type.getOwnerBankId(), principal);
+
         type.setIsActive(true);
         type.setModifiedBy(principal != null ? principal.getId() : null);
         MasterLookupType saved = masterLookupTypeRepository.save(type);
         log.info("Activated Master Lookup Type code={}", code);
-        return mapToResponse(saved, true);
+        return mapToResponse(saved, true, principal);
     }
 
     @Transactional
@@ -317,6 +380,8 @@ public class AdministrationLookupService {
         MasterLookupType type = masterLookupTypeRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + code));
 
+        validateModificationAccess(type.getOwnerType(), type.getOwnerBankId(), principal);
+
         if (Boolean.TRUE.equals(type.getIsFixed())) {
             throw new BusinessException("CANNOT_DEACTIVATE_FIXED", "Cannot deactivate system-fixed lookup type: " + code);
         }
@@ -325,16 +390,18 @@ public class AdministrationLookupService {
         type.setModifiedBy(principal != null ? principal.getId() : null);
         MasterLookupType saved = masterLookupTypeRepository.save(type);
         log.info("Deactivated Master Lookup Type code={}", code);
-        return mapToResponse(saved, true);
+        return mapToResponse(saved, true, principal);
     }
 
     @Transactional
-    public void deleteLookupType(String code) {
+    public void deleteLookupType(String code, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
         MasterLookupType type = masterLookupTypeRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + code));
+
+        validateModificationAccess(type.getOwnerType(), type.getOwnerBankId(), principal);
 
         if (Boolean.TRUE.equals(type.getIsFixed())) {
             throw new BusinessException("CANNOT_DELETE_FIXED", "Cannot delete system fixed master lookup type: " + code);
@@ -346,17 +413,34 @@ public class AdministrationLookupService {
         log.info("Deleted Master Lookup Type code={}", code);
     }
 
+    @Transactional
+    public void deleteLookupType(String code) {
+        deleteLookupType(code, null);
+    }
+
     // =========================================================================
-    //  MASTER LOOKUP SUB-TYPES / OPTIONS (CENTRAL ADMIN)
+    //  MASTER LOOKUP SUB-TYPES / OPTIONS (CENTRAL ADMIN & BANK VISIBILITY)
     // =========================================================================
 
     @Transactional(readOnly = true)
-    public List<LookupSubTypeResponse> getSubTypesByLookupTypeCode(String lookupTypeCode) {
+    public List<LookupSubTypeResponse> getSubTypesByLookupTypeCode(String lookupTypeCode, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
-        if (!masterLookupTypeRepository.existsByCode(lookupTypeCode)) {
-            throw new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode);
+        MasterLookupType type = masterLookupTypeRepository.findByCode(lookupTypeCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode));
+
+        if (principal != null && !principal.isPlatformAdmin()) {
+            Long bankId = principal.getOrganizationId();
+            boolean isVisible = "INTERNAL_ADMIN".equalsIgnoreCase(type.getOwnerType()) ||
+                    type.getOwnerType() == null ||
+                    (bankId != null && bankId.equals(type.getOwnerBankId()));
+            if (!isVisible) {
+                throw new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode);
+            }
+            return masterLookupSubTypeRepository.findVisibleToBank(lookupTypeCode, bankId).stream()
+                    .map(this::mapSubTypeToResponse)
+                    .collect(Collectors.toList());
         }
 
         return masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc(lookupTypeCode).stream()
@@ -365,18 +449,40 @@ public class AdministrationLookupService {
     }
 
     @Transactional(readOnly = true)
+    public List<LookupSubTypeResponse> getSubTypesByLookupTypeCode(String lookupTypeCode) {
+        return getSubTypesByLookupTypeCode(lookupTypeCode, null);
+    }
+
+    @Transactional(readOnly = true)
     public PagedLookupResponse<LookupSubTypeResponse> searchLookupSubTypes(
-            String lookupTypeCode, String search, String status, int page, int size) {
+            String lookupTypeCode, String search, String status, int page, int size, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
-        if (!masterLookupTypeRepository.existsByCode(lookupTypeCode)) {
-            throw new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode);
+        MasterLookupType type = masterLookupTypeRepository.findByCode(lookupTypeCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode));
+
+        if (principal != null && !principal.isPlatformAdmin()) {
+            Long bankId = principal.getOrganizationId();
+            boolean isVisible = "INTERNAL_ADMIN".equalsIgnoreCase(type.getOwnerType()) ||
+                    type.getOwnerType() == null ||
+                    (bankId != null && bankId.equals(type.getOwnerBankId()));
+            if (!isVisible) {
+                throw new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode);
+            }
         }
 
         Specification<MasterLookupSubType> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("lookupTypeCode"), lookupTypeCode));
+            if (principal != null && !principal.isPlatformAdmin()) {
+                Long bankId = principal.getOrganizationId();
+                predicates.add(cb.or(
+                        cb.equal(root.get("ownerType"), "INTERNAL_ADMIN"),
+                        cb.isNull(root.get("ownerType")),
+                        cb.equal(root.get("ownerBankId"), bankId)
+                ));
+            }
             if (search != null && !search.isBlank()) {
                 String pattern = "%" + search.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
@@ -407,6 +513,12 @@ public class AdministrationLookupService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public PagedLookupResponse<LookupSubTypeResponse> searchLookupSubTypes(
+            String lookupTypeCode, String search, String status, int page, int size) {
+        return searchLookupSubTypes(lookupTypeCode, search, status, page, size, null);
+    }
+
     @Transactional
     public LookupSubTypeResponse addSubType(String lookupTypeCode, CreateLookupSubTypeRequest request, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
@@ -415,6 +527,16 @@ public class AdministrationLookupService {
         // 1. Pessimistic lock on parent type row
         MasterLookupType type = masterLookupTypeRepository.findByCodeForUpdate(lookupTypeCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode));
+
+        if (principal != null && !principal.isPlatformAdmin()) {
+            Long bankId = principal.getOrganizationId();
+            boolean isVisible = "INTERNAL_ADMIN".equalsIgnoreCase(type.getOwnerType()) ||
+                    type.getOwnerType() == null ||
+                    (bankId != null && bankId.equals(type.getOwnerBankId()));
+            if (!isVisible) {
+                throw new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode);
+            }
+        }
 
         String subTypeName = request.getName() != null ? request.getName().trim() : "";
         if (subTypeName.isEmpty() && request.getSubTypeDescription() != null) {
@@ -452,6 +574,10 @@ public class AdministrationLookupService {
         int displayOrder = request.getDisplayOrder() != null ? request.getDisplayOrder() : (maxDisplayOrder + 1);
         boolean isActive = !"INACTIVE".equalsIgnoreCase(request.getStatus());
 
+        boolean isPlatformAdmin = principal == null || principal.isPlatformAdmin();
+        String ownerType = isPlatformAdmin ? "INTERNAL_ADMIN" : "BANK";
+        Long ownerBankId = isPlatformAdmin ? null : principal.getOrganizationId();
+
         MasterLookupSubType subType = MasterLookupSubType.builder()
                 .lookupTypeCode(lookupTypeCode)
                 .typeDescription(type.getDescription())
@@ -460,12 +586,14 @@ public class AdministrationLookupService {
                 .isFixed(Boolean.TRUE.equals(request.getIsFixed()))
                 .isActive(isActive)
                 .displayOrder(displayOrder)
+                .ownerType(ownerType)
+                .ownerBankId(ownerBankId)
                 .createdBy(principal != null ? principal.getId() : null)
                 .build();
 
         MasterLookupSubType saved = masterLookupSubTypeRepository.save(subType);
-        log.info("Added SubType code={} name='{}' to Master Lookup Type={} by admin={}",
-                saved.getSubTypeCode(), saved.getSubTypeDescription(), lookupTypeCode, principal != null ? principal.getEmail() : "SYSTEM");
+        log.info("Added SubType code={} name='{}' to Master Lookup Type={} ownerType={} by user={}",
+                saved.getSubTypeCode(), saved.getSubTypeDescription(), lookupTypeCode, ownerType, principal != null ? principal.getEmail() : "SYSTEM");
         return mapSubTypeToResponse(saved);
     }
 
@@ -476,6 +604,8 @@ public class AdministrationLookupService {
 
         MasterLookupSubType subType = masterLookupSubTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup sub-type not found with id: " + id));
+
+        validateModificationAccess(subType.getOwnerType(), subType.getOwnerBankId(), principal);
 
         String newName = request.getName() != null ? request.getName().trim() : "";
         if (newName.isEmpty() && request.getSubTypeDescription() != null) {
@@ -522,6 +652,8 @@ public class AdministrationLookupService {
         MasterLookupSubType subType = masterLookupSubTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup sub-type not found with id: " + id));
 
+        validateModificationAccess(subType.getOwnerType(), subType.getOwnerBankId(), principal);
+
         subType.setIsActive(true);
         subType.setModifiedBy(principal != null ? principal.getId() : null);
         MasterLookupSubType saved = masterLookupSubTypeRepository.save(subType);
@@ -537,6 +669,8 @@ public class AdministrationLookupService {
         MasterLookupSubType subType = masterLookupSubTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup sub-type not found with id: " + id));
 
+        validateModificationAccess(subType.getOwnerType(), subType.getOwnerBankId(), principal);
+
         MasterLookupType parentType = masterLookupTypeRepository.findByCode(subType.getLookupTypeCode()).orElse(null);
         if (Boolean.TRUE.equals(subType.getIsFixed()) || (parentType != null && Boolean.TRUE.equals(parentType.getIsFixed()))) {
             throw new BusinessException("CANNOT_DEACTIVATE_FIXED",
@@ -551,12 +685,14 @@ public class AdministrationLookupService {
     }
 
     @Transactional
-    public void deleteSubType(Long id) {
+    public void deleteSubType(Long id, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
         MasterLookupSubType subType = masterLookupSubTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Master lookup sub-type not found with id: " + id));
+
+        validateModificationAccess(subType.getOwnerType(), subType.getOwnerBankId(), principal);
 
         MasterLookupType parentType = masterLookupTypeRepository.findByCode(subType.getLookupTypeCode()).orElse(null);
         if (Boolean.TRUE.equals(subType.getIsFixed()) || (parentType != null && Boolean.TRUE.equals(parentType.getIsFixed()))) {
@@ -568,12 +704,17 @@ public class AdministrationLookupService {
         log.info("Deleted Master Lookup SubType id={}", id);
     }
 
+    @Transactional
+    public void deleteSubType(Long id) {
+        deleteSubType(id, null);
+    }
+
     // =========================================================================
-    //  DROPDOWN OPTIONS FOR INTERNAL ADMIN PANEL
+    //  DROPDOWN OPTIONS FOR INTERNAL ADMIN PANEL & BANK APIS
     // =========================================================================
 
     @Transactional(readOnly = true)
-    public List<LookupOptionResponse> getActiveOptionsByLookupCode(String lookupTypeCode) {
+    public List<LookupOptionResponse> getActiveOptionsByLookupCode(String lookupTypeCode, UserPrincipal principal) {
         BankContext.setCurrentBank(BankContext.MASTER_DB_NAME);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
 
@@ -584,8 +725,20 @@ public class AdministrationLookupService {
             throw new ResourceNotFoundException("Master lookup type is not active with code: " + lookupTypeCode);
         }
 
-        List<MasterLookupSubType> activeSubTypes = masterLookupSubTypeRepository
-                .findByLookupTypeCodeAndIsActiveTrueOrderByDisplayOrderAscIdAsc(lookupTypeCode);
+        List<MasterLookupSubType> activeSubTypes;
+        if (principal != null && !principal.isPlatformAdmin()) {
+            Long bankId = principal.getOrganizationId();
+            boolean isVisible = "INTERNAL_ADMIN".equalsIgnoreCase(type.getOwnerType()) ||
+                    type.getOwnerType() == null ||
+                    (bankId != null && bankId.equals(type.getOwnerBankId()));
+            if (!isVisible) {
+                throw new ResourceNotFoundException("Master lookup type not found with code: " + lookupTypeCode);
+            }
+            activeSubTypes = masterLookupSubTypeRepository.findActiveVisibleToBank(lookupTypeCode, bankId);
+        } else {
+            activeSubTypes = masterLookupSubTypeRepository
+                    .findByLookupTypeCodeAndIsActiveTrueOrderByDisplayOrderAscIdAsc(lookupTypeCode);
+        }
 
         return activeSubTypes.stream()
                 .map(st -> LookupOptionResponse.builder()
@@ -593,6 +746,11 @@ public class AdministrationLookupService {
                         .description(st.getSubTypeDescription())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<LookupOptionResponse> getActiveOptionsByLookupCode(String lookupTypeCode) {
+        return getActiveOptionsByLookupCode(lookupTypeCode, null);
     }
 
     // =========================================================================
@@ -766,22 +924,34 @@ public class AdministrationLookupService {
     //  MAPPERS
     // =========================================================================
 
-    public LookupTypeResponse mapToResponse(MasterLookupType entity, boolean includeSubTypes) {
+    public LookupTypeResponse mapToResponse(MasterLookupType entity, boolean includeSubTypes, UserPrincipal principal) {
         List<LookupSubTypeResponse> subTypeResponses = null;
         long count = 0;
-        if (entity.getSubTypes() != null && !entity.getSubTypes().isEmpty()) {
-            count = entity.getSubTypes().size();
+        boolean isBank = principal != null && !principal.isPlatformAdmin();
+        Long bankId = isBank ? principal.getOrganizationId() : null;
+
+        if (isBank) {
+            count = masterLookupSubTypeRepository.countVisibleToBank(entity.getCode(), bankId);
             if (includeSubTypes) {
-                subTypeResponses = entity.getSubTypes().stream()
+                subTypeResponses = masterLookupSubTypeRepository.findVisibleToBank(entity.getCode(), bankId).stream()
                         .map(this::mapSubTypeToResponse)
                         .collect(Collectors.toList());
             }
         } else {
-            count = masterLookupSubTypeRepository.countByLookupTypeCode(entity.getCode());
-            if (includeSubTypes) {
-                subTypeResponses = masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc(entity.getCode()).stream()
-                        .map(this::mapSubTypeToResponse)
-                        .collect(Collectors.toList());
+            if (entity.getSubTypes() != null && !entity.getSubTypes().isEmpty()) {
+                count = entity.getSubTypes().size();
+                if (includeSubTypes) {
+                    subTypeResponses = entity.getSubTypes().stream()
+                            .map(this::mapSubTypeToResponse)
+                            .collect(Collectors.toList());
+                }
+            } else {
+                count = masterLookupSubTypeRepository.countByLookupTypeCode(entity.getCode());
+                if (includeSubTypes) {
+                    subTypeResponses = masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc(entity.getCode()).stream()
+                            .map(this::mapSubTypeToResponse)
+                            .collect(Collectors.toList());
+                }
             }
         }
 
@@ -799,6 +969,8 @@ public class AdministrationLookupService {
                 .status(Boolean.TRUE.equals(entity.getIsActive()) ? "ACTIVE" : "INACTIVE")
                 .isFixed(entity.getIsFixed())
                 .isActive(entity.getIsActive())
+                .ownerType(entity.getOwnerType() != null ? entity.getOwnerType() : "INTERNAL_ADMIN")
+                .ownerBankId(entity.getOwnerBankId())
                 .subTypeCount(count)
                 .permissions(permCodes)
                 .createdBy(entity.getCreatedBy())
@@ -809,8 +981,12 @@ public class AdministrationLookupService {
                 .build();
     }
 
+    public LookupTypeResponse mapToResponse(MasterLookupType entity, boolean includeSubTypes) {
+        return mapToResponse(entity, includeSubTypes, null);
+    }
+
     public LookupTypeResponse mapToResponse(MasterLookupType entity) {
-        return mapToResponse(entity, true);
+        return mapToResponse(entity, true, null);
     }
 
     public LookupSubTypeResponse mapSubTypeToResponse(MasterLookupSubType entity) {
@@ -827,6 +1003,8 @@ public class AdministrationLookupService {
                 .status(Boolean.TRUE.equals(entity.getIsActive()) ? "ACTIVE" : "INACTIVE")
                 .isFixed(entity.getIsFixed())
                 .isActive(entity.getIsActive())
+                .ownerType(entity.getOwnerType() != null ? entity.getOwnerType() : "INTERNAL_ADMIN")
+                .ownerBankId(entity.getOwnerBankId())
                 .displayOrder(entity.getDisplayOrder())
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt())

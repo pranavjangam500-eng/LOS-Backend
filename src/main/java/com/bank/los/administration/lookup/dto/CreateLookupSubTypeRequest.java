@@ -11,10 +11,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateLookupSubTypeRequest {
-
-    // Optional/ignored input; server generates code = highest numeric sub_type_code + 1
-    private String subTypeCode;
 
     @JsonProperty("name")
     @JsonAlias({"subTypeDescription", "description"})

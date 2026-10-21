@@ -63,11 +63,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest request) {
         log.warn("Data integrity violation on {}: {}", request != null ? request.getRequestURI() : "", ex.getMessage());
+        String message = "Database constraint violation occurred.";
+        String method = request != null ? request.getMethod() : "";
+        String msgLower = ex.getMessage() != null ? ex.getMessage().toLowerCase() : "";
+
+        if ("DELETE".equalsIgnoreCase(method) || msgLower.contains("foreign key") || msgLower.contains("referential integrity") || msgLower.contains("referenced from table")) {
+            message = "Cannot delete or update record because it is referenced by other records (referential integrity constraint). Please delete dependent records first or use soft delete.";
+        } else if (msgLower.contains("unique") || msgLower.contains("duplicate") || msgLower.contains("already exists")) {
+            message = "Unique constraint violation: a record with the same code or identifier already exists.";
+        }
+
         ErrorResponse error = ErrorResponse.builder()
                 .success(false)
                 .status(HttpStatus.CONFLICT.value())
                 .error("CONFLICT")
-                .message("Unique constraint violation: a record with the same code or name already exists.")
+                .message(message)
                 .path(request != null ? request.getRequestURI() : null)
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -187,6 +197,19 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .success(false)
+                .status(HttpStatus.METHOD_NOT_ALLOWED.value())
+                .error(HttpStatus.METHOD_NOT_ALLOWED.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request != null ? request.getRequestURI() : null)
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 
     @ExceptionHandler(Exception.class)

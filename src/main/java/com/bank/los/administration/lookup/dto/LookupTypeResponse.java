@@ -24,6 +24,9 @@ public class LookupTypeResponse {
     private Boolean isActive;
     private Long subTypeCount;
 
+    private String ownerType;
+    private Long ownerBankId;
+
     @Builder.Default
     private Set<String> permissions = new java.util.HashSet<>();
 

@@ -41,4 +41,8 @@ public class BankUserManagementService {
     public UserResponse updateUser(UserPrincipal principal, Long userId, UpdateUserRequest request, Long organizationId) {
         return userService.updateUser(principal, userId, request, organizationId);
     }
+
+    public void deleteUser(UserPrincipal principal, Long userId, Long organizationId, boolean hardDelete) {
+        userService.deleteUser(principal, userId, organizationId, hardDelete);
+    }
 }

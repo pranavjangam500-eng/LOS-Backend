@@ -13,10 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateLookupTypeRequest {
-
-    // Optional/ignored input; server sequence generates the unique code
-    private String code;
 
     @JsonProperty("name")
     @JsonAlias({"description"})

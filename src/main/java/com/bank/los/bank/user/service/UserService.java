@@ -119,14 +119,17 @@ public class UserService {
         Organization targetOrg = null;
 
         if (isInternalAdmin) {
+            BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
             if (organizationId != null) {
-                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
                 targetOrg = organizationRepository.findById(organizationId)
                         .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
                 bankDataSourceProvider.getOrCreateBankDataSource(targetOrg.getDbName(), targetOrg.getDbHost(), targetOrg.getDbPort());
+                BankContext.setCurrentBank(targetOrg.getDbName());
                 OrganizationContext.setCurrentOrganization(targetOrg.getDbName());
                 OrganizationContext.setCurrentOrgCode(targetOrg.getCode());
             } else {
+                BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
                 OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
             }
         } else {
@@ -143,10 +146,15 @@ public class UserService {
             OrganizationContext.setCurrentOrgCode(principal.getOrganizationCode());
         }
 
-        final Organization finalOrg = targetOrg;
-        OrganizationUser user = organizationUserRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        return mapToResponse(user, finalOrg);
+        try {
+            final Organization finalOrg = targetOrg;
+            OrganizationUser user = organizationUserRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+            return mapToResponse(user, finalOrg);
+        } finally {
+            BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        }
     }
 
     public UserResponse createUser(UserPrincipal principal, CreateUserRequest request) {
@@ -609,6 +617,98 @@ public class UserService {
                 updatedUser.getId(), updatedUser.getUsername(), principal != null ? principal.getId() : null);
 
         return mapToResponse(updatedUser, finalOrg);
+    }
+
+    public void deleteUser(UserPrincipal principal, Long userId, Long organizationId, boolean hardDelete) {
+        boolean isInternalAdmin = isInternalAdmin(principal);
+        Organization targetOrg = null;
+
+        try {
+            if (isInternalAdmin) {
+                BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+                OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                if (organizationId != null) {
+                    targetOrg = organizationRepository.findById(organizationId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
+                    bankDataSourceProvider.getOrCreateBankDataSource(targetOrg.getDbName(), targetOrg.getDbHost(), targetOrg.getDbPort());
+                    BankContext.setCurrentBank(targetOrg.getDbName());
+                    OrganizationContext.setCurrentOrganization(targetOrg.getDbName());
+                    OrganizationContext.setCurrentOrgCode(targetOrg.getCode());
+                } else {
+                    List<Organization> orgs = organizationRepository.findAll();
+                    for (Organization candidate : orgs) {
+                        try {
+                            bankDataSourceProvider.getOrCreateBankDataSource(candidate.getDbName(), candidate.getDbHost(), candidate.getDbPort());
+                            BankContext.setCurrentBank(candidate.getDbName());
+                            OrganizationContext.setCurrentOrganization(candidate.getDbName());
+                            OrganizationContext.setCurrentOrgCode(candidate.getCode());
+                            if (organizationUserRepository.existsById(userId)) {
+                                targetOrg = candidate;
+                                break;
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    if (targetOrg == null) {
+                        throw new ResourceNotFoundException("User", "id", userId);
+                    }
+                }
+            } else {
+                if (organizationId != null && !principal.belongsToOrganization(organizationId)) {
+                    throw new org.springframework.security.access.AccessDeniedException(
+                            "Access denied: You cannot delete users of another organization"
+                    );
+                }
+                BankContext.setCurrentBank(principal.getOrganizationDbName());
+                OrganizationContext.setCurrentOrganization(principal.getOrganizationDbName());
+                OrganizationContext.setCurrentOrgCode(principal.getOrganizationCode());
+            }
+
+            OrganizationUser user = organizationUserRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+            String targetDb = targetOrg != null ? targetOrg.getDbName() : principal.getOrganizationDbName();
+
+            if (hardDelete) {
+                try {
+                    BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+                    OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                    loginDirectoryRepository.findByUserCode(user.getEmpNo()).ifPresent(loginDirectoryRepository::delete);
+                    loginDirectoryRepository.findByEmail(user.getEmail()).ifPresent(loginDirectoryRepository::delete);
+                } catch (Exception ex) {
+                    log.warn("Notice: could not remove login directory entry for deleted user {}: {}", user.getEmail(), ex.getMessage());
+                } finally {
+                    BankContext.setCurrentBank(targetDb);
+                    OrganizationContext.setCurrentOrganization(targetDb);
+                }
+
+                organizationUserRepository.delete(user);
+                log.warn("User id={} empNo={} HARD DELETED by principal={}", userId, user.getEmpNo(), principal != null ? principal.getId() : null);
+            } else {
+                user.setIsActive(false);
+                user.setStatus(ApplicationConstants.UserStatus.NON_OPERATIVE);
+                if (principal != null) {
+                    user.setModifiedBy(principal.getId());
+                }
+                user.setUpdatedAt(LocalDateTime.now());
+                organizationUserRepository.save(user);
+
+                try {
+                    BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+                    OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+                    loginDirectoryRepository.findByUserCode(user.getEmpNo()).ifPresent(loginDirectoryRepository::delete);
+                } catch (Exception ex) {
+                    log.warn("Notice: could not update login directory for deactivated user {}: {}", user.getEmail(), ex.getMessage());
+                } finally {
+                    BankContext.setCurrentBank(targetDb);
+                    OrganizationContext.setCurrentOrganization(targetDb);
+                }
+
+                log.info("User id={} empNo={} SOFT DELETED (is_active=false, status=NON_OPERATIVE) by principal={}", userId, user.getEmpNo(), principal != null ? principal.getId() : null);
+            }
+        } finally {
+            BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
+            OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
+        }
     }
 
     public UserResponse mapToResponse(OrganizationUser user, Organization org) {

@@ -120,4 +120,21 @@ public class BankUserManagementController {
         UserResponse response = bankUserManagementService.updateUser(principal, id, request, targetOrgId);
         return ResponseEntity.ok(ApiResponse.ok("User updated successfully", response));
     }
+
+    @DeleteMapping({"/{id}", "/users/{id}"})
+    @PreAuthorize("hasAnyRole('INTERNAL_ADMIN', 'SUPER_ADMIN', 'ADMIN')")
+    @Operation(summary = "Delete or deactivate a bank user (soft-delete by default, or hard-delete with ?hardDelete=true)")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestParam(required = false) Long organizationId,
+            @RequestParam(defaultValue = "false") boolean hardDelete) {
+        if (principal != null && organizationId != null && !principal.belongsToOrganization(organizationId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: You cannot delete users of another organization");
+        }
+        Long targetOrgId = (principal != null && !principal.isPlatformAdmin()) ? principal.getOrganizationId() : organizationId;
+        bankUserManagementService.deleteUser(principal, id, targetOrgId, hardDelete);
+        String msg = hardDelete ? "User permanently deleted successfully" : "User deactivated/deleted successfully";
+        return ResponseEntity.ok(ApiResponse.ok(msg, null));
+    }
 }

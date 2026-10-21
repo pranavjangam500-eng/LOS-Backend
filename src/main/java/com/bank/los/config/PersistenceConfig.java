@@ -79,6 +79,7 @@ public class PersistenceConfig {
                 populator.populate(conn);
             }
             ensureMasterLookupSequence(conn);
+            migrateLookupOwnershipColumns(conn);
             migrateLegacyInstitutionColumns(conn);
             migrateLegacyLeadColumns(conn);
         } catch (Exception e) {
@@ -327,6 +328,49 @@ public class PersistenceConfig {
             }
         } catch (Exception e) {
             log.debug("Legacy lead columns migration note: {}", e.getMessage());
+        }
+    }
+
+    private void migrateLookupOwnershipColumns(java.sql.Connection conn) {
+        try (java.sql.Statement stmt = conn.createStatement()) {
+            java.sql.DatabaseMetaData meta = conn.getMetaData();
+
+            // 1. lookup_types owner_type & owner_bank_id
+            if (!columnExists(meta, "lookup_types", "owner_type")) {
+                try {
+                    stmt.execute("ALTER TABLE identity.lookup_types ADD COLUMN owner_type VARCHAR(20) NOT NULL DEFAULT 'INTERNAL_ADMIN'");
+                } catch (Exception ignored) {}
+            }
+            if (!columnExists(meta, "lookup_types", "owner_bank_id")) {
+                try {
+                    stmt.execute("ALTER TABLE identity.lookup_types ADD COLUMN owner_bank_id BIGINT");
+                } catch (Exception ignored) {}
+            }
+            try {
+                stmt.execute("UPDATE identity.lookup_types SET owner_type = 'INTERNAL_ADMIN' WHERE owner_type IS NULL");
+            } catch (Exception ignored) {}
+
+            // 2. lookup_sub_types owner_type & owner_bank_id
+            if (!columnExists(meta, "lookup_sub_types", "owner_type")) {
+                try {
+                    stmt.execute("ALTER TABLE identity.lookup_sub_types ADD COLUMN owner_type VARCHAR(20) NOT NULL DEFAULT 'INTERNAL_ADMIN'");
+                } catch (Exception ignored) {}
+            }
+            if (!columnExists(meta, "lookup_sub_types", "owner_bank_id")) {
+                try {
+                    stmt.execute("ALTER TABLE identity.lookup_sub_types ADD COLUMN owner_bank_id BIGINT");
+                } catch (Exception ignored) {}
+            }
+            try {
+                stmt.execute("UPDATE identity.lookup_sub_types SET owner_type = 'INTERNAL_ADMIN' WHERE owner_type IS NULL");
+            } catch (Exception ignored) {}
+
+            // 3. Sub-type sequence
+            try {
+                stmt.execute("CREATE SEQUENCE IF NOT EXISTS identity.master_lookup_sub_type_code_seq START WITH 1000");
+            } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.debug("Lookup ownership migration note: {}", e.getMessage());
         }
     }
 

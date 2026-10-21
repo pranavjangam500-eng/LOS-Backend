@@ -1,0 +1,567 @@
+{
+  "info": {
+    "_postman_id": "los-lookups-api-collection-v2",
+    "name": "LOS - Master & Bank Lookups API Collection",
+    "description": "Complete collection of Master & Bank Lookup APIs for LOS Platform. Supports both Internal Admin and Bank/NBFC users (Super Admin, Admin, Maker, Checker, Viewer) with multi-tenant ownership rules.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lookupTypeCode",
+      "value": "10004",
+      "type": "string"
+    },
+    {
+      "key": "subTypeId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "bankCode",
+      "value": "HDFC01",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Authentication",
+      "item": [
+        {
+          "name": "Login - Platform Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Platform Admin token set successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@losplatform.com\",\n  \"password\": \"PlatformAdmin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Authenticates as Internal Platform Administrator."
+          }
+        },
+        {
+          "name": "Login - Bank User / Super Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Bank user token set successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pranav@allianzapay.com\",\n  \"password\": \"Govinda@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Authenticates as a Bank/NBFC user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Master Lookup Types",
+      "item": [
+        {
+          "name": "List All Lookup Types (Plain List)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types"]
+            },
+            "description": "Lists all master lookup types visible to caller. Platform admins see all; Bank users see platform types (INTERNAL_ADMIN) + their bank's types (BANK)."
+          }
+        },
+        {
+          "name": "Search & Paginate Lookup Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types?search=lead&status=ACTIVE&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "lead"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Searches lookup types by keyword and status with pagination."
+          }
+        },
+        {
+          "name": "Get Lookup Type by Code (Detail View)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}"]
+            },
+            "description": "Returns full details for a master lookup type including its options/sub-types."
+          }
+        },
+        {
+          "name": "Create Master Lookup Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Property Collateral Type\",\n  \"status\": \"ACTIVE\",\n  \"isFixed\": false,\n  \"permissions\": [\"VIEW\", \"CREATE\", \"EDIT\", \"DELETE\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types"]
+            },
+            "description": "Creates a new master lookup type. Backend generates sequential code >= 10010. If created by bank user, ownerType is BANK and ownerBankId is set automatically."
+          }
+        },
+        {
+          "name": "Update Lookup Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Property Collateral Category\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}"]
+            },
+            "description": "Updates name and status. (Note: Bank users cannot modify platform-managed INTERNAL_ADMIN lookups; returns 403 Forbidden)."
+          }
+        },
+        {
+          "name": "Activate Lookup Type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}", "activate"]
+            },
+            "description": "Activates a lookup type."
+          }
+        },
+        {
+          "name": "Deactivate Lookup Type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}", "deactivate"]
+            },
+            "description": "Deactivates a lookup type. System fixed lookups cannot be deactivated."
+          }
+        },
+        {
+          "name": "Delete Lookup Type",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}"]
+            },
+            "description": "Deletes a lookup type and its sub-types (if not system-fixed and user owns it)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Sub-Types & Dropdown Options",
+      "item": [
+        {
+          "name": "Get Dropdown Options (For UI Select / Dropdowns)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/{{lookupTypeCode}}/options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "{{lookupTypeCode}}", "options"]
+            },
+            "description": "Lightweight endpoint returning active dropdown options: [{ code: '1', description: 'Direct' }]."
+          }
+        },
+        {
+          "name": "List Sub-Types Under Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}/sub-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}", "sub-types"]
+            },
+            "description": "Lists full sub-type option objects under the parent lookup type."
+          }
+        },
+        {
+          "name": "Search & Paginate Sub-Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}/sub-types?search=direct&status=ACTIVE&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}", "sub-types"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "direct"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Searches options under a type with pagination."
+          }
+        },
+        {
+          "name": "Add Sub-Type / Option Under Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Channel Partner Referrals\",\n  \"status\": \"ACTIVE\",\n  \"displayOrder\": 10,\n  \"isFixed\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}/sub-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}", "sub-types"]
+            },
+            "description": "Adds an option under a lookup type. Backend auto-generates sequential subTypeCode. If called by bank user, ownerType is BANK and ownerBankId is set automatically."
+          }
+        },
+        {
+          "name": "Update Sub-Type / Option",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"DSA Channel Partner\",\n  \"status\": \"ACTIVE\",\n  \"displayOrder\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/{{subTypeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "sub-types", "{{subTypeId}}"]
+            },
+            "description": "Updates option description, status, and display order."
+          }
+        },
+        {
+          "name": "Activate Sub-Type / Option",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/{{subTypeId}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "sub-types", "{{subTypeId}}", "activate"]
+            },
+            "description": "Activates a sub-type option."
+          }
+        },
+        {
+          "name": "Deactivate Sub-Type / Option",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/{{subTypeId}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "sub-types", "{{subTypeId}}", "deactivate"]
+            },
+            "description": "Deactivates a sub-type option (if not fixed)."
+          }
+        },
+        {
+          "name": "Delete Sub-Type / Option",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sub-types/{{subTypeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "sub-types", "{{subTypeId}}"]
+            },
+            "description": "Deletes an option (if not fixed and caller owns it)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Platform Sync & Bank Inspection (Internal Admin Only)",
+      "item": [
+        {
+          "name": "Inspect Bank Lookups",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/banks/{{bankCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "banks", "{{bankCode}}"]
+            },
+            "description": "Inspects lookups and bank-customized options for a specific Bank/NBFC tenant database."
+          }
+        },
+        {
+          "name": "Update Bank Lookup Permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\"VIEW\", \"CREATE\", \"EDIT\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/banks/{{bankCode}}/types/{{lookupTypeCode}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "banks", "{{bankCode}}", "types", "{{lookupTypeCode}}", "permissions"]
+            },
+            "description": "Configures allowed permissions for a lookup type in a bank."
+          }
+        },
+        {
+          "name": "Sync Master Lookups to Bank",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sync/{{bankCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "sync", "{{bankCode}}"]
+            },
+            "description": "Pushes/syncs master lookups into a specific Bank/NBFC tenant database."
+          }
+        },
+        {
+          "name": "Sync Master Lookups to All Banks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/administration/lookups/sync-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "administration", "lookups", "sync-all"]
+            },
+            "description": "Pushes/syncs master lookups into all active Bank/NBFC tenant databases."
+          }
+        }
+      ]
+    }
+  ]
+}

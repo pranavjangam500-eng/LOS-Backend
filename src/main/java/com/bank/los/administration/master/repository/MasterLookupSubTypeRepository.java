@@ -25,5 +25,14 @@ public interface MasterLookupSubTypeRepository extends JpaRepository<MasterLooku
 
     long countByLookupTypeCode(String lookupTypeCode);
 
+    @org.springframework.data.jpa.repository.Query("SELECT st FROM MasterLookupSubType st WHERE st.lookupTypeCode = :typeCode AND (st.ownerType = 'INTERNAL_ADMIN' OR st.ownerBankId = :bankId) ORDER BY st.displayOrder ASC, st.id ASC")
+    List<MasterLookupSubType> findVisibleToBank(@org.springframework.data.repository.query.Param("typeCode") String typeCode, @org.springframework.data.repository.query.Param("bankId") Long bankId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT st FROM MasterLookupSubType st WHERE st.lookupTypeCode = :typeCode AND st.isActive = true AND (st.ownerType = 'INTERNAL_ADMIN' OR st.ownerBankId = :bankId) ORDER BY st.displayOrder ASC, st.id ASC")
+    List<MasterLookupSubType> findActiveVisibleToBank(@org.springframework.data.repository.query.Param("typeCode") String typeCode, @org.springframework.data.repository.query.Param("bankId") Long bankId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(st) FROM MasterLookupSubType st WHERE st.lookupTypeCode = :typeCode AND (st.ownerType = 'INTERNAL_ADMIN' OR st.ownerBankId = :bankId)")
+    long countVisibleToBank(@org.springframework.data.repository.query.Param("typeCode") String typeCode, @org.springframework.data.repository.query.Param("bankId") Long bankId);
+
     void deleteByLookupTypeCode(String lookupTypeCode);
 }

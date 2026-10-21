@@ -1,7 +1,9 @@
 package com.bank.los.administration.organization.service;
 
 import com.bank.los.administration.master.entity.Organization;
+import com.bank.los.administration.master.repository.LoginDirectoryRepository;
 import com.bank.los.administration.master.repository.OrganizationRepository;
+import com.bank.los.security.TenantResolutionService;
 import com.bank.los.administration.organization.dto.CreateOrganizationRequest;
 import com.bank.los.administration.organization.dto.OrganizationResponse;
 import com.bank.los.administration.organization.dto.UpdateOrganizationRequest;
@@ -45,6 +47,8 @@ public class OrganizationService {
     private final OrganizationProvisioningService organizationProvisioningService;
     private final OrganizationRoleRepository organizationRoleRepository;
     private final BranchRepository branchRepository;
+    private final LoginDirectoryRepository loginDirectoryRepository;
+    private final TenantResolutionService tenantResolutionService;
 
     private String resolveDefaultHost() {
         if (defaultDbHost != null && !defaultDbHost.isBlank() && !"localhost".equalsIgnoreCase(defaultDbHost.trim())) {
@@ -223,17 +227,22 @@ public class OrganizationService {
         return mapToResponse(updated);
     }
 
+    @Transactional
     public void deleteOrganization(String identifier, boolean hardDelete) {
         BankContext.setCurrentBank(BankContext.MASTER_BANK_ID);
         OrganizationContext.setCurrentOrganization(OrganizationContext.MASTER_ORG_ID);
         Organization org = findOrganizationByIdOrIdentifier(identifier);
 
         if (hardDelete) {
+            // Remove associated login directory records to prevent foreign key integrity violations
+            loginDirectoryRepository.deleteByOrganization(org);
             organizationRepository.delete(org);
+            tenantResolutionService.evictCache(org.getId());
             log.warn("Bank/Organization HARD DELETED: id={}, bankCode={}", org.getId(), org.getBankCode());
         } else {
             org.setStatus("DELETED");
             organizationRepository.save(org);
+            tenantResolutionService.evictCache(org.getId());
             log.info("Bank/Organization SOFT DELETED (status=DELETED): id={}, bankCode={}", org.getId(), org.getBankCode());
         }
     }

@@ -72,6 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         requestUri.startsWith("/api/v1/organizations") ||
                         requestUri.startsWith("/api/v1/administration/administrators") ||
                         requestUri.startsWith("/api/v1/administration/lookups") ||
+                        requestUri.startsWith("/api/v1/admin/lookups") ||
                         requestUri.startsWith("/api/v1/administration/rbac") ||
                         requestUri.startsWith("/api/v1/administration/audit") ||
                         requestUri.startsWith("/api/v1/administration/monitoring") ||

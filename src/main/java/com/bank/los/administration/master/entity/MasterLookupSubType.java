@@ -48,6 +48,13 @@ public class MasterLookupSubType {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder = 0;
 
+    @Builder.Default
+    @Column(name = "owner_type", nullable = false, length = 20)
+    private String ownerType = "INTERNAL_ADMIN";
+
+    @Column(name = "owner_bank_id")
+    private Long ownerBankId;
+
     @Column(name = "created_by")
     private Long createdBy;
 

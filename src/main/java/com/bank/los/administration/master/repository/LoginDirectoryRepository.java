@@ -24,4 +24,14 @@ public interface LoginDirectoryRepository extends JpaRepository<LoginDirectory, 
     boolean existsByEmail(String email);
     boolean existsByUserCode(String userCode);
     boolean existsByPhone(String phone);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM LoginDirectory ld WHERE ld.organization = :organization")
+    void deleteByOrganization(@Param("organization") com.bank.los.administration.master.entity.Organization organization);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query("DELETE FROM LoginDirectory ld WHERE ld.organization.id = :orgId")
+    void deleteByOrganizationId(@Param("orgId") Long orgId);
 }

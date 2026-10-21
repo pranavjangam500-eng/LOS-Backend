@@ -39,6 +39,13 @@ public class MasterLookupType {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Builder.Default
+    @Column(name = "owner_type", nullable = false, length = 20)
+    private String ownerType = "INTERNAL_ADMIN";
+
+    @Column(name = "owner_bank_id")
+    private Long ownerBankId;
+
     @Column(name = "created_by")
     private Long createdBy;
 

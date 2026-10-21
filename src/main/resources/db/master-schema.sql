@@ -284,11 +284,17 @@ CREATE TABLE IF NOT EXISTS identity.lookup_types (
     description   VARCHAR(255) NOT NULL,
     is_fixed      BOOLEAN      NOT NULL DEFAULT false,
     is_active     BOOLEAN      NOT NULL DEFAULT true,
+    owner_type    VARCHAR(20)  NOT NULL DEFAULT 'INTERNAL_ADMIN',
+    owner_bank_id BIGINT,
     created_by    BIGINT,
     created_at    TIMESTAMP    NOT NULL DEFAULT now(),
     modified_by   BIGINT,
     updated_at    TIMESTAMP    NOT NULL DEFAULT now()
 );
+
+ALTER TABLE identity.lookup_types ADD COLUMN IF NOT EXISTS owner_type VARCHAR(20) NOT NULL DEFAULT 'INTERNAL_ADMIN';
+ALTER TABLE identity.lookup_types ADD COLUMN IF NOT EXISTS owner_bank_id BIGINT;
+CREATE INDEX IF NOT EXISTS idx_lookup_types_owner ON identity.lookup_types(owner_type, owner_bank_id);
 
 -- -----------------------------------------------------------------------
 -- identity.lookup_sub_types (Table 51101) - Master Lookup Sub Types
@@ -302,6 +308,8 @@ CREATE TABLE IF NOT EXISTS identity.lookup_sub_types (
     is_fixed              BOOLEAN      NOT NULL DEFAULT false,
     is_active             BOOLEAN      NOT NULL DEFAULT true,
     display_order         INT          NOT NULL DEFAULT 0,
+    owner_type            VARCHAR(20)  NOT NULL DEFAULT 'INTERNAL_ADMIN',
+    owner_bank_id         BIGINT,
     created_by            BIGINT,
     created_at            TIMESTAMP    NOT NULL DEFAULT now(),
     modified_by           BIGINT,
@@ -309,13 +317,16 @@ CREATE TABLE IF NOT EXISTS identity.lookup_sub_types (
     CONSTRAINT uk_master_lookup_sub_type UNIQUE (lookup_type_code, sub_type_code)
 );
 
+ALTER TABLE identity.lookup_sub_types ADD COLUMN IF NOT EXISTS owner_type VARCHAR(20) NOT NULL DEFAULT 'INTERNAL_ADMIN';
+ALTER TABLE identity.lookup_sub_types ADD COLUMN IF NOT EXISTS owner_bank_id BIGINT;
+CREATE INDEX IF NOT EXISTS idx_lookup_sub_types_owner ON identity.lookup_sub_types(owner_type, owner_bank_id);
 CREATE INDEX IF NOT EXISTS idx_master_lst_type_code ON identity.lookup_sub_types(lookup_type_code);
 
 -- -----------------------------------------------------------------------
--- identity.master_lookup_type_code_seq (Sequence for Server-Generated Type Codes)
--- Starts at 10010 so initial generated type code is 10010 (leaving 10001-10009 for system seeds)
+-- Sequences for Server-Generated Codes
 -- -----------------------------------------------------------------------
 CREATE SEQUENCE IF NOT EXISTS identity.master_lookup_type_code_seq START WITH 10010;
+CREATE SEQUENCE IF NOT EXISTS identity.master_lookup_sub_type_code_seq START WITH 1000;
 
 -- -----------------------------------------------------------------------
 -- identity.master_lookup_type_permissions (Lookup Permissions Mapping in Master DB)

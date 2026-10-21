@@ -205,6 +205,18 @@ class UserServiceTest {
         List<UserResponse> iciciUsers = userService.getAllUsers(superAdminPrincipal, orgResponse.getPkid());
         assertFalse(iciciUsers.isEmpty());
         assertTrue(iciciUsers.stream().anyMatch(u -> "admin@icicibank.com".equals(u.getEmail())));
+
+        // 5. Test Soft Delete
+        userService.deleteUser(superAdminPrincipal, userResponse.getId(), orgResponse.getPkid(), false);
+        UserResponse softDeleted = userService.getUserById(superAdminPrincipal, userResponse.getId(), orgResponse.getPkid());
+        assertFalse(softDeleted.getIsActive());
+        assertEquals("NON_OPERATIVE", softDeleted.getStatus());
+
+        // 6. Test Hard Delete
+        userService.deleteUser(superAdminPrincipal, userResponse.getId(), orgResponse.getPkid(), true);
+        assertThrows(com.bank.los.common.exception.ResourceNotFoundException.class, () -> {
+            userService.getUserById(superAdminPrincipal, userResponse.getId(), orgResponse.getPkid());
+        });
     }
 
 }
