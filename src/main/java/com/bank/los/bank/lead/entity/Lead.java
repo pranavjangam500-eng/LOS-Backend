@@ -50,6 +50,7 @@ public class Lead extends LeadRequest {
         return "Lead{" +
                 "leadId='" + getLeadId() + '\'' +
                 ", customerName='" + getFirstNameBusinessName() + '\'' +
+                ", mobileNumber='" + getMobileNumber() + '\'' +
                 ", panNumber='" + getPanNumber() + '\'' +
                 ", loanProductType='" + getLoanProductType() + '\'' +
                 ", loanAmount=" + getLoanAmount() +

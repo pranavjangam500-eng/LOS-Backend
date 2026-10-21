@@ -99,7 +99,7 @@ public class LeadValidator {
             }
         }
 
-        // 4. Customer Type / User Category (Mandatory)
+        // 4. Customer Type / User Category
         String category = lead.getCustomerType();
         if (category == null || category.trim().isEmpty()) {
             lead.setCustomerType("Individual");
@@ -111,12 +111,8 @@ public class LeadValidator {
                     || "NonIndividual".equalsIgnoreCase(trimmedCategory)
                     || "Non Individual".equalsIgnoreCase(trimmedCategory)) {
                 lead.setCustomerType("Non-Individual");
-            } else if ("Sole Proprietorship".equalsIgnoreCase(trimmedCategory)
-                    || "Partnership".equalsIgnoreCase(trimmedCategory)
-                    || "Private Limited".equalsIgnoreCase(trimmedCategory)) {
-                lead.setCustomerType(trimmedCategory);
             } else {
-                errors.add("User Category must be either 'Individual' or 'Non-Individual'");
+                lead.setCustomerType(trimmedCategory);
             }
         }
 
@@ -274,6 +270,11 @@ public class LeadValidator {
             errors.add("Security Amount must be a non-negative amount");
         }
 
+        Double downPayment = lead.getDownPaymentCollateral();
+        if (downPayment != null && downPayment < 0) {
+            errors.add("Down Payment / Collateral must be a non-negative amount");
+        }
+
         Double takeHomePay = lead.getTakeHomePay();
         if (takeHomePay != null && takeHomePay < 0) {
             errors.add("Take Home Pay must be a non-negative amount");
@@ -326,10 +327,13 @@ public class LeadValidator {
         if (lead.getAadhaarValidationStatus() != null) lead.setAadhaarValidationStatus(lead.getAadhaarValidationStatus().trim());
         if (lead.getDedupeStatus() != null) lead.setDedupeStatus(lead.getDedupeStatus().trim());
         if (lead.getBlacklistStatus() != null) lead.setBlacklistStatus(lead.getBlacklistStatus().trim());
+        if (lead.getMobileNumber() != null) {
+            String trimmedMobile = lead.getMobileNumber().trim();
+            lead.setMobileNumber(trimmedMobile.isEmpty() ? null : trimmedMobile);
+        }
 
         if (lead.getLoanProductType() != null) lead.setLoanProductType(lead.getLoanProductType().trim());
         if (lead.getPurposeOfLoan() != null) lead.setPurposeOfLoan(lead.getPurposeOfLoan().trim());
-        if (lead.getDownPaymentCollateral() != null) lead.setDownPaymentCollateral(lead.getDownPaymentCollateral().trim());
 
         if (lead.getEmploymentType() != null) lead.setEmploymentType(lead.getEmploymentType().trim());
         if (lead.getDesignation() != null) lead.setDesignation(lead.getDesignation().trim());

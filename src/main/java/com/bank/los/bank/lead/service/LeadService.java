@@ -203,14 +203,6 @@ public class LeadService {
     }
 
     /**
-     * Overload for direct Lead entity calls.
-     */
-    @Transactional
-    public Lead createLead(Lead lead) {
-        return createLead((LeadRequest) lead);
-    }
-
-    /**
      * Imports multiple leads in bulk from an uploaded CSV input stream.
      * Validates each row against business rules, auto-generates IDs if omitted,
      * persists valid leads into the database, and reports row-level errors for invalid rows.
@@ -316,6 +308,9 @@ public class LeadService {
             if (indices.pinCodeCol >= 0 && indices.pinCodeCol < row.size()) {
                 lead.setPinCode(row.get(indices.pinCodeCol));
             }
+            if (indices.mobileNumberCol >= 0 && indices.mobileNumberCol < row.size()) {
+                lead.setMobileNumber(row.get(indices.mobileNumberCol));
+            }
             if (indices.numberOfDependentsCol >= 0 && indices.numberOfDependentsCol < row.size()) {
                 String val = row.get(indices.numberOfDependentsCol).trim();
                 if (!val.isEmpty()) {
@@ -373,7 +368,19 @@ public class LeadService {
                 }
             }
             if (indices.downPaymentCollateralCol >= 0 && indices.downPaymentCollateralCol < row.size()) {
-                lead.setDownPaymentCollateral(row.get(indices.downPaymentCollateralCol));
+                String val = row.get(indices.downPaymentCollateralCol).trim();
+                if (!val.isEmpty()) {
+                    try {
+                        lead.setDownPaymentCollateral(Double.valueOf(val));
+                    } catch (NumberFormatException e) {
+                        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^([0-9]+(?:\\.[0-9]+)?)").matcher(val);
+                        if (m.find()) {
+                            try {
+                                lead.setDownPaymentCollateral(Double.valueOf(m.group(1)));
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+                }
             }
 
             // 3. Income Profile
@@ -580,14 +587,6 @@ public class LeadService {
     }
 
     /**
-     * Overload for direct Lead entity calls.
-     */
-    @Transactional
-    public Lead updateLead(String leadId, Lead lead) {
-        return updateLead(leadId, (LeadRequest) lead);
-    }
-
-    /**
      * Assigns a Lead to an active Bank User with MAKER role.
      * Validates that lead exists, Maker user exists and is active, and Assigner has ADMIN role.
      * Updates assignedEmployeeId, sets leadStatus = ASSIGNED, stores assignmentTimestamp, assignedBy.
@@ -696,7 +695,7 @@ public class LeadService {
                     lead.getInterestRate() != null ? String.valueOf(lead.getInterestRate()) : "",
                     lead.getTotalInterest() != null ? String.valueOf(lead.getTotalInterest()) : "",
                     lead.getSecurityAmount() != null ? String.valueOf(lead.getSecurityAmount()) : "",
-                    lead.getDownPaymentCollateral() != null ? lead.getDownPaymentCollateral() : "",
+                    lead.getDownPaymentCollateral() != null ? String.valueOf(lead.getDownPaymentCollateral()) : "",
                     // 3. Income Profile
                     lead.getEmploymentType() != null ? lead.getEmploymentType() : "",
                     lead.getAnnualIncome() != null ? String.valueOf(lead.getAnnualIncome()) : "",

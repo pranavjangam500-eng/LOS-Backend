@@ -60,6 +60,7 @@ public class LeadMapper {
         if (updateData.getNumberOfDependents() != null) existingLead.setNumberOfDependents(updateData.getNumberOfDependents());
         if (updateData.getEmailAddress() != null) existingLead.setEmailAddress(updateData.getEmailAddress());
         if (updateData.getPinCode() != null) existingLead.setPinCode(updateData.getPinCode());
+        if (updateData.getMobileNumber() != null) existingLead.setMobileNumber(updateData.getMobileNumber());
 
         // 2. Loan Details
         if (updateData.getLoanProductType() != null) existingLead.setLoanProductType(updateData.getLoanProductType());

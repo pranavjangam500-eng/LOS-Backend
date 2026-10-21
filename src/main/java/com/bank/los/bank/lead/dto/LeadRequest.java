@@ -170,6 +170,11 @@ public class LeadRequest {
     @JsonAlias({"pin_code", "pincode", "Pin Code", "zipCode"})
     private String pinCode;
 
+    @Column(name = "mobile_number")
+    @JsonProperty("mobileNumber")
+    @JsonAlias({"mobile_number", "mobile", "Mobile Number", "mobileNo", "phoneNumber", "phone", "Mobile", "Mobile No."})
+    private String mobileNumber;
+
     // ==========================================
     // 2. Loan Details
     // ==========================================
@@ -220,8 +225,8 @@ public class LeadRequest {
 
     @Column(name = "down_payment_collateral")
     @JsonProperty("downPaymentCollateral")
-    @JsonAlias({"down_payment_collateral", "downPayment", "collateral", "Down Payment/Collateral", "downPaymentOrCollateral"})
-    private String downPaymentCollateral;
+    @JsonAlias({"down_payment_collateral", "downPayment", "collateral", "Down Payment/Collateral", "downPaymentOrCollateral", "down_payment"})
+    private Double downPaymentCollateral;
 
     // ==========================================
     // 3. Income Profile
@@ -384,6 +389,7 @@ public class LeadRequest {
             this.numberOfDependents = request.numberOfDependents;
             this.emailAddress = request.emailAddress;
             this.pinCode = request.pinCode;
+            this.mobileNumber = request.mobileNumber;
 
             // 2. Loan Details
             this.loanProductType = request.loanProductType;
@@ -694,6 +700,34 @@ public class LeadRequest {
         this.pinCode = pinCode;
     }
 
+    public String getMobileNumber() {
+        return mobileNumber;
+    }
+
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
+    }
+
+    @JsonIgnore
+    public String getMobile() {
+        return mobileNumber;
+    }
+
+    @JsonIgnore
+    public void setMobile(String mobile) {
+        this.mobileNumber = mobile;
+    }
+
+    @JsonIgnore
+    public String getPhone() {
+        return mobileNumber;
+    }
+
+    @JsonIgnore
+    public void setPhone(String phone) {
+        this.mobileNumber = phone;
+    }
+
     // ==========================================
     // Getters and Setters: 2. Loan Details
     // ==========================================
@@ -789,11 +823,11 @@ public class LeadRequest {
         this.securityAmount = securityAmount;
     }
 
-    public String getDownPaymentCollateral() {
+    public Double getDownPaymentCollateral() {
         return downPaymentCollateral;
     }
 
-    public void setDownPaymentCollateral(String downPaymentCollateral) {
+    public void setDownPaymentCollateral(Double downPaymentCollateral) {
         this.downPaymentCollateral = downPaymentCollateral;
     }
 

@@ -34,9 +34,6 @@ class LeadControllerIntegrationTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private LeadRepository leadRepository;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
     private String adminToken;
@@ -107,6 +104,8 @@ class LeadControllerIntegrationTest {
         req.setAnnualIncome(1200000.0);
         req.setLeadAcquisitionChannel("Website");
         req.setDate("2026-10-10");
+        req.setSecurityAmount(50000.0);
+        req.setDownPaymentCollateral(1000000.0);
         req.setSourcingAgentPartnerId("AGT-101");
         req.setAgentPartnerName("FinCorp Partners");
         req.setEmployeeId("EMP-001");
@@ -151,6 +150,7 @@ class LeadControllerIntegrationTest {
                 .andExpect(jsonPath("$.leadId").isNotEmpty())
                 .andExpect(jsonPath("$.leadStatus").value("NEW"))
                 .andExpect(jsonPath("$.customerName").value("Rohan Verma"))
+                .andExpect(jsonPath("$.downPaymentCollateral").value(1000000.0))
                 .andReturn();
 
         Lead createdLead = objectMapper.readValue(createRes.getResponse().getContentAsString(), Lead.class);
@@ -215,5 +215,126 @@ class LeadControllerIntegrationTest {
                         .header("Authorization", "Bearer " + internalAdminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/leads with invalid text '1000000 Down Payment' returns HTTP 400 instead of HTTP 500 without debug/SQL leaks")
+    void testCreateLeadWithInvalidTextDownPaymentCollateralReturns400() throws Exception {
+        String payloadWithTextDownPayment = """
+                {
+                  "customerName": "Vikram Seth",
+                  "loanProductType": "Home Loan",
+                  "loanAmount": 5000000.0,
+                  "downPaymentCollateral": "1000000 Down Payment"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/leads")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payloadWithTextDownPayment))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("INVALID_INPUT"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("downPaymentCollateral")))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("ERROR DEBUG"))))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("SQL"))));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/leads with negative downPaymentCollateral returns HTTP 400 validation error")
+    void testCreateLeadWithNegativeDownPaymentCollateralReturns400() throws Exception {
+        String payloadWithNegativeDownPayment = """
+                {
+                  "customerName": "Vikram Seth",
+                  "loanProductType": "Home Loan",
+                  "loanAmount": 5000000.0,
+                  "downPaymentCollateral": -50000.0,
+                  "leadAcquisitionChannel": "Website",
+                  "date": "2026-10-15"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/leads")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payloadWithNegativeDownPayment))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors").isArray())
+                .andExpect(jsonPath("$.errors", org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.containsString("Down Payment / Collateral must be a non-negative amount"))));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/leads with valid numeric downPaymentCollateral creates lead successfully (HTTP 201)")
+    void testCreateLeadWithValidNumericDownPaymentCollateralSuccess() throws Exception {
+        String payloadWithValidNumeric = """
+                {
+                  "customerName": "Anita Desai",
+                  "panNumber": "ABCDE5678K",
+                  "loanProductType": "Home Loan",
+                  "loanAmount": 4000000.0,
+                  "securityAmount": 100000.0,
+                  "downPaymentCollateral": 1000000.0,
+                  "annualIncome": 1800000.0,
+                  "leadAcquisitionChannel": "Website",
+                  "date": "2026-10-15"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/leads")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payloadWithValidNumeric))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.leadId").isNotEmpty())
+                .andExpect(jsonPath("$.leadStatus").value("NEW"))
+                .andExpect(jsonPath("$.downPaymentCollateral").value(1000000.0));
+    }
+
+    @Test
+    @DisplayName("POST /api/leads with mobileNumber and arbitrary customerType creates lead successfully")
+    void testCreateLeadWithMobileNumberAndCustomCustomerType() throws Exception {
+        String payload = """
+                {
+                  "customerName": "Acme Enterprises",
+                  "customerType": "Corporate",
+                  "mobileNumber": "9876543210",
+                  "panNumber": "ABCDE9876F",
+                  "loanProductType": "Business Loan",
+                  "loanAmount": 2000000.0,
+                  "leadAcquisitionChannel": "Website",
+                  "date": "2026-10-18"
+                }
+                """;
+
+        MvcResult result = mockMvc.perform(post("/api/leads")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.leadId").isNotEmpty())
+                .andExpect(jsonPath("$.customerType").value("Corporate"))
+                .andExpect(jsonPath("$.mobileNumber").value("9876543210"))
+                .andReturn();
+
+        Lead created = objectMapper.readValue(result.getResponse().getContentAsString(), Lead.class);
+        assertEquals("Corporate", created.getCustomerType());
+        assertEquals("9876543210", created.getMobileNumber());
+
+        // Also test update with phone alias
+        String updatePayload = """
+                {
+                  "phone": "9876500000",
+                  "customerType": "MSME"
+                }
+                """;
+        mockMvc.perform(put("/api/leads/" + created.getLeadId())
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mobileNumber").value("9876500000"))
+                .andExpect(jsonPath("$.customerType").value("MSME"));
     }
 }

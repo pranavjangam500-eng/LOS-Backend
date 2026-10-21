@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,6 +44,7 @@ public class CreateUserRequest {
     @Schema(description = "Target Organisation Code (alternative to organizationId)", example = "SBI01")
     private String organizationCode;
 
+    @Size(max = 30, message = "Employee number must not exceed 30 characters")
     @JsonProperty("emp_no")
     @JsonAlias({"empNo", "EmpNo", "employeeNumber", "employee_no", "employee_id", "employeeId", "emp_id", "empId"})
     @Schema(description = "Unique Manual Employee ID / Number (e.g. EMP-SBI-001)", example = "EMP-SBI-001")

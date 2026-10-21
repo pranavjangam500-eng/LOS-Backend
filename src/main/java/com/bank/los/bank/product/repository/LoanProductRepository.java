@@ -12,4 +12,5 @@ public interface LoanProductRepository extends JpaRepository<LoanProduct, Long> 
     Optional<LoanProduct> findByCode(String code);
     List<LoanProduct> findByStatus(String status);
     boolean existsByCode(String code);
+    boolean existsByCodeAndIdNot(String code, Long id);
 }

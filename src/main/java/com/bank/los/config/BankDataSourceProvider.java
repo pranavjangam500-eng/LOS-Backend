@@ -201,6 +201,9 @@ public class BankDataSourceProvider {
             populator.setContinueOnError(true);
             populator.setIgnoreFailedDrops(true);
             populator.populate(conn);
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE customer.leads ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(50)");
+            } catch (Exception ignored) {}
         } catch (Exception e) {
             log.debug("Bank DB schema populate notice for {}: {}", dbName, e.getMessage());
         }
