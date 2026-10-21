@@ -308,6 +308,9 @@ public class LeadService {
             if (indices.pinCodeCol >= 0 && indices.pinCodeCol < row.size()) {
                 lead.setPinCode(row.get(indices.pinCodeCol));
             }
+            if (indices.mobileNumberCol >= 0 && indices.mobileNumberCol < row.size()) {
+                lead.setMobileNumber(row.get(indices.mobileNumberCol));
+            }
             if (indices.numberOfDependentsCol >= 0 && indices.numberOfDependentsCol < row.size()) {
                 String val = row.get(indices.numberOfDependentsCol).trim();
                 if (!val.isEmpty()) {

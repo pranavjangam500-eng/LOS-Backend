@@ -170,6 +170,11 @@ public class LeadRequest {
     @JsonAlias({"pin_code", "pincode", "Pin Code", "zipCode"})
     private String pinCode;
 
+    @Column(name = "mobile_number")
+    @JsonProperty("mobileNumber")
+    @JsonAlias({"mobile_number", "mobile", "Mobile Number", "mobileNo", "phoneNumber", "phone", "Mobile", "Mobile No."})
+    private String mobileNumber;
+
     // ==========================================
     // 2. Loan Details
     // ==========================================
@@ -384,6 +389,7 @@ public class LeadRequest {
             this.numberOfDependents = request.numberOfDependents;
             this.emailAddress = request.emailAddress;
             this.pinCode = request.pinCode;
+            this.mobileNumber = request.mobileNumber;
 
             // 2. Loan Details
             this.loanProductType = request.loanProductType;
@@ -692,6 +698,34 @@ public class LeadRequest {
 
     public void setPinCode(String pinCode) {
         this.pinCode = pinCode;
+    }
+
+    public String getMobileNumber() {
+        return mobileNumber;
+    }
+
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
+    }
+
+    @JsonIgnore
+    public String getMobile() {
+        return mobileNumber;
+    }
+
+    @JsonIgnore
+    public void setMobile(String mobile) {
+        this.mobileNumber = mobile;
+    }
+
+    @JsonIgnore
+    public String getPhone() {
+        return mobileNumber;
+    }
+
+    @JsonIgnore
+    public void setPhone(String phone) {
+        this.mobileNumber = phone;
     }
 
     // ==========================================

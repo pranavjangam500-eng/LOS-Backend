@@ -325,6 +325,7 @@ public class PersistenceConfig {
             if (columnExists(meta, "leads", "updated_at")) {
                 try { stmt.execute("ALTER TABLE customer.leads ALTER COLUMN updated_at SET DEFAULT now()"); } catch (Exception ignored) {}
             }
+            try { stmt.execute("ALTER TABLE customer.leads ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(50)"); } catch (Exception ignored) {}
         } catch (Exception e) {
             log.debug("Legacy lead columns migration note: {}", e.getMessage());
         }

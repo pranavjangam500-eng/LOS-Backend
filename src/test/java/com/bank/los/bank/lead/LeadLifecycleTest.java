@@ -342,5 +342,38 @@ class LeadLifecycleTest {
         Lead lead = new Lead(createBaseLeadRequest());
         assertDoesNotThrow(() -> leadValidator.validateAndNormalize(lead));
     }
+
+    @Test
+    @DisplayName("Create and update Lead should properly support mobileNumber field and aliases")
+    void testLeadWithMobileNumber() {
+        LeadRequest request = createBaseLeadRequest();
+        request.setMobileNumber("9876543210");
+
+        Lead created = leadService.createLead(request);
+        assertNotNull(created);
+        assertEquals("9876543210", created.getMobileNumber());
+        assertEquals("9876543210", created.getMobile());
+        assertEquals("9876543210", created.getPhone());
+
+        // Update mobileNumber
+        lenient().when(leadRepository.findById(created.getLeadId())).thenReturn(Optional.of(created));
+        LeadRequest updateReq = new LeadRequest();
+        updateReq.setMobileNumber("9123456789");
+        Lead updated = leadService.updateLead(created.getLeadId(), updateReq);
+        assertEquals("9123456789", updated.getMobileNumber());
+    }
+
+    @Test
+    @DisplayName("Customer type should allow any value sent by frontend without strict predefined validation")
+    void testAnyCustomerTypeAllowed() {
+        String[] customerTypes = {"Corporate", "Trust", "LLP", "MSME", "Self-Employed", "Government", "Enterprise", "Other"};
+        for (String cType : customerTypes) {
+            Lead lead = new Lead(createBaseLeadRequest());
+            lead.setCustomerType(cType);
+            assertDoesNotThrow(() -> leadValidator.validateAndNormalize(lead),
+                    "Customer type '" + cType + "' should be allowed without strict validation");
+            assertEquals(cType, lead.getCustomerType());
+        }
+    }
 }
 

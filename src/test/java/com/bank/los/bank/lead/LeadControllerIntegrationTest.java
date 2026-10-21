@@ -291,4 +291,50 @@ class LeadControllerIntegrationTest {
                 .andExpect(jsonPath("$.leadStatus").value("NEW"))
                 .andExpect(jsonPath("$.downPaymentCollateral").value(1000000.0));
     }
+
+    @Test
+    @DisplayName("POST /api/leads with mobileNumber and arbitrary customerType creates lead successfully")
+    void testCreateLeadWithMobileNumberAndCustomCustomerType() throws Exception {
+        String payload = """
+                {
+                  "customerName": "Acme Enterprises",
+                  "customerType": "Corporate",
+                  "mobileNumber": "9876543210",
+                  "panNumber": "ABCDE9876F",
+                  "loanProductType": "Business Loan",
+                  "loanAmount": 2000000.0,
+                  "leadAcquisitionChannel": "Website",
+                  "date": "2026-10-18"
+                }
+                """;
+
+        MvcResult result = mockMvc.perform(post("/api/leads")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.leadId").isNotEmpty())
+                .andExpect(jsonPath("$.customerType").value("Corporate"))
+                .andExpect(jsonPath("$.mobileNumber").value("9876543210"))
+                .andReturn();
+
+        Lead created = objectMapper.readValue(result.getResponse().getContentAsString(), Lead.class);
+        assertEquals("Corporate", created.getCustomerType());
+        assertEquals("9876543210", created.getMobileNumber());
+
+        // Also test update with phone alias
+        String updatePayload = """
+                {
+                  "phone": "9876500000",
+                  "customerType": "MSME"
+                }
+                """;
+        mockMvc.perform(put("/api/leads/" + created.getLeadId())
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mobileNumber").value("9876500000"))
+                .andExpect(jsonPath("$.customerType").value("MSME"));
+    }
 }

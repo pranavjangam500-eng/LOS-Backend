@@ -220,6 +220,7 @@ public class CsvHelper {
         public int lastNameCol = -1;
         public int emailAddressCol = -1;
         public int pinCodeCol = -1;
+        public int mobileNumberCol = -1;
         public int numberOfDependentsCol = -1;
 
         // 2. Loan Details
@@ -318,6 +319,8 @@ public class CsvHelper {
                 indices.emailAddressCol = i;
             } else if (norm.contains("pincode") || norm.contains("zipcode") || norm.equals("postalcode") || norm.equals("pin")) {
                 indices.pinCodeCol = i;
+            } else if (norm.equals("mobilenumber") || norm.equals("mobile") || norm.equals("phonenumber") || norm.equals("phone") || norm.equals("mobileno") || norm.contains("phoneno")) {
+                indices.mobileNumberCol = i;
             } else if (norm.contains("dateofbirth") || norm.equals("dob")) {
                 indices.dobCol = i;
             } else if (norm.equals("age") || norm.contains("applicantage")) {

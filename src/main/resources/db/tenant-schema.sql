@@ -399,6 +399,7 @@ CREATE TABLE IF NOT EXISTS customer.leads (
     last_name                       VARCHAR(100),
     email_address                   VARCHAR(150),
     pin_code                        VARCHAR(20),
+    mobile_number                   VARCHAR(50),
     number_of_dependents            INT,
     down_payment_collateral         VARCHAR(255),
     created_at                      TIMESTAMP NOT NULL DEFAULT now(),
