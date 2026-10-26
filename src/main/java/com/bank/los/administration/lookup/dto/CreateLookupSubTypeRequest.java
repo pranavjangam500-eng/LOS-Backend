@@ -14,6 +14,11 @@ import lombok.*;
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateLookupSubTypeRequest {
 
+    @JsonProperty("code")
+    @JsonAlias({"subTypeCode"})
+    @Size(max = 50, message = "Lookup sub-type code must not exceed 50 characters")
+    private String code;
+
     @JsonProperty("name")
     @JsonAlias({"subTypeDescription", "description"})
     @NotBlank(message = "Lookup sub-type name is required")
@@ -38,9 +43,27 @@ public class CreateLookupSubTypeRequest {
             this.name = description;
             return this;
         }
+
+        public CreateLookupSubTypeRequestBuilder code(String code) {
+            this.code = code;
+            return this;
+        }
+
+        public CreateLookupSubTypeRequestBuilder subTypeCode(String subTypeCode) {
+            this.code = subTypeCode;
+            return this;
+        }
     }
 
     // Backward-compatibility accessors
+    public String getSubTypeCode() {
+        return code;
+    }
+
+    public void setSubTypeCode(String subTypeCode) {
+        this.code = subTypeCode;
+    }
+
     public String getSubTypeDescription() {
         return name;
     }

@@ -16,6 +16,10 @@ import java.util.List;
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateLookupTypeRequest {
 
+    @JsonProperty("code")
+    @Size(max = 50, message = "Lookup type code must not exceed 50 characters")
+    private String code;
+
     @JsonProperty("name")
     @JsonAlias({"description"})
     @NotBlank(message = "Lookup type name is required")
@@ -33,6 +37,11 @@ public class CreateLookupTypeRequest {
     public static class CreateLookupTypeRequestBuilder {
         public CreateLookupTypeRequestBuilder description(String description) {
             this.name = description;
+            return this;
+        }
+
+        public CreateLookupTypeRequestBuilder code(String code) {
+            this.code = code;
             return this;
         }
     }

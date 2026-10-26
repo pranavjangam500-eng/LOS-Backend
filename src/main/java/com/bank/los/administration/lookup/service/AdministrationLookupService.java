@@ -263,8 +263,15 @@ public class AdministrationLookupService {
             throw new ConflictException("Lookup type already exists with name: " + typeName);
         }
 
-        // Server-generated unique type code
-        String generatedCode = generateNextLookupTypeCode();
+        // Type code: from request body if present, else fallback to sequence
+        String typeCode = request.getCode() != null ? request.getCode().trim() : "";
+        if (typeCode.isEmpty()) {
+            typeCode = generateNextLookupTypeCode();
+        } else {
+            if (masterLookupTypeRepository.existsByCode(typeCode)) {
+                throw new ConflictException("Lookup type already exists with code: " + typeCode);
+            }
+        }
 
         boolean isActive = !"INACTIVE".equalsIgnoreCase(request.getStatus());
         boolean isPlatformAdmin = principal == null || principal.isPlatformAdmin();
@@ -272,7 +279,7 @@ public class AdministrationLookupService {
         Long ownerBankId = isPlatformAdmin ? null : principal.getOrganizationId();
 
         MasterLookupType lookupType = MasterLookupType.builder()
-                .code(generatedCode)
+                .code(typeCode)
                 .description(typeName)
                 .isFixed(Boolean.TRUE.equals(request.getIsFixed()))
                 .isActive(isActive)
@@ -551,7 +558,12 @@ public class AdministrationLookupService {
             throw new ConflictException("Lookup sub-type already exists with name '" + subTypeName + "' under type " + lookupTypeCode);
         }
 
-        // 3. Sub-type code = highest numeric sub_type_code under that type + 1
+        // 3. Sub-type code: from request body if present, else fallback to highest numeric + 1
+        String subTypeCode = request.getCode() != null ? request.getCode().trim() : "";
+        if (subTypeCode.isEmpty() && request.getSubTypeCode() != null) {
+            subTypeCode = request.getSubTypeCode().trim();
+        }
+
         List<MasterLookupSubType> existing = masterLookupSubTypeRepository.findByLookupTypeCodeOrderByDisplayOrderAscIdAsc(lookupTypeCode);
         long maxNumericCode = 0;
         int maxDisplayOrder = 0;
@@ -569,7 +581,14 @@ public class AdministrationLookupService {
                 maxDisplayOrder = st.getDisplayOrder();
             }
         }
-        String generatedSubTypeCode = String.valueOf(maxNumericCode == 0 ? 1 : (maxNumericCode + 1));
+
+        if (subTypeCode.isEmpty()) {
+            subTypeCode = String.valueOf(maxNumericCode == 0 ? 1 : (maxNumericCode + 1));
+        } else {
+            if (masterLookupSubTypeRepository.existsByLookupTypeCodeAndSubTypeCode(lookupTypeCode, subTypeCode)) {
+                throw new ConflictException("Lookup sub-type code '" + subTypeCode + "' already exists under type " + lookupTypeCode);
+            }
+        }
 
         int displayOrder = request.getDisplayOrder() != null ? request.getDisplayOrder() : (maxDisplayOrder + 1);
         boolean isActive = !"INACTIVE".equalsIgnoreCase(request.getStatus());
@@ -581,7 +600,7 @@ public class AdministrationLookupService {
         MasterLookupSubType subType = MasterLookupSubType.builder()
                 .lookupTypeCode(lookupTypeCode)
                 .typeDescription(type.getDescription())
-                .subTypeCode(generatedSubTypeCode)
+                .subTypeCode(subTypeCode)
                 .subTypeDescription(subTypeName)
                 .isFixed(Boolean.TRUE.equals(request.getIsFixed()))
                 .isActive(isActive)

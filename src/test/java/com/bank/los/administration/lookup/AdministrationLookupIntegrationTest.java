@@ -372,4 +372,46 @@ class AdministrationLookupIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Cannot delete option under system fixed")));
     }
+
+    @Test
+    @WithMockUser(username = "admin@losplatform.com", roles = {"INTERNAL_ADMIN"})
+    @DisplayName("9. Frontend can specify custom code when creating lookup type and sub-types")
+    void testFrontendProvidedCodes() throws Exception {
+        String customTypeCode = "CUSTOM_TYPE_" + System.currentTimeMillis();
+
+        CreateLookupTypeRequest customTypeReq = CreateLookupTypeRequest.builder()
+                .code(customTypeCode)
+                .name("Frontend Provided Code Type")
+                .status("ACTIVE")
+                .isFixed(false)
+                .build();
+
+        mockMvc.perform(post("/api/v1/administration/lookups/types")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(customTypeReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.code").value(customTypeCode));
+
+        // Sub-type with frontend-provided code
+        CreateLookupSubTypeRequest customSubTypeReq = CreateLookupSubTypeRequest.builder()
+                .code("CODE_ABC")
+                .name("Option ABC")
+                .status("ACTIVE")
+                .build();
+
+        mockMvc.perform(post("/api/v1/administration/lookups/types/" + customTypeCode + "/sub-types")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(customSubTypeReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.code").value("CODE_ABC"))
+                .andExpect(jsonPath("$.data.subTypeCode").value("CODE_ABC"));
+
+        // Duplicate code under same parent should return 409 Conflict
+        mockMvc.perform(post("/api/v1/administration/lookups/types/" + customTypeCode + "/sub-types")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(customSubTypeReq)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+    }
 }

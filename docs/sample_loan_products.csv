@@ -1,0 +1,5 @@
+Product Code,Product Name,Description,EMI,EMI Type,Min Amount,Max Amount,Interest Rate %,Min Tenure Months,Max Tenure Months,Penalty,Penalty %,Interest Calculation Frequency,Interest Calculation Mode,Processing Fee %,Status
+HOME_LOAN_PRIME,Prime Home Loan,Prime residential property loan with low interest,43391.13,REDUCING_BALANCE,500000.0,15000000.0,8.75,12,360,500.0,2.0,MONTHLY,REDUCING,0.5,ACTIVE
+PERSONAL_LOAN_EXPRESS,Express Personal Loan,Instant collateral-free personal loan,26333.84,FLAT_RATE,50000.0,2000000.0,12.5,6,60,300.0,3.0,MONTHLY,FLAT,1.5,ACTIVE
+AUTO_LOAN_FLEXI,Flexi Auto Loan,New and pre-owned vehicle financing,18500.0,REDUCING_BALANCE,200000.0,5000000.0,9.25,12,84,400.0,2.0,MONTHLY,REDUCING,0.75,ACTIVE
+BUSINESS_LOAN_GROWTH,SME Growth Loan,Working capital and expansion loan for businesses,55000.0,REDUCING_BALANCE,1000000.0,30000000.0,11.0,12,120,1000.0,2.5,MONTHLY,REDUCING,1.0,ACTIVE

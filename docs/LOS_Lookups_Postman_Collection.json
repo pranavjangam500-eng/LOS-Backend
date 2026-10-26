@@ -203,14 +203,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Property Collateral Type\",\n  \"status\": \"ACTIVE\",\n  \"isFixed\": false,\n  \"permissions\": [\"VIEW\", \"CREATE\", \"EDIT\", \"DELETE\"]\n}"
+              "raw": "{\n  \"code\": \"10015\",\n  \"name\": \"Property Collateral Type\",\n  \"status\": \"ACTIVE\",\n  \"isFixed\": false,\n  \"permissions\": [\"VIEW\", \"CREATE\", \"EDIT\", \"DELETE\"]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/administration/lookups/types",
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "administration", "lookups", "types"]
             },
-            "description": "Creates a new master lookup type. Backend generates sequential code >= 10010. If created by bank user, ownerType is BANK and ownerBankId is set automatically."
+            "description": "Creates a new master lookup type with code specified from frontend request body (e.g. 10015 or PROPERTY_TYPE). If created by bank user, ownerType is BANK and ownerBankId is set automatically."
           }
         },
         {
@@ -386,14 +386,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Channel Partner Referrals\",\n  \"status\": \"ACTIVE\",\n  \"displayOrder\": 10,\n  \"isFixed\": false\n}"
+              "raw": "{\n  \"code\": \"4\",\n  \"name\": \"Channel Partner Referrals\",\n  \"status\": \"ACTIVE\",\n  \"displayOrder\": 10,\n  \"isFixed\": false\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/administration/lookups/types/{{lookupTypeCode}}/sub-types",
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "administration", "lookups", "types", "{{lookupTypeCode}}", "sub-types"]
             },
-            "description": "Adds an option under a lookup type. Backend auto-generates sequential subTypeCode. If called by bank user, ownerType is BANK and ownerBankId is set automatically."
+            "description": "Adds an option under a lookup type with code specified from frontend request body (e.g. 4 or CHANNEL_PARTNER). If called by bank user, ownerType is BANK and ownerBankId is set automatically."
           }
         },
         {
