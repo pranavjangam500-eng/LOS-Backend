@@ -33,7 +33,7 @@ public class SecurityConfig {
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080,https://system-rimge9vct-pranav-3745.vercel.app}")
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:8080,https://system-los.vercel.app,https://system-rimge9vct-pranav-3745.vercel.app,https://los-application.vercel.app}")
     private String rawAllowedOrigins;
 
     @Bean
